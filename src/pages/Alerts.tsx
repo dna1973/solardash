@@ -35,18 +35,14 @@ export default function Alerts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
-  const hasReal = dbAlerts && dbAlerts.length > 0;
-
-  const alerts = hasReal
-    ? dbAlerts.map((a) => ({
-        id: a.id,
-        type: a.type as "critical" | "warning" | "info",
-        message: a.message,
-        plant_name: (a as any).plants?.name || "—",
-        resolved: a.resolved,
-        timestamp: a.created_at,
-      }))
-    : mockAlerts;
+  const alerts = (dbAlerts || []).map((a) => ({
+    id: a.id,
+    type: a.type as "critical" | "warning" | "info",
+    message: a.message,
+    plant_name: (a as any).plants?.name || "—",
+    resolved: a.resolved,
+    timestamp: a.created_at,
+  }));
 
   const sorted = [...alerts].sort((a, b) => {
     if (a.resolved !== b.resolved) return a.resolved ? 1 : -1;
