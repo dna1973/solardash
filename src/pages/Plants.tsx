@@ -1,5 +1,4 @@
 import { usePlants } from "@/hooks/useSupabaseData";
-import { plants as mockPlants } from "@/data/mockData";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
 import { Sun, MapPin, Zap, Calendar, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -7,24 +6,14 @@ import { motion } from "framer-motion";
 export default function Plants() {
   const { data: dbPlants, isLoading } = usePlants();
 
-  const hasReal = dbPlants && dbPlants.length > 0;
-
-  const plants = hasReal
-    ? dbPlants.map((p) => ({
-        id: p.id,
-        name: p.name,
-        location: p.location || "—",
-        status: p.status as "online" | "offline" | "warning" | "maintenance",
-        capacity_kwp: p.capacity_kwp,
-        current_power_kw: 0,
-        today_energy_kwh: 0,
-        monthly_energy_kwh: 0,
-        total_energy_mwh: 0,
-        device_count: 0,
-        efficiency: 0,
-        installation_date: p.installation_date || "—",
-      }))
-    : mockPlants;
+  const plants = (dbPlants || []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    location: p.location || "—",
+    status: p.status as "online" | "offline" | "warning" | "maintenance",
+    capacity_kwp: p.capacity_kwp,
+    installation_date: p.installation_date || "—",
+  }));
 
   return (
     <div className="space-y-6">
@@ -33,7 +22,6 @@ export default function Plants() {
           <h1 className="text-2xl font-bold tracking-tight">Usinas Solares</h1>
           <p className="text-sm text-muted-foreground">
             {isLoading ? "Carregando..." : `${plants.length} usinas cadastradas`}
-            {!hasReal && !isLoading && <span className="text-[10px] ml-2 text-muted-foreground/60">(dados de demonstração)</span>}
           </p>
         </div>
         <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity">
@@ -44,6 +32,12 @@ export default function Plants() {
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : plants.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <Sun className="h-12 w-12 mx-auto mb-4 opacity-30" />
+          <p className="text-sm">Nenhuma usina cadastrada.</p>
+          <p className="text-xs mt-1">Configure uma integração em Configurações para sincronizar suas usinas.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -83,10 +77,6 @@ export default function Plants() {
               </div>
 
               <div className="flex items-center justify-between mt-4 pt-3 border-t text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  {plant.device_count} equipamentos
-                </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {plant.installation_date}
