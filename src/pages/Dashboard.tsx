@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData();
@@ -23,6 +24,8 @@ export default function Dashboard() {
     location: p.location || "—",
     status: p.status as "online" | "offline" | "warning" | "maintenance",
     capacity_kwp: p.capacity_kwp,
+    latitude: p.latitude,
+    longitude: p.longitude,
   }));
 
   const alerts = (dbAlerts || []).map((a) => ({
