@@ -151,6 +151,20 @@ serve(async (req) => {
         }
         break;
       }
+      case "apsystems": {
+        const apSession = await apsystems.authenticate(credentials);
+        switch (action) {
+          case "list_plants": result = await apsystems.listPlants(apSession); break;
+          case "list_devices":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await apsystems.listDevices(apSession, plant_external_id); break;
+          case "collect_energy":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await apsystems.collectEnergy(apSession, plant_external_id, device_serial); break;
+          default: throw new Error(`Unsupported action: ${action}`);
+        }
+        break;
+      }
       default:
         throw new Error(`Unsupported manufacturer: ${manufacturer}`);
     }
