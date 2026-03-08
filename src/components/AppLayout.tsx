@@ -26,7 +26,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span>{platformStats.plantsOnline} usinas online</span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
               <NotificationBell />
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-white">
