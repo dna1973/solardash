@@ -31,13 +31,6 @@ interface Property {
   status: "surplus" | "deficit" | "balanced";
 }
 
-const mockProperties: Property[] = [
-  { id: "1", name: "Sede Administrativa", address: "Av. Paulista, 1000 - São Paulo, SP", type: "commercial", plant_name: "Usina Solar Campinas I", monthly_consumption_kwh: 12500, monthly_generation_kwh: 15200, monthly_cost_brl: 2800, savings_brl: 4200, contract_demand_kw: 75, utility: "CPFL Energia", status: "surplus" },
-  { id: "2", name: "Galpão Industrial", address: "Rod. Anhanguera, km 42 - Campinas, SP", type: "industrial", plant_name: "Solar Park Ribeirão", monthly_consumption_kwh: 45000, monthly_generation_kwh: 38000, monthly_cost_brl: 18500, savings_brl: 12600, contract_demand_kw: 250, utility: "Elektro", status: "deficit" },
-  { id: "3", name: "Filial Centro", address: "R. XV de Novembro, 250 - Curitiba, PR", type: "commercial", plant_name: "Usina Solar Curitiba", monthly_consumption_kwh: 8200, monthly_generation_kwh: 8100, monthly_cost_brl: 3200, savings_brl: 2900, contract_demand_kw: 50, utility: "Copel", status: "balanced" },
-  { id: "4", name: "Residência Diretor", address: "R. das Palmeiras, 55 - Goiânia, GO", type: "residential", plant_name: "Parque Fotovoltaico Goiás", monthly_consumption_kwh: 850, monthly_generation_kwh: 1200, monthly_cost_brl: 180, savings_brl: 520, utility: "Enel GO", status: "surplus" },
-  { id: "5", name: "Fazenda Agro Solar", address: "Zona Rural - Uberlândia, MG", type: "rural", plant_name: "Fazenda Solar MG", monthly_consumption_kwh: 22000, monthly_generation_kwh: 18500, monthly_cost_brl: 9800, savings_brl: 6200, contract_demand_kw: 120, utility: "CEMIG", status: "deficit" },
-];
 
 const typeLabels: Record<string, string> = {
   residential: "Residencial",
