@@ -192,9 +192,44 @@ export async function authenticate(
 
   const userId = String(back.user?.id || back.userId || "");
   const loginPlants = Array.isArray(back.data) ? back.data : [];
-  console.log(`Growatt: login OK, userId=${userId}, cookies=${cookieStr ? "yes" : "no"}, plants in login=${loginPlants.length}`);
+  console.log(`Growatt: API login OK, userId=${userId}, cookies=${cookieStr ? "yes" : "no"}, plants=${loginPlants.length}`);
 
-  return { cookie: cookieStr, userId, baseUrl, loginPlants };
+  // Now do a web login to get proper session cookies for data endpoints
+  console.log(`Growatt: fazendo login web para obter sessão válida...`);
+  const webLoginUrl = `${baseUrl}/login`;
+  try {
+    const webResp = await fetch(webLoginUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": AGENT,
+        ...(cookieStr ? { Cookie: cookieStr } : {}),
+      },
+      body: new URLSearchParams({
+        account: credentials.username,
+        password: hashedPwd,
+        validateCode: "",
+        isReadPact: "0",
+      }),
+      redirect: "manual",
+    });
+
+    const webCookies: string[] = [];
+    webResp.headers.forEach((value, key) => {
+      if (key.toLowerCase() === "set-cookie") {
+        webCookies.push(value.split(";")[0]);
+      }
+    });
+    
+    const allCookies = [...cookies, ...webCookies];
+    const finalCookieStr = allCookies.join("; ");
+    console.log(`Growatt: web login status=${webResp.status}, new cookies=${webCookies.length}, total=${allCookies.length}`);
+    
+    return { cookie: finalCookieStr, userId, baseUrl, loginPlants };
+  } catch (e) {
+    console.log(`Growatt: web login falhou: ${e}, usando cookies da API`);
+    return { cookie: cookieStr, userId, baseUrl, loginPlants };
+  }
 }
 
 async function authenticateLegacy(
