@@ -213,16 +213,24 @@ export function IntegrationManager() {
   return (
     <Card className="shadow-card border-border/50">
       <CardHeader className="pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Plug className="w-5 h-5 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Plug className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Integrações de Fabricantes</CardTitle>
+              <CardDescription className="text-xs">
+                Conecte inversores Growatt, SolarEdge, Fronius e mais
+              </CardDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-base">Integrações de Fabricantes</CardTitle>
-            <CardDescription className="text-xs">
-              Conecte inversores Growatt, SolarEdge, Fronius e mais
-            </CardDescription>
-          </div>
+          {savedIntegrations.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleSyncNow} disabled={syncing}>
+              {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              Sincronizar
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
