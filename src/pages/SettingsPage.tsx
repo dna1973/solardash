@@ -1,14 +1,6 @@
-import { Settings, Globe, Bell, Database, Shield } from "lucide-react";
+import { Settings, Bell, Database, Shield } from "lucide-react";
 import { motion } from "framer-motion";
-
-const integrations = [
-  { name: "Huawei FusionSolar", status: "connected", color: "text-primary" },
-  { name: "SolarEdge Monitoring", status: "connected", color: "text-primary" },
-  { name: "Growatt Server", status: "pending", color: "text-energy-yellow" },
-  { name: "Fronius Solar API", status: "disconnected", color: "text-muted-foreground" },
-  { name: "GoodWe SEMS Portal", status: "disconnected", color: "text-muted-foreground" },
-  { name: "SMA Sunny Portal", status: "disconnected", color: "text-muted-foreground" },
-];
+import { IntegrationManager } from "@/components/IntegrationManager";
 
 export default function SettingsPage() {
   return (
@@ -19,23 +11,8 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Integrations */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl bg-card p-5 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Globe className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold">Integrações de Fabricantes</h3>
-          </div>
-          <div className="space-y-3">
-            {integrations.map((integ) => (
-              <div key={integ.name} className="flex items-center justify-between py-2 border-b last:border-0">
-                <span className="text-sm font-medium">{integ.name}</span>
-                <span className={`text-xs font-medium ${integ.color}`}>
-                  {integ.status === 'connected' ? '● Conectado' : integ.status === 'pending' ? '◐ Pendente' : '○ Desconectado'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        {/* Integration Manager */}
+        <IntegrationManager />
 
         {/* Settings sections */}
         <div className="space-y-4">
