@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Sun,
   Cpu,
-  AlertTriangle,
   FileBarChart,
   Zap,
   Building2,
