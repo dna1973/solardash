@@ -111,22 +111,3 @@ export function useEnergyData(plantId?: string) {
     },
   });
 }
-  return useQuery({
-    queryKey: ["energy_data", plantId],
-    queryFn: async () => {
-      let query = supabase
-        .from("energy_data")
-        .select("*")
-        .order("timestamp", { ascending: true })
-        .limit(500);
-
-      if (plantId) {
-        query = query.eq("plant_id", plantId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-  });
-}
