@@ -444,29 +444,29 @@ export async function collectEnergy(
     "X-Requested-With": "XMLHttpRequest",
   };
 
-  // Try multiple endpoints to get current energy data
+  // Try multiple endpoints to get current energy data — use GET with query params
   const endpoints = [
-    // 1. PlantDetailAPI.do — most reliable
+    // 1. PlantDetailAPI.do (GET) — most reliable on server.growatt.com
     {
-      url: `${session.baseUrl}/PlantDetailAPI.do`,
-      method: "POST" as const,
-      body: `plantId=${plantId}`,
+      url: `${session.baseUrl}/PlantDetailAPI.do?plantId=${plantId}`,
+      method: "GET" as const,
     },
-    // 2. newPlantDetailAPI.do  
+    // 2. newPlantDetailAPI.do (GET)
     {
-      url: `${session.baseUrl}/newPlantDetailAPI.do`,
-      method: "POST" as const,
-      body: `plantId=${plantId}`,
+      url: `${session.baseUrl}/newPlantDetailAPI.do?plantId=${plantId}`,
+      method: "GET" as const,
     },
-    // 3. panel/getPlantData — works on some servers
+    // 3. panel/getPlantData (POST with cookie)
     {
       url: `${session.baseUrl}/panel/getPlantData?plantId=${plantId}`,
-      method: "GET" as const,
+      method: "POST" as const,
+      body: `plantId=${plantId}`,
     },
-    // 4. newTwoPlantAPI.do with op=getAllDeviceListThree
+    // 4. newTwoPlantAPI.do
     {
       url: `${session.baseUrl}/newTwoPlantAPI.do?op=getAllDeviceListThree&plantId=${plantId}&pageNum=1&pageSize=10`,
-      method: "GET" as const,
+      method: "POST" as const,
+      body: "",
     },
   ];
 
