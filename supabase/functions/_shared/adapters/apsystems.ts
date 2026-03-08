@@ -113,12 +113,12 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
 }
 
 // End User API: GET /user/api/v2/systems/details/{sid}
+// Each ECU is mapped as a separate plant since they're at different physical locations
 export async function listPlants(session: APSystemsSession): Promise<NormalizedPlant[]> {
   if (!session.systemId) {
     throw new Error("APsystems End User API requer o System ID (sid). Configure-o nas credenciais da integração.");
   }
 
-  // End User API doesn't have a list-all endpoint; fetch details for the configured system
   const data = await apiRequest(session, `/user/api/v2/systems/details/${session.systemId}`);
 
   const sys = data.data;
@@ -127,26 +127,87 @@ export async function listPlants(session: APSystemsSession): Promise<NormalizedP
     return [];
   }
 
-  return [{
-    external_id: sys.sid || session.systemId,
-    name: sys.sid || `APsystems ${session.systemId}`,
-    location: undefined,
-    latitude: undefined,
-    longitude: undefined,
-    capacity_kwp: sys.capacity ? parseFloat(sys.capacity) : undefined,
-    status: mapStatus(sys.light),
-  }];
+  const ecus: string[] = sys.ecu || [];
+  const totalCapacity = sys.capacity ? parseFloat(sys.capacity) : 0;
+  const capacityPerEcu = ecus.length > 0 ? totalCapacity / ecus.length : totalCapacity;
+
+  if (ecus.length === 0) {
+    // Fallback: single plant if no ECU list
+    return [{
+      external_id: sys.sid || session.systemId,
+      name: `APsystems ${session.systemId}`,
+      capacity_kwp: totalCapacity,
+      status: mapStatus(sys.light),
+    }];
+  }
+
+  // Also fetch inverters to get per-ECU details
+  let ecuInverterMap: Record<string, any[]> = {};
+  try {
+    const invData = await apiRequest(session, `/user/api/v2/systems/inverters/${session.systemId}`);
+    const ecuList = invData.data || [];
+    if (Array.isArray(ecuList)) {
+      for (const ecu of ecuList) {
+        const ecuId = ecu.ecu_id || ecu.uid || "";
+        if (ecuId) {
+          ecuInverterMap[ecuId] = ecu.inverter || [];
+        }
+      }
+    }
+  } catch (e) {
+    console.log("apsystems: não conseguiu buscar inversores para detalhar ECUs:", e);
+  }
+
+  console.log(`apsystems: ${ecus.length} ECUs encontradas, mapeando como plantas separadas`);
+
+  return ecus.map((ecuId, idx) => {
+    const inverters = ecuInverterMap[ecuId] || [];
+    const ecuCapacity = inverters.length > 0
+      ? inverters.reduce((sum: number, inv: any) => sum + (inv.max_power ? parseFloat(inv.max_power) / 1000 : capacityPerEcu / ecus.length), 0)
+      : capacityPerEcu;
+
+    return {
+      external_id: `${session.systemId}_ECU_${ecuId}`,
+      name: `ECU ${ecuId}`,
+      capacity_kwp: Math.round(ecuCapacity * 100) / 100,
+      status: mapStatus(sys.light),
+    };
+  });
 }
 
 // End User API: GET /user/api/v2/systems/inverters/{sid}
+// Filters inverters belonging to the specific ECU (plant)
 export async function listDevices(session: APSystemsSession, plantId: string): Promise<NormalizedDevice[]> {
-  const data = await apiRequest(session, `/user/api/v2/systems/inverters/${plantId}`);
+  // plantId format: {sid}_ECU_{ecuId} or just {sid}
+  const ecuId = extractEcuId(plantId);
+  const sid = extractSid(session, plantId);
+
+  const data = await apiRequest(session, `/user/api/v2/systems/inverters/${sid}`);
 
   const ecus = data.data || [];
   const devices: NormalizedDevice[] = [];
 
   if (Array.isArray(ecus)) {
     for (const ecu of ecus) {
+      const thisEcuId = ecu.ecu_id || ecu.uid || "";
+      
+      // If we have an ECU filter, only include matching ECU's inverters
+      if (ecuId && thisEcuId && thisEcuId !== ecuId) continue;
+
+      // Add the ECU itself as a gateway device
+      if (thisEcuId) {
+        devices.push({
+          external_id: thisEcuId,
+          plant_external_id: plantId,
+          manufacturer: "apsystems",
+          model: "APsystems ECU",
+          serial_number: thisEcuId,
+          device_type: "gateway" as const,
+          status: "online" as const,
+          last_communication: undefined,
+        });
+      }
+
       const inverters = ecu.inverter || [];
       for (const inv of inverters) {
         devices.push({
@@ -164,6 +225,18 @@ export async function listDevices(session: APSystemsSession, plantId: string): P
   }
 
   return devices;
+}
+
+// Helper: extract ECU ID from plant external_id format "{sid}_ECU_{ecuId}"
+function extractEcuId(plantId: string): string | null {
+  const match = plantId.match(/_ECU_(.+)$/);
+  return match ? match[1] : null;
+}
+
+// Helper: extract system ID from plant external_id
+function extractSid(session: APSystemsSession, plantId: string): string {
+  const match = plantId.match(/^(.+?)_ECU_/);
+  return match ? match[1] : (session.systemId || plantId);
 }
 
 // End User API: GET /user/api/v2/systems/energy/{sid}?energy_level=hourly&date_range=yyyy-MM-dd
