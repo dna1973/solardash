@@ -2,6 +2,7 @@ import { usePlants } from "@/hooks/useSupabaseData";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
 import { Sun, MapPin, Zap, Calendar, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function Plants() {
   const { data: dbPlants, isLoading } = usePlants();
