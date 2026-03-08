@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   Zap,
+  Building2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -27,6 +28,7 @@ const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Usinas", url: "/plants", icon: Sun },
   { title: "Equipamentos", url: "/devices", icon: Cpu },
+  { title: "Consumo", url: "/consumption", icon: Building2 },
   { title: "Alertas", url: "/alerts", icon: AlertTriangle },
   { title: "Relatórios", url: "/reports", icon: FileBarChart },
   { title: "Usuários", url: "/users", icon: Users },
