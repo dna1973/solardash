@@ -1,7 +1,8 @@
 // APsystems EMA OpenAPI Adapter
 // Docs: Apsystems_OpenAPI_User_Manual_Installer_EN.pdf
 // Base URL: https://api.apsystemsema.com:9282
-// Auth: Signature-based (X-CA-AppId, X-CA-Timestamp, X-CA-Nonce, X-CA-Signature)
+// Auth: Signature-based (X-CA-AppId, X-CA-Timestamp, X-CA-Nonce, X-CA-Signature-Method, X-CA-Signature)
+// stringToSign = Timestamp + "/" + Nonce + "/" + AppId + "/" + RequestPath
 
 import type { AdapterCredentials, NormalizedPlant, NormalizedDevice, NormalizedEnergyData } from "../solar-types.ts";
 
@@ -23,13 +24,10 @@ export async function authenticate(credentials: AdapterCredentials): Promise<APS
   }
 
   console.log("apsystems: autenticando com appId:", appId.substring(0, 4) + "...");
-
-  // Validate credentials by making a test request
-  const session: APSystemsSession = { appId, appSecret, baseUrl };
-  return session;
+  return { appId, appSecret, baseUrl };
 }
 
-// Generate HMAC-SHA256 signature as required by APsystems OpenAPI
+// Generate HMAC-SHA256 signature per APsystems docs
 async function generateSignature(appSecret: string, stringToSign: string): Promise<string> {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(appSecret);
@@ -51,8 +49,12 @@ async function apiRequest(session: APSystemsSession, endpoint: string, body?: an
   const timestamp = String(Date.now());
   const nonce = generateNonce();
 
-  // Build string to sign: AppId + Timestamp + Nonce
-  const stringToSign = `${session.appId}${timestamp}${nonce}`;
+  // APsystems signature format from docs:
+  // stringToSign = Timestamp + "/" + Nonce + "/" + AppId + "/" + RequestPath
+  // RequestPath is the last segment or the full endpoint path
+  const stringToSign = `${timestamp}/${nonce}/${session.appId}/${endpoint}`;
+  console.log(`apsystems: stringToSign: ${stringToSign}`);
+
   const signature = await generateSignature(session.appSecret, stringToSign);
 
   const headers: Record<string, string> = {
@@ -60,6 +62,7 @@ async function apiRequest(session: APSystemsSession, endpoint: string, body?: an
     "X-CA-AppId": session.appId,
     "X-CA-Timestamp": timestamp,
     "X-CA-Nonce": nonce,
+    "X-CA-Signature-Method": "HmacSHA256",
     "X-CA-Signature": signature,
   };
 
@@ -70,12 +73,20 @@ async function apiRequest(session: APSystemsSession, endpoint: string, body?: an
 
   const url = `${session.baseUrl}${endpoint}`;
   console.log(`apsystems: ${method} ${url}`);
+  console.log(`apsystems: headers:`, JSON.stringify({ 
+    "X-CA-AppId": session.appId.substring(0, 4) + "...",
+    "X-CA-Timestamp": timestamp,
+    "X-CA-Nonce": nonce,
+    "X-CA-Signature-Method": "HmacSHA256",
+    "X-CA-Signature": signature.substring(0, 10) + "...",
+  }));
 
   const response = await fetch(url, options);
   const text = await response.text();
 
+  console.log(`apsystems: HTTP ${response.status}, body: ${text.substring(0, 500)}`);
+
   if (!response.ok) {
-    console.error(`apsystems: HTTP ${response.status} — ${text.substring(0, 300)}`);
     throw new Error(`APsystems API erro HTTP ${response.status}: ${text.substring(0, 200)}`);
   }
 
@@ -83,11 +94,8 @@ async function apiRequest(session: APSystemsSession, endpoint: string, body?: an
   try {
     data = JSON.parse(text);
   } catch {
-    console.error("apsystems: resposta não-JSON:", text.substring(0, 300));
-    throw new Error("APsystems retornou resposta não-JSON");
+    throw new Error(`APsystems retornou resposta não-JSON: ${text.substring(0, 100)}`);
   }
-
-  console.log(`apsystems: resposta:`, JSON.stringify(data).substring(0, 500));
 
   // APsystems uses "code": 0 for success
   if (data.code !== undefined && data.code !== 0 && data.code !== "0") {
