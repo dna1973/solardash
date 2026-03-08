@@ -1,4 +1,4 @@
-import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2 } from "lucide-react";
+import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
@@ -81,6 +81,9 @@ export default function Dashboard() {
             <TabsTrigger value="consumption" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Plug className="h-4 w-4" /> Consumo
             </TabsTrigger>
+            <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <MapIcon className="h-4 w-4" /> Mapa
+            </TabsTrigger>
           </TabsList>
 
           {/* GERAÇÃO */}
@@ -99,19 +102,6 @@ export default function Dashboard() {
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
             </div>
 
-            {/* Map */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
-              <h3 className="text-sm font-semibold mb-3">Mapa das Usinas</h3>
-              <div className="h-[360px] rounded-lg overflow-hidden border border-border">
-                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
-              </div>
-              <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary inline-block" /> Online</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-destructive inline-block" /> Offline</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-energy-orange inline-block" /> Alerta</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-energy-blue inline-block" /> Manutenção</span>
-              </div>
-            </motion.div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="xl:col-span-2 rounded-xl bg-card p-5 shadow-card">
@@ -191,6 +181,58 @@ export default function Dashboard() {
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
               <EnergyChart data={chartHourly} title="Geração vs Consumo — Hoje (kW)" dataKeys={["generation", "consumption"]} />
             </div>
+          </TabsContent>
+
+          {/* MAPA */}
+          <TabsContent value="map" className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <StatCard title="Total de Usinas" value={String(totalPlantsCount)} icon={Battery} variant="default" />
+              <StatCard title="Online" value={String(plantsOnline)} icon={Sun} variant="primary" />
+              <StatCard title="Offline" value={String(plants.filter(p => p.status === "offline").length)} icon={AlertTriangle} variant={plants.some(p => p.status === "offline") ? "warning" : "default"} />
+              <StatCard title="Com Coordenadas" value={String(plants.filter(p => p.latitude != null).length)} icon={MapIcon} variant="default" />
+            </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
+              <h3 className="text-sm font-semibold mb-3">Usinas em Pernambuco</h3>
+              <div className="h-[500px] rounded-lg overflow-hidden border border-border">
+                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
+              </div>
+              <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary inline-block" /> Online</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-destructive inline-block" /> Offline</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-energy-orange inline-block" /> Alerta</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-energy-blue inline-block" /> Manutenção</span>
+              </div>
+            </motion.div>
+
+            {/* Plant list below map */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-muted-foreground">
+                      <th className="text-left py-2 font-medium">Usina</th>
+                      <th className="text-left py-2 font-medium">Local</th>
+                      <th className="text-right py-2 font-medium">Capacidade</th>
+                      <th className="text-center py-2 font-medium">Coordenadas</th>
+                      <th className="text-center py-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plants.map((plant) => (
+                      <tr key={plant.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/plants/${plant.id}`)}>
+                        <td className="py-3 font-medium">{plant.name}</td>
+                        <td className="py-3 text-muted-foreground">{plant.location}</td>
+                        <td className="py-3 text-right font-mono text-xs">{plant.capacity_kwp} kWp</td>
+                        <td className="py-3 text-center font-mono text-xs text-muted-foreground">
+                          {plant.latitude != null ? `${plant.latitude.toFixed(4)}, ${plant.longitude?.toFixed(4)}` : "—"}
+                        </td>
+                        <td className="py-3 text-center"><PlantStatusBadge status={plant.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
           </TabsContent>
         </Tabs>
       )}
