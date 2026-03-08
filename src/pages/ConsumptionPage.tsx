@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Building2, Plus, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt } from "lucide-react";
+import { Building2, Plus, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,8 @@ import { StatCard } from "@/components/StatCard";
 import { BillImportDialog } from "@/components/BillImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 
 interface EnergyBill {
   id: string;
@@ -83,6 +85,77 @@ export default function ConsumptionPage() {
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
   const billsTotalGeneration = filteredBills.reduce((s, b) => s + (b.generation_kwh || 0), 0);
   const billsTotalAmount = filteredBills.reduce((s, b) => s + (b.amount_brl || 0), 0);
+
+  const getBillsExportData = () =>
+    filteredBills.map((b) => ({
+      "Imóvel": b.property_name || "—",
+      "Endereço": b.address || "—",
+      "UC": b.account_number || "—",
+      "Concessionária": b.utility_company || "—",
+      "Mês Ref.": b.reference_month || "—",
+      "Consumo (kWh)": b.consumption_kwh || 0,
+      "Geração (kWh)": b.generation_kwh || 0,
+      "Valor (R$)": b.amount_brl || 0,
+      "Tarifa": b.tariff_type || "—",
+    }));
+
+  const exportExcel = () => {
+    const data = getBillsExportData();
+    if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contas");
+    XLSX.writeFile(wb, "contas-energia.xlsx");
+    toast.success("Excel exportado!");
+  };
+
+  const exportPDF = () => {
+    const data = getBillsExportData();
+    if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const headers = Object.keys(data[0]);
+    const colWidths = [40, 45, 25, 30, 22, 25, 25, 25, 20];
+    const startX = 10;
+    let y = 15;
+
+    doc.setFontSize(14);
+    doc.text("Contas de Energia Importadas", startX, y);
+    y += 10;
+
+    // Header row
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    headers.forEach((h, i) => {
+      const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+      doc.text(h, x, y);
+    });
+    y += 5;
+    doc.setDrawColor(200);
+    doc.line(startX, y - 3, 287, y - 3);
+
+    // Data rows
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    data.forEach((row) => {
+      if (y > 190) { doc.addPage(); y = 15; }
+      const values = Object.values(row);
+      values.forEach((v, i) => {
+        const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+        const text = typeof v === "number" ? v.toLocaleString("pt-BR", { minimumFractionDigits: v % 1 === 0 ? 0 : 2 }) : String(v);
+        doc.text(text.substring(0, 25), x, y);
+      });
+      y += 4.5;
+    });
+
+    // Totals
+    y += 3;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text(`Consumo Total: ${(billsTotalConsumption / 1000).toFixed(1)} MWh  |  Geração Total: ${(billsTotalGeneration / 1000).toFixed(1)} MWh  |  Valor Total: R$ ${billsTotalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, startX, y);
+
+    doc.save("contas-energia.pdf");
+    toast.success("PDF exportado!");
+  };
 
   // Aggregate bills by property for the "Imóveis" tab
   const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number }>();
@@ -276,6 +349,12 @@ export default function ConsumptionPage() {
               </SelectContent>
             </Select>
             <div className="flex-1" />
+            <Button variant="outline" size="sm" className="gap-2" onClick={exportExcel}>
+              <Download className="w-4 h-4" /> Excel
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={exportPDF}>
+              <Download className="w-4 h-4" /> PDF
+            </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
               <FileUp className="w-4 h-4" /> Importar Nova Conta
             </Button>
