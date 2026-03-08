@@ -122,15 +122,15 @@ function normalizeUrl(url: string): string {
 const AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
-async function fetchJsonVerbose(url: string, opts: RequestInit, label: string): Promise<any> {
+async function fetchJson(url: string, opts: RequestInit): Promise<any> {
   const resp = await fetch(url, opts);
   const text = await resp.text();
   try {
     const json = JSON.parse(text);
-    console.log(`Growatt [${label}]: JSON (${text.length} chars): ${text.substring(0, 600)}`);
+    console.log(`Growatt fetchJson OK ${url.split("?")[0].split("/").pop()}: ${text.substring(0, 500)}`);
     return json;
   } catch {
-    console.log(`Growatt [${label}]: não-JSON (${text.length} chars): ${text.substring(0, 200)}`);
+    console.log(`Growatt fetchJson FAIL ${url.split("?")[0].split("/").pop()} (${text.length} chars): ${text.substring(0, 150)}`);
     return null;
   }
 }
