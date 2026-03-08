@@ -2,3 +2,6 @@ project_id = "oonatblrieucuchhqzgq"
 
 [functions.detect-anomalies]
 verify_jwt = false
+
+[functions.solar-collector]
+verify_jwt = false
