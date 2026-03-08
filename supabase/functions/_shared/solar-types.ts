@@ -58,7 +58,10 @@ export interface CollectorRequest {
   credentials: AdapterCredentials;
   plant_external_id?: string;
   device_serial?: string;
-  action: "list_plants" | "list_devices" | "collect_energy" | "device_status";
+  action: "list_plants" | "list_devices" | "collect_energy" | "collect_historical" | "device_status";
+  start_date?: string;
+  end_date?: string;
+  level?: "daily" | "monthly";
 }
 
 // Adapter interface contract - each manufacturer must implement these
