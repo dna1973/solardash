@@ -145,8 +145,9 @@ export default function ConsumptionPage() {
               </div>
               <Button className="w-full gradient-primary">Cadastrar</Button>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Summary Stats */}
