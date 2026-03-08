@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { BillImportDialog } from "@/components/BillImportDialog";
+import { toast } from "sonner";
 
 interface Property {
   id: string;
