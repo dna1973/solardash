@@ -147,8 +147,8 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
                 scrollWheelZoom={true}
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> | HOT'
-                  url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                  url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"
                 />
                 <MapClickHandler onMapClick={handleMapClick} />
                 {lat !== null && lng !== null && <Marker position={[lat, lng]} />}
