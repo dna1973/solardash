@@ -302,6 +302,7 @@ export type Database = {
           created_at: string
           id: string
           installation_date: string | null
+          integrator: string | null
           latitude: number | null
           location: string | null
           longitude: number | null
@@ -316,6 +317,7 @@ export type Database = {
           created_at?: string
           id?: string
           installation_date?: string | null
+          integrator?: string | null
           latitude?: number | null
           location?: string | null
           longitude?: number | null
@@ -330,6 +332,7 @@ export type Database = {
           created_at?: string
           id?: string
           installation_date?: string | null
+          integrator?: string | null
           latitude?: number | null
           location?: string | null
           longitude?: number | null

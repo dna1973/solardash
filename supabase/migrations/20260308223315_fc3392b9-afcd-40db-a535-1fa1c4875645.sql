@@ -1,0 +1,1 @@
+ALTER TABLE public.plants ADD COLUMN integrator text DEFAULT NULL;
