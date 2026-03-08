@@ -326,7 +326,7 @@ async function syncIntegration(
       }
 
       for (const entry of energyData) {
-        await supabase.from("energy_data").insert({
+        const { error: upsertErr } = await supabase.from("energy_data").upsert({
           plant_id: plantId,
           device_id: null,
           timestamp: entry.timestamp,
@@ -338,8 +338,8 @@ async function syncIntegration(
           current: entry.current || null,
           temperature: entry.temperature || null,
           status: entry.status || "ok",
-        });
-        energyPoints++;
+        }, { onConflict: "plant_id,timestamp", ignoreDuplicates: true });
+        if (!upsertErr) energyPoints++;
       }
     } catch (e) {
       console.error(`syncIntegration: erro ao coletar energia de ${plant.name}: ${e}`);
