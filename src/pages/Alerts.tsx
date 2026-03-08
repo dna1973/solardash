@@ -26,7 +26,7 @@ const typeConfig: Record<string, { icon: any; bg: string; border: string; iconCo
   info: { icon: Info, bg: "bg-energy-blue-light", border: "border-l-energy-blue", iconColor: "text-energy-blue", label: "Info" },
 };
 
-export default function Alerts() {
+export default function Alerts({ embedded = false }: { embedded?: boolean }) {
   const { data: dbAlerts, isLoading } = useAlerts();
   const { toast } = useToast();
   const queryClient = useQueryClient();
