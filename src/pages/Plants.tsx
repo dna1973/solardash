@@ -1,6 +1,6 @@
 import { usePlants } from "@/hooks/useSupabaseData";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
-import { Sun, MapPin, Zap, Calendar, Loader2 } from "lucide-react";
+import { Sun, MapPin, Zap, Calendar, Loader2, Factory, Wrench } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -8,14 +8,20 @@ export default function Plants() {
   const navigate = useNavigate();
   const { data: dbPlants, isLoading } = usePlants();
 
-  const plants = (dbPlants || []).map((p) => ({
-    id: p.id,
-    name: p.name,
-    location: p.location || "—",
-    status: p.status as "online" | "offline" | "warning" | "maintenance",
-    capacity_kwp: p.capacity_kwp,
-    installation_date: p.installation_date || "—",
-  }));
+  const plants = (dbPlants || []).map((p: any) => {
+    const devices = p.devices || [];
+    const manufacturers = [...new Set(devices.map((d: any) => d.manufacturer).filter(Boolean))];
+    return {
+      id: p.id,
+      name: p.name,
+      location: p.location || "—",
+      status: p.status as "online" | "offline" | "warning" | "maintenance",
+      capacity_kwp: p.capacity_kwp,
+      installation_date: p.installation_date || "—",
+      manufacturer: manufacturers.join(", ") || "—",
+      integrator: p.integrator || "—",
+    };
+  });
 
   return (
     <div className="space-y-6">
