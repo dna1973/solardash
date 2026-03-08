@@ -16,16 +16,16 @@ interface APSystemsSession {
 }
 
 export async function authenticate(credentials: AdapterCredentials): Promise<APSystemsSession> {
-  const appId = credentials.api_key;
-  const appSecret = credentials.token;
-  const baseUrl = credentials.base_url || BASE_URL;
-  const systemId = credentials.system_id || credentials.plant_id;
+  const appId = (credentials.api_key || "").trim();
+  const appSecret = (credentials.token || "").trim();
+  const baseUrl = (credentials.base_url || BASE_URL).trim();
+  const systemId = (credentials.system_id || credentials.plant_id || "").trim() || undefined;
 
   if (!appId || !appSecret) {
     throw new Error("APsystems requer App ID e App Secret da OpenAPI");
   }
 
-  console.log("apsystems: autenticando com appId:", appId.substring(0, 4) + "...");
+  console.log("apsystems: autenticando com appId:", appId.substring(0, 4) + "..., appSecret length:", appSecret.length);
   return { appId, appSecret, baseUrl, systemId };
 }
 
@@ -52,9 +52,12 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
   const nonce = generateNonce();
   const signatureMethod = "HmacSHA256";
 
-  // APsystems End User docs Section 2.2.2:
+  // APsystems docs Section 2.2.2:
   // stringToSign = X-CA-Timestamp + "/" + X-CA-Nonce + "/" + X-CA-AppId + "/" + RequestPath + "/" + HTTPMethod + "/" + X-CA-Signature-Method
-  const stringToSign = `${timestamp}/${nonce}/${session.appId}/${endpoint}/${method}/${signatureMethod}`;
+  // "RequestPath" = "The last segment of the path" (NOT the full path)
+  const pathParts = endpoint.split("/").filter(Boolean);
+  const requestPath = pathParts[pathParts.length - 1] || endpoint;
+  const stringToSign = `${timestamp}/${nonce}/${session.appId}/${requestPath}/${method}/${signatureMethod}`;
   console.log(`apsystems: stringToSign: ${stringToSign}`);
 
   const signature = await generateSignature(session.appSecret, stringToSign);
