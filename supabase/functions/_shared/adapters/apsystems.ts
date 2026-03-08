@@ -1,43 +1,66 @@
 // APsystems EMA OpenAPI Adapter
-// Docs: https://file.apsystemsema.com:8083/apsystems/resource/openapi/Apsystems_OpenAPI_User_Manual_Installer_EN.pdf
+// Docs: Apsystems_OpenAPI_User_Manual_Installer_EN.pdf
 // Base URL: https://api.apsystemsema.com:9282
+// Auth: Signature-based (X-CA-AppId, X-CA-Timestamp, X-CA-Nonce, X-CA-Signature)
 
 import type { AdapterCredentials, NormalizedPlant, NormalizedDevice, NormalizedEnergyData } from "../solar-types.ts";
 
 const BASE_URL = "https://api.apsystemsema.com:9282";
 
 interface APSystemsSession {
-  token: string;
+  appId: string;
+  appSecret: string;
   baseUrl: string;
 }
 
 export async function authenticate(credentials: AdapterCredentials): Promise<APSystemsSession> {
-  const baseUrl = credentials.base_url || BASE_URL;
   const appId = credentials.api_key;
   const appSecret = credentials.token;
+  const baseUrl = credentials.base_url || BASE_URL;
 
   if (!appId || !appSecret) {
     throw new Error("APsystems requer App ID e App Secret da OpenAPI");
   }
 
-  // The APsystems OpenAPI uses appId + appSecret for authentication
-  // The token is constructed as Bearer authorization
-  // Some versions use direct appId/appSecret in headers
-  console.log("apsystems: autenticando com appId:", appId?.substring(0, 4) + "...");
+  console.log("apsystems: autenticando com appId:", appId.substring(0, 4) + "...");
 
-  return {
-    token: `${appId}:${appSecret}`,
-    baseUrl,
-  };
+  // Validate credentials by making a test request
+  const session: APSystemsSession = { appId, appSecret, baseUrl };
+  return session;
+}
+
+// Generate HMAC-SHA256 signature as required by APsystems OpenAPI
+async function generateSignature(appSecret: string, stringToSign: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(appSecret);
+  const msgData = encoder.encode(stringToSign);
+
+  const key = await crypto.subtle.importKey(
+    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign("HMAC", key, msgData);
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
+function generateNonce(): string {
+  return crypto.randomUUID().replace(/-/g, "");
 }
 
 async function apiRequest(session: APSystemsSession, endpoint: string, body?: any, method = "POST"): Promise<any> {
-  const [appId, appSecret] = session.token.split(":");
+  const timestamp = String(Date.now());
+  const nonce = generateNonce();
+
+  // Build string to sign: AppId + Timestamp + Nonce
+  const stringToSign = `${session.appId}${timestamp}${nonce}`;
+  const signature = await generateSignature(session.appSecret, stringToSign);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "appId": appId,
-    "appSecret": appSecret,
+    "X-CA-AppId": session.appId,
+    "X-CA-Timestamp": timestamp,
+    "X-CA-Nonce": nonce,
+    "X-CA-Signature": signature,
   };
 
   const options: RequestInit = { method, headers };
@@ -49,32 +72,40 @@ async function apiRequest(session: APSystemsSession, endpoint: string, body?: an
   console.log(`apsystems: ${method} ${url}`);
 
   const response = await fetch(url, options);
-  
+  const text = await response.text();
+
   if (!response.ok) {
-    const text = await response.text();
-    console.error(`apsystems: HTTP ${response.status} — ${text}`);
-    throw new Error(`APsystems API erro ${response.status}: ${text.substring(0, 200)}`);
+    console.error(`apsystems: HTTP ${response.status} — ${text.substring(0, 300)}`);
+    throw new Error(`APsystems API erro HTTP ${response.status}: ${text.substring(0, 200)}`);
   }
 
-  const data = await response.json();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error("apsystems: resposta não-JSON:", text.substring(0, 300));
+    throw new Error("APsystems retornou resposta não-JSON");
+  }
+
   console.log(`apsystems: resposta:`, JSON.stringify(data).substring(0, 500));
 
-  if (data.code && data.code !== "0" && data.code !== 0) {
-    throw new Error(`APsystems API erro: ${data.message || data.msg || JSON.stringify(data)}`);
+  // APsystems uses "code": 0 for success
+  if (data.code !== undefined && data.code !== 0 && data.code !== "0") {
+    const msg = data.message || data.msg || `code ${data.code}`;
+    throw new Error(`APsystems API erro: ${msg}`);
   }
 
   return data;
 }
 
 export async function listPlants(session: APSystemsSession): Promise<NormalizedPlant[]> {
-  // POST /installer/api/v2/systems
   const data = await apiRequest(session, "/installer/api/v2/systems", {
     page: 1,
     size: 100,
   });
 
   const systems = data.data?.systems || data.systems || data.data || [];
-  
+
   if (!Array.isArray(systems)) {
     console.log("apsystems: resposta inesperada para listPlants:", JSON.stringify(data).substring(0, 500));
     return [];
@@ -86,13 +117,12 @@ export async function listPlants(session: APSystemsSession): Promise<NormalizedP
     location: s.address || s.location || undefined,
     latitude: s.latitude ? parseFloat(s.latitude) : undefined,
     longitude: s.longitude ? parseFloat(s.longitude) : undefined,
-    capacity_kwp: s.capacity ? parseFloat(s.capacity) / 1000 : undefined, // W to kWp
+    capacity_kwp: s.capacity ? parseFloat(s.capacity) / 1000 : undefined,
     status: mapStatus(s.status),
   }));
 }
 
 export async function listDevices(session: APSystemsSession, plantId: string): Promise<NormalizedDevice[]> {
-  // GET /installer/api/v2/systems/inverters/{sid}
   const data = await apiRequest(session, `/installer/api/v2/systems/inverters/${plantId}`, undefined, "GET");
 
   const inverters = data.data?.inverters || data.inverters || data.data || [];
@@ -114,16 +144,14 @@ export async function listDevices(session: APSystemsSession, plantId: string): P
 }
 
 export async function collectEnergy(session: APSystemsSession, plantId: string, _deviceSerial?: string): Promise<NormalizedEnergyData[]> {
-  // POST /installer/api/v2/systems/energy/{sid}/today
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  
+  const today = new Date().toISOString().split("T")[0];
+
   let data: any;
   try {
     data = await apiRequest(session, `/installer/api/v2/systems/energy/${plantId}/today`, {
       date: today,
     });
   } catch {
-    // Fallback: try system-level data
     try {
       data = await apiRequest(session, `/installer/api/v2/systems/${plantId}/summary`, undefined, "GET");
     } catch (e2) {
@@ -133,12 +161,12 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
   }
 
   const entries = data.data?.energy || data.energy || [];
-  
+
   if (Array.isArray(entries) && entries.length > 0) {
     return entries.map((e: any) => ({
       plant_external_id: plantId,
       timestamp: e.timestamp || e.time || new Date().toISOString(),
-      generation_power_kw: e.power ? parseFloat(e.power) / 1000 : undefined, // W to kW
+      generation_power_kw: e.power ? parseFloat(e.power) / 1000 : undefined,
       energy_generated_kwh: e.energy ? parseFloat(e.energy) : undefined,
       consumption_power_kw: undefined,
       energy_consumed_kwh: undefined,
@@ -146,7 +174,6 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
     }));
   }
 
-  // If we got summary data instead
   if (data.data) {
     const summary = data.data;
     return [{
