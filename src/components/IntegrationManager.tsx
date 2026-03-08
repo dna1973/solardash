@@ -178,9 +178,14 @@ export function IntegrationManager() {
     setSaving(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("tenant_id")
+        .eq("user_id", user.id)
+        .limit(1)
         .single();
 
       if (!profile) throw new Error("Perfil não encontrado");
