@@ -255,6 +255,12 @@ export async function listPlants(
   session: GrowattSession,
   _baseUrl?: string
 ): Promise<NormalizedPlant[]> {
+  // If login already returned plants, use them directly
+  if (session.loginPlants && session.loginPlants.length > 0) {
+    console.log(`Growatt: usando ${session.loginPlants.length} planta(s) do login`);
+    return session.loginPlants.map(mapPlantResponse);
+  }
+
   const base = session.baseUrl;
   const headers: Record<string, string> = {
     Cookie: session.cookie,
