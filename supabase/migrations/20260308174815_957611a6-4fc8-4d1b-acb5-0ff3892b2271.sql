@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX energy_bills_unique_account_month ON public.energy_bills (tenant_id, account_number, reference_month) WHERE account_number IS NOT NULL AND reference_month IS NOT NULL;

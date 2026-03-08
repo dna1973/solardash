@@ -106,6 +106,24 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
   const saveData = async () => {
     setStep("saving");
     try {
+      // Check for duplicates before inserting
+      if (extracted.account_number && extracted.reference_month) {
+        const { data: existing } = await supabase
+          .from("energy_bills")
+          .select("id")
+          .eq("account_number", extracted.account_number)
+          .eq("reference_month", extracted.reference_month)
+          .maybeSingle();
+
+        if (existing) {
+          setErrorMsg(
+            `Já existe uma conta importada para UC ${extracted.account_number} no mês ${extracted.reference_month}.`
+          );
+          setStep("error");
+          return;
+        }
+      }
+
       const { error } = await supabase.from("energy_bills").insert({
         tenant_id: tenantId,
         property_name: extracted.property_name || null,
@@ -124,7 +142,14 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
         raw_ocr_data: extracted as any,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          throw new Error(
+            `Conta duplicada: UC ${extracted.account_number} / ${extracted.reference_month} já foi importada.`
+          );
+        }
+        throw error;
+      }
 
       setStep("done");
       toast.success("Conta importada com sucesso!");
