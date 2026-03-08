@@ -7,7 +7,7 @@ export function usePlants() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("plants")
-        .select("*")
+        .select("*, devices(manufacturer)")
         .order("name");
       if (error) throw error;
       return data || [];
