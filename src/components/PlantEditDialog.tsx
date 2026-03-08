@@ -48,8 +48,9 @@ function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
+    map.flyTo(center, zoom, { animate: true, duration: 1 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [center[0], center[1], zoom]);
   return null;
 }
 
