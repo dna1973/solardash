@@ -42,6 +42,8 @@ export interface AdapterCredentials {
   api_key?: string;
   token?: string;
   base_url?: string;
+  system_id?: string;
+  plant_id?: string;
 }
 
 export interface AdapterResponse<T> {
