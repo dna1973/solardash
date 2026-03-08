@@ -66,7 +66,7 @@ async function callManageUsers(action: string, params: Record<string, unknown>) 
   return data;
 }
 
-export default function UsersPage() {
+export default function UsersPage({ embedded = false }: { embedded?: boolean }) {
   const { data: users = [], isLoading } = useUsers();
   const { isAdmin, isLoading: roleLoading } = useUserRole();
   const { user: currentUser } = useAuth();
@@ -177,12 +177,19 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+        {!embedded && (
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+            <p className="text-sm text-muted-foreground">
+              {`${users.length} usuários cadastrados`}
+            </p>
+          </div>
+        )}
+        {embedded && (
           <p className="text-sm text-muted-foreground">
             {`${users.length} usuários cadastrados`}
           </p>
-        </div>
+        )}
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" /> Novo Usuário
         </Button>
