@@ -52,14 +52,15 @@ interface PlantsMapProps {
 export function PlantsMap({ plants, onPlantClick }: PlantsMapProps) {
   const plantsWithCoords = plants.filter((p) => p.latitude != null && p.longitude != null);
 
+  // Default: center of Pernambuco
   const center = useMemo<[number, number]>(() => {
-    if (plantsWithCoords.length === 0) return [-14.24, -51.93]; // Brazil center
+    if (plantsWithCoords.length === 0) return [-8.05, -34.87]; // Recife, PE
     const avgLat = plantsWithCoords.reduce((s, p) => s + p.latitude!, 0) / plantsWithCoords.length;
     const avgLng = plantsWithCoords.reduce((s, p) => s + p.longitude!, 0) / plantsWithCoords.length;
     return [avgLat, avgLng];
   }, [plantsWithCoords]);
 
-  const zoom = plantsWithCoords.length === 0 ? 4 : plantsWithCoords.length === 1 ? 13 : 8;
+  const zoom = plantsWithCoords.length === 0 ? 7 : plantsWithCoords.length === 1 ? 13 : 9;
 
   if (plantsWithCoords.length === 0) {
     return (
