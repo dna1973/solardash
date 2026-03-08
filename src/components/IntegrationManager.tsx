@@ -129,6 +129,38 @@ export function IntegrationManager() {
     }
   };
 
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Faça login primeiro");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solar-collector`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: "sync_all" }),
+        }
+      );
+      const result = await response.json();
+      if (result.success) {
+        toast({ title: "Sincronização concluída!", description: `${result.totalPlants || 0} planta(s) sincronizada(s), ${result.totalEnergy || 0} ponto(s) de energia.` });
+      } else {
+        toast({ title: "Erro na sincronização", description: result.error, variant: "destructive" });
+      }
+      await fetchSavedIntegrations();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedMfr) return;
     setSaving(true);
@@ -157,9 +189,12 @@ export function IntegrationManager() {
         });
       }
 
-      toast({ title: "Salvo!", description: `Credenciais ${selectedMfr.name} salvas com sucesso.` });
+      toast({ title: "Salvo!", description: `Credenciais ${selectedMfr.name} salvas. Iniciando sincronização...` });
       await fetchSavedIntegrations();
       setDialogOpen(false);
+
+      // Auto-sync after saving
+      handleSyncNow();
     } catch (err: any) {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
     } finally {
