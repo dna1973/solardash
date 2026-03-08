@@ -52,21 +52,9 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   balanced: { label: "Equilibrado", color: "text-energy-blue" },
 };
 
-// Mock hourly consumption data per property
-const hourlyConsumption = Array.from({ length: 24 }, (_, i) => ({
-  time: `${String(i).padStart(2, "0")}:00`,
-  generation: Math.round((i >= 6 && i <= 18 ? Math.sin(((i - 6) / 12) * Math.PI) : 0) * 45 * (0.85 + Math.random() * 0.15)),
-  consumption: Math.round(15 + Math.random() * 20 + (i >= 8 && i <= 18 ? 25 : 0)),
-}));
+// Mock hourly consumption data removed - will use real data when available
 
-const monthlyHistory = [
-  { time: "Out", generation: 14200, consumption: 12000 },
-  { time: "Nov", generation: 15800, consumption: 12500 },
-  { time: "Dez", generation: 16100, consumption: 13200 },
-  { time: "Jan", generation: 15500, consumption: 13800 },
-  { time: "Fev", generation: 14800, consumption: 12900 },
-  { time: "Mar", generation: 15200, consumption: 12500 },
-];
+
 
 interface EnergyBill {
   id: string;
