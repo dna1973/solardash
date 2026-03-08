@@ -283,6 +283,11 @@ async function syncIntegration(
         case "fronius":
           energyData = await fronius.collectEnergy(credentials, plant.external_id);
           break;
+        case "apsystems":
+          if (session) {
+            energyData = await apsystems.collectEnergy(session, plant.external_id);
+          }
+          break;
       }
 
       for (const entry of energyData) {
