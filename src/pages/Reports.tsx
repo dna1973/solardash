@@ -2,17 +2,18 @@ import { EnergyChart } from "@/components/EnergyChart";
 import { FileBarChart, Download, Leaf, Zap, TrendingUp, Loader2, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEnergyData } from "@/hooks/useSupabaseData";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Reports() {
   const { data: energyData = [], isLoading } = useEnergyData();
+  const { toast } = useToast();
 
   const { monthlyChart, monthlyGen, injectedEnergy, estimatedSavings, co2Monthly } = useMemo(() => {
     if (energyData.length === 0) {
       return { monthlyChart: [], monthlyGen: 0, injectedEnergy: 0, estimatedSavings: 0, co2Monthly: 0 };
     }
 
-    // Aggregate by month
     const monthMap = new Map<string, { generation: number; consumption: number }>();
     energyData.forEach((d) => {
       const date = new Date(d.timestamp);
@@ -50,6 +51,136 @@ export default function Reports() {
     };
   }, [energyData]);
 
+  const handleExportPDF = useCallback(async () => {
+    if (monthlyChart.length === 0) {
+      toast({ title: "Sem dados", description: "Não há dados para exportar.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      await import("jspdf-autotable");
+
+      const doc = new jsPDF();
+      const now = new Date().toLocaleDateString("pt-BR");
+
+      // Title
+      doc.setFontSize(18);
+      doc.setTextColor(34, 34, 34);
+      doc.text("Relatório Energético", 14, 22);
+      doc.setFontSize(10);
+      doc.setTextColor(120, 120, 120);
+      doc.text(`Gerado em ${now}`, 14, 30);
+
+      // Summary
+      doc.setFontSize(12);
+      doc.setTextColor(34, 34, 34);
+      doc.text("Resumo Mensal (média)", 14, 44);
+
+      const summaryData = [
+        ["Energia Gerada", `${(monthlyGen / 1000).toFixed(1)} MWh`],
+        ["Energia Injetada", `${(injectedEnergy / 1000).toFixed(1)} MWh`],
+        ["Economia Estimada", `R$ ${estimatedSavings.toFixed(0)}`],
+        ["CO₂ Evitado", `${co2Monthly.toFixed(1)} ton`],
+      ];
+
+      (doc as any).autoTable({
+        startY: 48,
+        head: [["Indicador", "Valor"]],
+        body: summaryData,
+        theme: "grid",
+        headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 10 },
+        styles: { fontSize: 10, cellPadding: 4 },
+        margin: { left: 14, right: 14 },
+      });
+
+      // Monthly table
+      const tableY = (doc as any).lastAutoTable.finalY + 12;
+      doc.setFontSize(12);
+      doc.text("Dados Mensais", 14, tableY);
+
+      const tableData = monthlyChart.map((row) => [
+        row.time,
+        `${row.generation.toLocaleString("pt-BR")} kWh`,
+        `${row.consumption.toLocaleString("pt-BR")} kWh`,
+        `${Math.max(0, row.generation - row.consumption).toLocaleString("pt-BR")} kWh`,
+      ]);
+
+      (doc as any).autoTable({
+        startY: tableY + 4,
+        head: [["Mês", "Geração", "Consumo", "Injetada"]],
+        body: tableData,
+        theme: "striped",
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 10 },
+        styles: { fontSize: 9, cellPadding: 3 },
+        margin: { left: 14, right: 14 },
+      });
+
+      doc.save(`relatorio-energetico-${now.replace(/\//g, "-")}.pdf`);
+      toast({ title: "PDF exportado!", description: "O relatório foi baixado com sucesso." });
+    } catch (err: any) {
+      console.error("PDF export error:", err);
+      toast({ title: "Erro ao exportar PDF", description: err.message, variant: "destructive" });
+    }
+  }, [monthlyChart, monthlyGen, injectedEnergy, estimatedSavings, co2Monthly, toast]);
+
+  const handleExportExcel = useCallback(async () => {
+    if (monthlyChart.length === 0) {
+      toast({ title: "Sem dados", description: "Não há dados para exportar.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+
+      // Summary sheet
+      const summaryRows = [
+        { Indicador: "Energia Gerada (média/mês)", Valor: `${(monthlyGen / 1000).toFixed(1)} MWh` },
+        { Indicador: "Energia Injetada (média/mês)", Valor: `${(injectedEnergy / 1000).toFixed(1)} MWh` },
+        { Indicador: "Economia Estimada", Valor: `R$ ${estimatedSavings.toFixed(0)}` },
+        { Indicador: "CO₂ Evitado (média/mês)", Valor: `${co2Monthly.toFixed(1)} ton` },
+      ];
+      const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
+
+      // Monthly data sheet
+      const monthlyRows = monthlyChart.map((row) => ({
+        Mês: row.time,
+        "Geração (kWh)": row.generation,
+        "Consumo (kWh)": row.consumption,
+        "Injetada (kWh)": Math.max(0, row.generation - row.consumption),
+      }));
+      const monthlySheet = XLSX.utils.json_to_sheet(monthlyRows);
+
+      // Raw data sheet (last 500 records)
+      const rawRows = energyData.slice(0, 500).map((d) => ({
+        Data: new Date(d.timestamp).toLocaleString("pt-BR"),
+        "Geração (kWh)": d.energy_generated_kwh || 0,
+        "Consumo (kWh)": d.energy_consumed_kwh || 0,
+        "Potência Geração (kW)": d.generation_power_kw || 0,
+        "Potência Consumo (kW)": d.consumption_power_kw || 0,
+        Status: d.status || "",
+      }));
+      const rawSheet = XLSX.utils.json_to_sheet(rawRows);
+
+      // Set column widths
+      summarySheet["!cols"] = [{ wch: 30 }, { wch: 20 }];
+      monthlySheet["!cols"] = [{ wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      rawSheet["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 10 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, summarySheet, "Resumo");
+      XLSX.utils.book_append_sheet(wb, monthlySheet, "Mensal");
+      XLSX.utils.book_append_sheet(wb, rawSheet, "Dados Brutos");
+
+      const now = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+      XLSX.writeFile(wb, `relatorio-energetico-${now}.xlsx`);
+      toast({ title: "Excel exportado!", description: "A planilha foi baixada com sucesso." });
+    } catch (err: any) {
+      console.error("Excel export error:", err);
+      toast({ title: "Erro ao exportar Excel", description: err.message, variant: "destructive" });
+    }
+  }, [monthlyChart, monthlyGen, injectedEnergy, estimatedSavings, co2Monthly, energyData, toast]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -68,10 +199,18 @@ export default function Reports() {
           <p className="text-sm text-muted-foreground">Análise energética e exportação de dados</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors">
+          <button
+            onClick={handleExportPDF}
+            disabled={!hasData}
+            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Download className="h-4 w-4" /> PDF
           </button>
-          <button className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors">
+          <button
+            onClick={handleExportExcel}
+            disabled={!hasData}
+            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Download className="h-4 w-4" /> Excel
           </button>
         </div>
