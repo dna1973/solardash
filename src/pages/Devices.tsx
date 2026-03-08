@@ -1,7 +1,6 @@
 import { useDevices } from "@/hooks/useSupabaseData";
-import { devices as mockDevices } from "@/data/mockData";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
-import { Cpu, Loader2 } from "lucide-react";
+import { Cpu, Loader2, ServerOff } from "lucide-react";
 import { motion } from "framer-motion";
 
 const deviceTypeLabels: Record<string, string> = {
@@ -15,21 +14,15 @@ const deviceTypeLabels: Record<string, string> = {
 export default function Devices() {
   const { data: dbDevices, isLoading } = useDevices();
 
-  const hasReal = dbDevices && dbDevices.length > 0;
-
-  const devices = hasReal
-    ? dbDevices.map((d) => ({
-        id: d.id,
-        plant_name: (d as any).plants?.name || "—",
-        manufacturer: d.manufacturer,
-        model: d.model,
-        serial_number: d.serial_number,
-        device_type: d.device_type,
-        status: d.status as "online" | "offline" | "warning",
-        power_kw: 0,
-        temperature: 0,
-      }))
-    : mockDevices;
+  const devices = (dbDevices || []).map((d) => ({
+    id: d.id,
+    plant_name: (d as any).plants?.name || "—",
+    manufacturer: d.manufacturer,
+    model: d.model,
+    serial_number: d.serial_number,
+    device_type: d.device_type,
+    status: d.status as "online" | "offline" | "warning",
+  }));
 
   return (
     <div className="space-y-6">
