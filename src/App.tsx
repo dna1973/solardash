@@ -66,7 +66,7 @@ const AppRoutes = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/plants" element={<Plants />} />
                 <Route path="/plants/:id" element={<PlantDetail />} />
-                <Route path="/devices" element={<Devices />} />
+                
                 <Route path="/consumption" element={<ConsumptionPage />} />
                 <Route path="/alerts" element={<Navigate to="/plants?tab=alertas" replace />} />
                 <Route path="/reports" element={<Reports />} />
