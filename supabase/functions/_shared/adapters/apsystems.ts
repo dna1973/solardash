@@ -52,10 +52,11 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
   const nonce = generateNonce();
   const signatureMethod = "HmacSHA256";
 
-  // APsystems End User docs Section 2.2.2:
+  // APsystems docs Section 2.2.2:
   // stringToSign = X-CA-Timestamp + "/" + X-CA-Nonce + "/" + X-CA-AppId + "/" + RequestPath + "/" + HTTPMethod + "/" + X-CA-Signature-Method
-  // RequestPath must NOT have leading slash to avoid double-slash in signature
-  const requestPath = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+  // "RequestPath" = "The last segment of the path" (NOT the full path)
+  const pathParts = endpoint.split("/").filter(Boolean);
+  const requestPath = pathParts[pathParts.length - 1] || endpoint;
   const stringToSign = `${timestamp}/${nonce}/${session.appId}/${requestPath}/${method}/${signatureMethod}`;
   console.log(`apsystems: stringToSign: ${stringToSign}`);
 
