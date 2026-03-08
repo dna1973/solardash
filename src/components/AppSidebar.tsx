@@ -8,9 +8,13 @@ import {
   Settings,
   Zap,
   Building2,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +43,16 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário";
+  const avatarUrl = user?.user_metadata?.avatar_url;
+  const initials = displayName
+    .split(" ")
+    .map((n: string) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <Sidebar collapsible="icon">
@@ -89,11 +103,46 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        {!collapsed && (
-          <div className="text-[11px] text-sidebar-foreground/40">
-            © 2026 SolarHub Platform
-          </div>
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarImage src={avatarUrl} alt={displayName} />
+            <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-sidebar-accent-foreground truncate">
+                {displayName}
+              </p>
+              <p className="text-[10px] text-sidebar-foreground/50 truncate">
+                {user?.email}
+              </p>
+            </div>
+          )}
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 text-sidebar-foreground/50 hover:text-destructive"
+              onClick={signOut}
+              title="Sair"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+        {collapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 mx-auto text-sidebar-foreground/50 hover:text-destructive"
+            onClick={signOut}
+            title="Sair"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+          </Button>
         )}
       </SidebarFooter>
     </Sidebar>
