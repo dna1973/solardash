@@ -36,7 +36,10 @@ export async function authenticate(
     throw new Error("Growatt: credenciais (usuário e senha) são obrigatórias");
   }
 
-  const baseUrl = credentials.base_url || GROWATT_SERVERS.global;
+  let baseUrl = (credentials.base_url || GROWATT_SERVERS.global).trim().replace(/\/+$/, "");
+  if (baseUrl && !baseUrl.startsWith("http")) {
+    baseUrl = `https://${baseUrl}`;
+  }
 
   let response: Response;
   try {
