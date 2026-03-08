@@ -17,6 +17,7 @@ import ConsumptionPage from "./pages/ConsumptionPage";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import FullMap from "./pages/FullMap";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
