@@ -75,6 +75,7 @@ export default function ConsumptionPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = mockProperties.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.address.toLowerCase().includes(search.toLowerCase());
