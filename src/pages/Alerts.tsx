@@ -1,5 +1,4 @@
 import { useAlerts } from "@/hooks/useSupabaseData";
-import { alerts as mockAlerts } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, CheckCircle2, Info, XCircle, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -35,18 +34,14 @@ export default function Alerts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
-  const hasReal = dbAlerts && dbAlerts.length > 0;
-
-  const alerts = hasReal
-    ? dbAlerts.map((a) => ({
-        id: a.id,
-        type: a.type as "critical" | "warning" | "info",
-        message: a.message,
-        plant_name: (a as any).plants?.name || "—",
-        resolved: a.resolved,
-        timestamp: a.created_at,
-      }))
-    : mockAlerts;
+  const alerts = (dbAlerts || []).map((a) => ({
+    id: a.id,
+    type: a.type as "critical" | "warning" | "info",
+    message: a.message,
+    plant_name: (a as any).plants?.name || "—",
+    resolved: a.resolved,
+    timestamp: a.created_at,
+  }));
 
   const sorted = [...alerts].sort((a, b) => {
     if (a.resolved !== b.resolved) return a.resolved ? 1 : -1;
@@ -166,7 +161,7 @@ export default function Alerts() {
           <h1 className="text-2xl font-bold tracking-tight">Alertas</h1>
           <p className="text-sm text-muted-foreground">
             {isLoading ? "Carregando..." : `${activeCount} alertas ativos`}
-            {!hasReal && !isLoading && <span className="text-[10px] ml-2 text-muted-foreground/60">(dados de demonstração)</span>}
+            
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleCheckNow} disabled={checking}>
@@ -185,7 +180,7 @@ export default function Alerts() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              {hasReal && (
+              {sorted.length > 0 && (
                 <Checkbox
                   checked={sorted.length > 0 && selected.size === sorted.length}
                   onCheckedChange={toggleAll}
@@ -202,7 +197,7 @@ export default function Alerts() {
               </h2>
             </div>
 
-            {selected.size > 0 && hasReal && (
+            {selected.size > 0 && (
               <div className="flex items-center gap-2">
                 {selectedUnresolved.length > 0 && (
                   <Button variant="outline" size="sm" onClick={handleBulkResolve}>
@@ -248,7 +243,7 @@ export default function Alerts() {
                   transition={{ delay: i * 0.03 }}
                   className={`rounded-xl p-4 border-l-4 flex items-start gap-4 ${config.bg} ${config.border} ${alert.resolved ? "opacity-50" : ""} ${selected.has(alert.id) ? "ring-2 ring-primary/30" : ""}`}
                 >
-                  {hasReal && (
+                  {sorted.length > 0 && (
                     <Checkbox
                       checked={selected.has(alert.id)}
                       onCheckedChange={() => toggleSelect(alert.id)}
@@ -271,7 +266,7 @@ export default function Alerts() {
                       {alert.plant_name} • {new Date(alert.timestamp).toLocaleString("pt-BR")}
                     </p>
                   </div>
-                  {!alert.resolved && hasReal && (
+                  {!alert.resolved && (
                     <Button
                       variant="ghost"
                       size="sm"
