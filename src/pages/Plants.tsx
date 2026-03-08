@@ -49,6 +49,7 @@ export default function Plants() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
+              onClick={() => navigate(`/plants/${plant.id}`)}
               className="rounded-xl bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
