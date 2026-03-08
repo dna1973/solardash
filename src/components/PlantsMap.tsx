@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 const STATUS_COLORS: Record<string, string> = {
   online: "hsl(152, 60%, 42%)",
   offline: "hsl(0, 72%, 51%)",
-  warning: "hsl(25, 95%, 53%)",
+  warning: "hsl(45, 100%, 50%)",
   maintenance: "hsl(210, 80%, 55%)",
 };
 
