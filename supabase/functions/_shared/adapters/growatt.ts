@@ -257,12 +257,12 @@ async function fetchPlantDetail(
     "X-Requested-With": "XMLHttpRequest",
   };
 
-  // Try multiple endpoints for plant detail
+  // Try multiple endpoints for plant detail — use GET with query params
   const endpoints = [
-    { url: `${session.baseUrl}/panel/getPlantData?plantId=${plantId}`, method: "GET" as const },
-    { url: `${session.baseUrl}/PlantDetailAPI.do`, method: "POST" as const, body: `plantId=${plantId}` },
-    { url: `${session.baseUrl}/newPlantDetailAPI.do`, method: "POST" as const, body: `plantId=${plantId}` },
-    { url: `${session.baseUrl}/newTwoPlantAPI.do?op=getAllDeviceListThree&plantId=${plantId}&pageNum=1&pageSize=1`, method: "GET" as const },
+    { url: `${session.baseUrl}/PlantDetailAPI.do?plantId=${plantId}`, method: "GET" as const },
+    { url: `${session.baseUrl}/newPlantDetailAPI.do?plantId=${plantId}`, method: "GET" as const },
+    { url: `${session.baseUrl}/panel/getPlantData?plantId=${plantId}`, method: "POST" as const, body: `plantId=${plantId}` },
+    { url: `${session.baseUrl}/newTwoPlantAPI.do?op=getAllDeviceListThree&plantId=${plantId}&pageNum=1&pageSize=1`, method: "POST" as const, body: "" },
   ];
 
   for (const ep of endpoints) {
