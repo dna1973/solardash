@@ -243,7 +243,7 @@ export default function Alerts() {
                   transition={{ delay: i * 0.03 }}
                   className={`rounded-xl p-4 border-l-4 flex items-start gap-4 ${config.bg} ${config.border} ${alert.resolved ? "opacity-50" : ""} ${selected.has(alert.id) ? "ring-2 ring-primary/30" : ""}`}
                 >
-                  {hasReal && (
+                  {sorted.length > 0 && (
                     <Checkbox
                       checked={selected.has(alert.id)}
                       onCheckedChange={() => toggleSelect(alert.id)}
