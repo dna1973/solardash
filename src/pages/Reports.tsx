@@ -86,7 +86,7 @@ export default function Reports() {
         ["CO₂ Evitado", `${co2Monthly.toFixed(1)} ton`],
       ];
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: 48,
         head: [["Indicador", "Valor"]],
         body: summaryData,
@@ -108,7 +108,7 @@ export default function Reports() {
         `${Math.max(0, row.generation - row.consumption).toLocaleString("pt-BR")} kWh`,
       ]);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: tableY + 4,
         head: [["Mês", "Geração", "Consumo", "Injetada"]],
         body: tableData,
