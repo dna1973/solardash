@@ -243,15 +243,31 @@ export async function authenticate(
 }
 
 function extractCookies(resp: Response, jar: Map<string, string>) {
-  resp.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "set-cookie") {
-      const cookie = value.split(";")[0];
-      const eqIdx = cookie.indexOf("=");
-      if (eqIdx > 0) {
-        jar.set(cookie.substring(0, eqIdx), cookie);
-      }
+  // Use getSetCookie() for proper handling of multiple Set-Cookie headers
+  // (headers.forEach may merge them incorrectly)
+  let rawCookies: string[] = [];
+  try {
+    rawCookies = (resp.headers as any).getSetCookie?.() || [];
+  } catch {
+    // Fallback: parse from forEach
+  }
+  
+  if (rawCookies.length === 0) {
+    // Fallback: some runtimes combine Set-Cookie with comma
+    const combined = resp.headers.get("set-cookie") || "";
+    if (combined) {
+      // Split on comma followed by a cookie name pattern (word=)
+      rawCookies = combined.split(/,\s*(?=[A-Za-z_][A-Za-z0-9_]*=)/);
     }
-  });
+  }
+
+  for (const raw of rawCookies) {
+    const cookie = raw.split(";")[0].trim();
+    const eqIdx = cookie.indexOf("=");
+    if (eqIdx > 0) {
+      jar.set(cookie.substring(0, eqIdx), cookie);
+    }
+  }
 }
 
 function cookieString(jar: Map<string, string>): string {
