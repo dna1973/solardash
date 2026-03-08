@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { MapPin, Loader2 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapPin, Loader2, Search } from "lucide-react";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -46,6 +45,14 @@ function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number
   return null;
 }
 
+function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+}
+
 export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEditDialogProps) {
   const [location, setLocation] = useState(plant.location || "");
   const [utilityCompany, setUtilityCompany] = useState(plant.utility_company || "");
@@ -53,6 +60,9 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
   const [lat, setLat] = useState<number | null>(plant.latitude);
   const [lng, setLng] = useState<number | null>(plant.longitude);
   const [saving, setSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([plant.latitude || -8.88, plant.longitude || -36.49]);
+  const [mapZoom, setMapZoom] = useState(plant.latitude ? 15 : 6);
 
   useEffect(() => {
     if (open) {
@@ -61,6 +71,8 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
       setIntegrator(plant.integrator || "");
       setLat(plant.latitude);
       setLng(plant.longitude);
+      setMapCenter([plant.latitude || -8.88, plant.longitude || -36.49]);
+      setMapZoom(plant.latitude ? 15 : 6);
     }
   }, [open, plant]);
 
@@ -68,6 +80,29 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
     setLat(parseFloat(newLat.toFixed(6)));
     setLng(parseFloat(newLng.toFixed(6)));
   }, []);
+
+  const handleSearchAddress = async () => {
+    if (!location.trim()) return;
+    setSearching(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
+      );
+      const results = await res.json();
+      if (results.length > 0) {
+        const newLat = parseFloat(parseFloat(results[0].lat).toFixed(6));
+        const newLng = parseFloat(parseFloat(results[0].lon).toFixed(6));
+        setLat(newLat);
+        setLng(newLng);
+        setMapCenter([newLat, newLng]);
+        setMapZoom(15);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSearching(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -79,8 +114,6 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
     }
   };
 
-  const center: [number, number] = [lat || -8.88, lng || -36.49];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -89,15 +122,28 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Location */}
+          {/* Location with search */}
           <div className="space-y-1.5">
             <Label htmlFor="location">Localização / Endereço</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ex: Rua das Flores, 123 - Garanhuns/PE"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Ex: Rua das Flores, 123 - Garanhuns/PE"
+                onKeyDown={(e) => e.key === "Enter" && handleSearchAddress()}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleSearchAddress}
+                disabled={searching || !location.trim()}
+                title="Buscar endereço no mapa"
+              >
+                {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
 
           {/* Utility Company */}
@@ -152,12 +198,12 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5" />
-              Clique no mapa para selecionar a localização
+              Clique no mapa ou busque pelo endereço
             </Label>
             <div className="rounded-lg overflow-hidden border border-border h-[280px]">
               <MapContainer
-                center={center}
-                zoom={lat ? 15 : 6}
+                center={mapCenter}
+                zoom={mapZoom}
                 style={{ height: "100%", width: "100%" }}
                 scrollWheelZoom={true}
               >
@@ -166,6 +212,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
                   url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"
                 />
                 <MapClickHandler onMapClick={handleMapClick} />
+                <MapUpdater center={mapCenter} zoom={mapZoom} />
                 {lat !== null && lng !== null && <Marker position={[lat, lng]} />}
               </MapContainer>
             </div>
