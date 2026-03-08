@@ -142,144 +142,143 @@ export async function authenticate(
     throw new Error("Growatt: credenciais (usuário e senha) são obrigatórias");
   }
 
-  const baseUrl = normalizeUrl(credentials.base_url || "https://openapi.growatt.com");
-  const hashedPwd = await hashPassword(credentials.password);
+  const baseUrl = normalizeUrl(credentials.base_url || "https://server.growatt.com");
+  const hashedPwd = hashPassword(credentials.password);
+  const cookieJar = new Map<string, string>();
 
-  const loginUrl = `${baseUrl}/newTwoLoginAPI.do`;
-  console.log(`Growatt: login em ${loginUrl}`);
-
-  let response: Response;
+  // Step 1: GET login page → get JSESSIONID
+  console.log(`Growatt AUTH: GET ${baseUrl}/login`);
   try {
-    response = await fetch(loginUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": AGENT,
-      },
-      body: new URLSearchParams({
-        userName: credentials.username,
-        password: hashedPwd,
-      }),
+    const r = await fetch(`${baseUrl}/login`, {
+      method: "GET",
+      headers: { "User-Agent": AGENT },
       redirect: "manual",
     });
+    extractCookies(r, cookieJar);
+    await r.text();
   } catch (e) {
-    throw new Error(`Growatt: não foi possível conectar a ${baseUrl}. Verifique a URL. (${e})`);
+    console.log(`Growatt AUTH step1 error: ${e}`);
   }
+  console.log(`Growatt AUTH step1 jar: ${[...cookieJar.entries()].map(([k,v]) => `${k}=${v.substring(0,30)}...`).join(", ")}`);
 
-  const cookies: string[] = [];
-  response.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "set-cookie") {
-      cookies.push(value.split(";")[0]);
-    }
-  });
-  const cookieStr = cookies.join("; ") || "";
-
-  const text = await response.text();
-  console.log(`Growatt: login response (${text.length} chars): ${text.substring(0, 500)}`);
-
-  let body: any;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    console.log("Growatt: newTwoLoginAPI não retornou JSON, tentando login legado...");
-    return authenticateLegacy(credentials, baseUrl);
-  }
-
-  const back = body.back || body;
-  if (!back.success) {
-    throw new Error(`Growatt: login falhou — ${back.msg || back.error || "credenciais inválidas"}`);
-  }
-
-  const userId = String(back.user?.id || back.userId || "");
-  const loginPlants = Array.isArray(back.data) ? back.data : [];
-  console.log(`Growatt: API login OK, userId=${userId}, cookies=${cookieStr ? "yes" : "no"}, plants=${loginPlants.length}`);
-
-  // Now do a web login to get proper session cookies for data endpoints
-  console.log(`Growatt: fazendo login web para obter sessão válida...`);
-  const webLoginUrl = `${baseUrl}/login`;
-  try {
-    const webResp = await fetch(webLoginUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": AGENT,
-        ...(cookieStr ? { Cookie: cookieStr } : {}),
-      },
-      body: new URLSearchParams({
-        account: credentials.username,
-        password: hashedPwd,
-        validateCode: "",
-        isReadPact: "0",
-      }),
-      redirect: "manual",
-    });
-
-    const webCookies: string[] = [];
-    webResp.headers.forEach((value, key) => {
-      if (key.toLowerCase() === "set-cookie") {
-        webCookies.push(value.split(";")[0]);
-      }
-    });
-    
-    const allCookies = [...cookies, ...webCookies];
-    const finalCookieStr = allCookies.join("; ");
-    console.log(`Growatt: web login status=${webResp.status}, new cookies=${webCookies.length}, total=${allCookies.length}`);
-    
-    return { cookie: finalCookieStr, userId, baseUrl, loginPlants };
-  } catch (e) {
-    console.log(`Growatt: web login falhou: ${e}, usando cookies da API`);
-    return { cookie: cookieStr, userId, baseUrl, loginPlants };
-  }
-}
-
-async function authenticateLegacy(
-  credentials: AdapterCredentials,
-  baseUrl: string,
-  existingCookies?: string
-): Promise<GrowattSession> {
-  const loginUrl = `${baseUrl}/login`;
-  console.log(`Growatt: tentando login legado em ${loginUrl}`);
-
-  const reqHeaders: Record<string, string> = {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent": AGENT,
-  };
-  if (existingCookies) reqHeaders["Cookie"] = existingCookies;
-
-  const response = await fetch(loginUrl, {
+  // Step 2: POST /login with web credentials → follow redirect
+  console.log(`Growatt AUTH: POST ${baseUrl}/login`);
+  const webResp = await fetch(`${baseUrl}/login`, {
     method: "POST",
-    headers: reqHeaders,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": AGENT,
+      Cookie: cookieString(cookieJar),
+    },
     body: new URLSearchParams({
-      account: credentials.username!,
-      password: credentials.password!,
+      account: credentials.username,
+      password: hashedPwd,
       validateCode: "",
       isReadPact: "0",
     }),
     redirect: "manual",
   });
+  extractCookies(webResp, cookieJar);
+  const webText = await webResp.text();
+  console.log(`Growatt AUTH step2: status=${webResp.status}, location=${webResp.headers.get("location") || "none"}, cookies=${cookieJar.size}, body=${webText.substring(0, 150)}`);
 
-  const cookies: string[] = [];
-  response.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "set-cookie") {
-      cookies.push(value.split(";")[0]);
+  // Follow redirect
+  if (webResp.status >= 300 && webResp.status < 400) {
+    const loc = webResp.headers.get("location");
+    if (loc) {
+      const url = loc.startsWith("http") ? loc : `${baseUrl}${loc}`;
+      console.log(`Growatt AUTH: following redirect → ${url}`);
+      try {
+        const rr = await fetch(url, {
+          headers: { "User-Agent": AGENT, Cookie: cookieString(cookieJar) },
+          redirect: "manual",
+        });
+        extractCookies(rr, cookieJar);
+        await rr.text();
+      } catch (e) {
+        console.log(`Growatt AUTH redirect error: ${e}`);
+      }
     }
+  }
+
+  // Step 3: API login for user info and plant list
+  console.log(`Growatt AUTH: POST newTwoLoginAPI.do`);
+  const apiResp = await fetch(`${baseUrl}/newTwoLoginAPI.do`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": AGENT,
+      Cookie: cookieString(cookieJar),
+    },
+    body: new URLSearchParams({ userName: credentials.username, password: hashedPwd }),
+    redirect: "manual",
   });
-  const cookieStr = [existingCookies, ...cookies].filter(Boolean).join("; ");
+  extractCookies(apiResp, cookieJar);
+  const apiText = await apiResp.text();
 
-  const text = await response.text();
-  let body: any = {};
+  let body: any;
+  try { body = JSON.parse(apiText); } catch {
+    throw new Error("Growatt: login API não retornou JSON");
+  }
+
+  const back = body.back || body;
+  if (!back.success) {
+    throw new Error(`Growatt: login falhou — ${back.msg || "credenciais inválidas"}`);
+  }
+
+  const userId = String(back.user?.id || back.userId || "");
+  const loginPlants = Array.isArray(back.data) ? back.data : [];
+  
+  // Step 4: Test session by hitting PlantDetailAPI.do
+  const testPlantId = loginPlants[0]?.plantId;
+  if (testPlantId) {
+    const testUrl = `${baseUrl}/PlantDetailAPI.do?plantId=${testPlantId}`;
+    console.log(`Growatt AUTH: testing session → GET ${testUrl}`);
+    console.log(`Growatt AUTH: cookie header = ${cookieString(cookieJar)}`);
+    const testResp = await fetch(testUrl, {
+      headers: {
+        Cookie: cookieString(cookieJar),
+        "User-Agent": AGENT,
+      },
+    });
+    const testText = await testResp.text();
+    console.log(`Growatt AUTH: test result = ${testText.substring(0, 300)}`);
+  }
+
+  console.log(`Growatt AUTH: DONE userId=${userId}, plants=${loginPlants.length}, cookies=${cookieJar.size}`);
+  return { cookie: cookieString(cookieJar), userId, baseUrl, loginPlants };
+}
+
+function extractCookies(resp: Response, jar: Map<string, string>) {
+  // Use getSetCookie() for proper handling of multiple Set-Cookie headers
+  // (headers.forEach may merge them incorrectly)
+  let rawCookies: string[] = [];
   try {
-    body = JSON.parse(text);
+    rawCookies = (resp.headers as any).getSetCookie?.() || [];
   } catch {
-    // HTML redirect = success if we have cookies
+    // Fallback: parse from forEach
+  }
+  
+  if (rawCookies.length === 0) {
+    // Fallback: some runtimes combine Set-Cookie with comma
+    const combined = resp.headers.get("set-cookie") || "";
+    if (combined) {
+      // Split on comma followed by a cookie name pattern (word=)
+      rawCookies = combined.split(/,\s*(?=[A-Za-z_][A-Za-z0-9_]*=)/);
+    }
   }
 
-  const userId = String(body.back?.userId || body.back?.user?.id || "");
-  if (!cookieStr && !userId) {
-    throw new Error("Growatt: login falhou — nenhum cookie ou userId retornado");
+  for (const raw of rawCookies) {
+    const cookie = raw.split(";")[0].trim();
+    const eqIdx = cookie.indexOf("=");
+    if (eqIdx > 0) {
+      jar.set(cookie.substring(0, eqIdx), cookie);
+    }
   }
+}
 
-  return { cookie: cookieStr, userId, baseUrl };
+function cookieString(jar: Map<string, string>): string {
+  return [...jar.values()].join("; ");
 }
 
 /** Fetch plant detail to get capacity_kwp, real status, and current power */
