@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Building2, Plus, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug } from "lucide-react";
+import { Building2, Plus, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
+import { BillImportDialog } from "@/components/BillImportDialog";
+import { toast } from "sonner";
 
 interface Property {
   id: string;
@@ -74,6 +76,7 @@ export default function ConsumptionPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = mockProperties.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.address.toLowerCase().includes(search.toLowerCase());
@@ -95,13 +98,17 @@ export default function ConsumptionPage() {
             Gestão de consumo e geração de energia por unidade consumidora
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary gap-2" size="sm">
-              <Plus className="w-4 h-4" /> Novo Imóvel
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
+            <FileUp className="w-4 h-4" /> Importar Conta (OCR)
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary gap-2" size="sm">
+                <Plus className="w-4 h-4" /> Novo Imóvel
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Cadastrar Imóvel</DialogTitle>
               <DialogDescription>Adicione uma nova unidade consumidora ao sistema</DialogDescription>
@@ -139,8 +146,9 @@ export default function ConsumptionPage() {
               </div>
               <Button className="w-full gradient-primary">Cadastrar</Button>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Summary Stats */}
@@ -315,6 +323,13 @@ export default function ConsumptionPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Bill Import Dialog */}
+      <BillImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => toast.success("Conta importada! Atualize a página para ver os dados.")}
+      />
     </div>
   );
 }

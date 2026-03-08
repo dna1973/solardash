@@ -118,6 +118,77 @@ export type Database = {
           },
         ]
       }
+      energy_bills: {
+        Row: {
+          account_number: string | null
+          address: string | null
+          amount_brl: number | null
+          consumption_kwh: number | null
+          created_at: string
+          due_date: string | null
+          generation_kwh: number | null
+          id: string
+          off_peak_demand_kw: number | null
+          pdf_path: string | null
+          peak_demand_kw: number | null
+          property_name: string | null
+          raw_ocr_data: Json | null
+          reference_month: string | null
+          tariff_type: string | null
+          tenant_id: string
+          updated_at: string
+          utility_company: string | null
+        }
+        Insert: {
+          account_number?: string | null
+          address?: string | null
+          amount_brl?: number | null
+          consumption_kwh?: number | null
+          created_at?: string
+          due_date?: string | null
+          generation_kwh?: number | null
+          id?: string
+          off_peak_demand_kw?: number | null
+          pdf_path?: string | null
+          peak_demand_kw?: number | null
+          property_name?: string | null
+          raw_ocr_data?: Json | null
+          reference_month?: string | null
+          tariff_type?: string | null
+          tenant_id: string
+          updated_at?: string
+          utility_company?: string | null
+        }
+        Update: {
+          account_number?: string | null
+          address?: string | null
+          amount_brl?: number | null
+          consumption_kwh?: number | null
+          created_at?: string
+          due_date?: string | null
+          generation_kwh?: number | null
+          id?: string
+          off_peak_demand_kw?: number | null
+          pdf_path?: string | null
+          peak_demand_kw?: number | null
+          property_name?: string | null
+          raw_ocr_data?: Json | null
+          reference_month?: string | null
+          tariff_type?: string | null
+          tenant_id?: string
+          updated_at?: string
+          utility_company?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "energy_bills_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       energy_data: {
         Row: {
           consumption_power_kw: number | null
