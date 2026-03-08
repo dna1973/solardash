@@ -2,13 +2,15 @@ import { Settings, Bell, Database, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { IntegrationManager } from "@/components/IntegrationManager";
 
-export default function SettingsPage() {
+export default function SettingsPage({ embedded = false }: { embedded?: boolean }) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Gerenciar plataforma e integrações</p>
-      </div>
+      {!embedded && (
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
+          <p className="text-sm text-muted-foreground">Gerenciar plataforma e integrações</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Integration Manager */}
