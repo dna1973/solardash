@@ -192,7 +192,12 @@ export default function Dashboard() {
               <StatCard title="Com Coordenadas" value={String(plants.filter(p => p.latitude != null).length)} icon={MapIcon} variant="default" />
             </div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
-              <h3 className="text-sm font-semibold mb-3">Usinas em Pernambuco</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold">Usinas em Pernambuco</h3>
+                <button onClick={() => navigate("/map")} className="text-xs text-primary hover:underline flex items-center gap-1">
+                  <MapIcon className="h-3.5 w-3.5" /> Tela cheia
+                </button>
+              </div>
               <div className="h-[500px] rounded-lg overflow-hidden border border-border">
                 <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
               </div>
