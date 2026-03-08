@@ -4,7 +4,7 @@ import type {
   NormalizedPlant,
   NormalizedDevice,
   NormalizedEnergyData,
-} from "../_shared/solar-types.ts";
+} from "../solar-types.ts";
 
 const GROWATT_SERVERS: Record<string, string> = {
   global: "https://openapi.growatt.com",
@@ -15,6 +15,18 @@ const GROWATT_SERVERS: Record<string, string> = {
 interface GrowattSession {
   cookie: string;
   userId: string;
+}
+
+async function safeJson(response: Response, context: string): Promise<any> {
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`Growatt ${context}: HTTP ${response.status} - ${text.substring(0, 200)}`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Growatt ${context}: resposta não é JSON (${text.substring(0, 100)}...)`);
+  }
 }
 
 export async function authenticate(
@@ -33,7 +45,7 @@ export async function authenticate(
   });
 
   const cookies = response.headers.get("set-cookie") || "";
-  const body = await response.json().catch(() => ({}));
+  const body = await safeJson(response, "login").catch(() => ({}));
 
   if (!body.back?.success && !cookies) {
     throw new Error("Growatt authentication failed");
@@ -52,7 +64,7 @@ export async function listPlants(
   const response = await fetch(`${baseUrl}/index/getPlantListTitle`, {
     headers: { Cookie: session.cookie },
   });
-  const data = await response.json();
+  const data = await safeJson(response, "listPlants");
   const plants = data.back || [];
 
   return plants.map((p: any) => ({
@@ -75,7 +87,7 @@ export async function listDevices(
     `${baseUrl}/v1/device/list?plant_id=${plantId}`,
     { headers: { Cookie: session.cookie } }
   );
-  const data = await response.json();
+  const data = await safeJson(response, "listDevices");
   const devices = data.back?.deviceList || data.data || [];
 
   return devices.map((d: any) => ({
@@ -96,17 +108,16 @@ export async function collectEnergy(
   _deviceSerial?: string,
   baseUrl = GROWATT_SERVERS.global
 ): Promise<NormalizedEnergyData[]> {
-  // Get plant overview data
   const response = await fetch(
     `${baseUrl}/v1/plant/data?plant_id=${plantId}`,
     { headers: { Cookie: session.cookie } }
   );
-  const data = await response.json();
+  const data = await safeJson(response, "collectEnergy");
   const plantData = data.back || data.data || {};
 
   const now = new Date().toISOString();
 
-  const energyData: NormalizedEnergyData[] = [
+  return [
     {
       plant_external_id: plantId,
       device_external_id: _deviceSerial,
@@ -118,8 +129,6 @@ export async function collectEnergy(
       status: "ok",
     },
   ];
-
-  return energyData;
 }
 
 function mapPlantStatus(status: any): NormalizedPlant["status"] {
