@@ -12,6 +12,7 @@ import Alerts from "./pages/Alerts";
 import Reports from "./pages/Reports";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
+import ConsumptionPage from "./pages/ConsumptionPage";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -63,6 +64,7 @@ const AppRoutes = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/plants" element={<Plants />} />
                 <Route path="/devices" element={<Devices />} />
+                <Route path="/consumption" element={<ConsumptionPage />} />
                 <Route path="/alerts" element={<Alerts />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/users" element={<UsersPage />} />
