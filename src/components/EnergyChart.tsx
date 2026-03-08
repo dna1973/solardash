@@ -1,0 +1,59 @@
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { EnergyDataPoint } from "@/data/mockData";
+
+interface EnergyChartProps {
+  data: EnergyDataPoint[];
+  title: string;
+  height?: number;
+}
+
+export function EnergyChart({ data, title, height = 300 }: EnergyChartProps) {
+  return (
+    <div className="rounded-xl bg-card p-5 shadow-card">
+      <h3 className="text-sm font-semibold mb-4">{title}</h3>
+      <ResponsiveContainer width="100%" height={height}>
+        <AreaChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+          <defs>
+            <linearGradient id="genGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(152, 60%, 42%)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="hsl(152, 60%, 42%)" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="conGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
+          <XAxis dataKey="time" tick={{ fontSize: 11, fill: 'hsl(220, 10%, 46%)' }} />
+          <YAxis tick={{ fontSize: 11, fill: 'hsl(220, 10%, 46%)' }} />
+          <Tooltip
+            contentStyle={{
+              background: 'hsl(0, 0%, 100%)',
+              border: '1px solid hsl(220, 13%, 90%)',
+              borderRadius: '8px',
+              fontSize: '12px',
+            }}
+            formatter={(value: number) => [`${value.toLocaleString('pt-BR')} kWh`, undefined]}
+          />
+          <Legend wrapperStyle={{ fontSize: '12px' }} />
+          <Area
+            type="monotone"
+            dataKey="generation"
+            name="Geração"
+            stroke="hsl(152, 60%, 42%)"
+            strokeWidth={2}
+            fill="url(#genGrad)"
+          />
+          <Area
+            type="monotone"
+            dataKey="consumption"
+            name="Consumo"
+            stroke="hsl(210, 80%, 55%)"
+            strokeWidth={2}
+            fill="url(#conGrad)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

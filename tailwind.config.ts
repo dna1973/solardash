@@ -13,7 +13,22 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
       colors: {
+        energy: {
+          green: "hsl(var(--energy-green))",
+          "green-light": "hsl(var(--energy-green-light))",
+          yellow: "hsl(var(--energy-yellow))",
+          "yellow-light": "hsl(var(--energy-yellow-light))",
+          blue: "hsl(var(--energy-blue))",
+          "blue-light": "hsl(var(--energy-blue-light))",
+          red: "hsl(var(--energy-red))",
+          "red-light": "hsl(var(--energy-red-light))",
+          orange: "hsl(var(--energy-orange))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
