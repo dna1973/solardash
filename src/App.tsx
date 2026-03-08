@@ -70,9 +70,7 @@ const AppRoutes = () => {
                 <Route path="/consumption" element={<ConsumptionPage />} />
                 <Route path="/alerts" element={<Alerts />} />
                 <Route path="/reports" element={<Reports />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/map" element={<FullMap />} />
+                <Route path="/management" element={<SystemManagementPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
