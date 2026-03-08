@@ -188,7 +188,7 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
         consumption_power_kw: undefined,
         energy_consumed_kwh: undefined,
         status: "ok",
-      })).filter(e => e.energy_generated_kwh > 0);
+      })).filter(e => (e.energy_generated_kwh ?? 0) > 0);
     }
   } catch (e) {
     console.log("apsystems: falha ao buscar energia horária, tentando sumário:", e);
@@ -214,6 +214,118 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
   }
 
   return [];
+}
+
+// Collect daily energy for a date range
+// GET /user/api/v2/systems/energy/{sid}?energy_level=daily&date_range=yyyy-MM-dd,yyyy-MM-dd
+export async function collectDailyEnergy(
+  session: APSystemsSession,
+  plantId: string,
+  startDate: string,
+  endDate: string
+): Promise<NormalizedEnergyData[]> {
+  console.log(`apsystems: coletando energia diária de ${startDate} a ${endDate}`);
+  
+  const data = await apiRequest(
+    session,
+    `/user/api/v2/systems/energy/${plantId}`,
+    { energy_level: "daily", date_range: `${startDate},${endDate}` }
+  );
+
+  const entries = data.data;
+  if (!entries || typeof entries !== "object") return [];
+
+  const results: NormalizedEnergyData[] = [];
+
+  // API returns { "yyyy-MM-dd": "value_kwh", ... } or array
+  if (Array.isArray(entries)) {
+    // Array format: each entry corresponds to a day
+    const start = new Date(startDate);
+    entries.forEach((val: string, idx: number) => {
+      const date = new Date(start);
+      date.setDate(date.getDate() + idx);
+      const kwh = val ? parseFloat(val) : 0;
+      if (kwh > 0) {
+        results.push({
+          plant_external_id: plantId,
+          timestamp: `${date.toISOString().split("T")[0]}T12:00:00Z`,
+          energy_generated_kwh: kwh,
+          status: "ok",
+        });
+      }
+    });
+  } else {
+    // Object format: { "2026-03-01": "12.5", ... }
+    for (const [dateStr, val] of Object.entries(entries)) {
+      const kwh = val ? parseFloat(String(val)) : 0;
+      if (kwh > 0) {
+        results.push({
+          plant_external_id: plantId,
+          timestamp: `${dateStr}T12:00:00Z`,
+          energy_generated_kwh: kwh,
+          status: "ok",
+        });
+      }
+    }
+  }
+
+  console.log(`apsystems: ${results.length} dias com dados de energia`);
+  return results;
+}
+
+// Collect monthly energy for a date range
+// GET /user/api/v2/systems/energy/{sid}?energy_level=monthly&date_range=yyyy-MM,yyyy-MM
+export async function collectMonthlyEnergy(
+  session: APSystemsSession,
+  plantId: string,
+  startMonth: string,
+  endMonth: string
+): Promise<NormalizedEnergyData[]> {
+  console.log(`apsystems: coletando energia mensal de ${startMonth} a ${endMonth}`);
+
+  const data = await apiRequest(
+    session,
+    `/user/api/v2/systems/energy/${plantId}`,
+    { energy_level: "monthly", date_range: `${startMonth},${endMonth}` }
+  );
+
+  const entries = data.data;
+  if (!entries || typeof entries !== "object") return [];
+
+  const results: NormalizedEnergyData[] = [];
+
+  if (Array.isArray(entries)) {
+    const [startYear, startMon] = startMonth.split("-").map(Number);
+    entries.forEach((val: string, idx: number) => {
+      const month = startMon + idx;
+      const year = startYear + Math.floor((month - 1) / 12);
+      const m = ((month - 1) % 12) + 1;
+      const kwh = val ? parseFloat(val) : 0;
+      if (kwh > 0) {
+        results.push({
+          plant_external_id: plantId,
+          timestamp: `${year}-${String(m).padStart(2, "0")}-15T12:00:00Z`,
+          energy_generated_kwh: kwh,
+          status: "ok",
+        });
+      }
+    });
+  } else {
+    for (const [monthStr, val] of Object.entries(entries)) {
+      const kwh = val ? parseFloat(String(val)) : 0;
+      if (kwh > 0) {
+        results.push({
+          plant_external_id: plantId,
+          timestamp: `${monthStr}-15T12:00:00Z`,
+          energy_generated_kwh: kwh,
+          status: "ok",
+        });
+      }
+    }
+  }
+
+  console.log(`apsystems: ${results.length} meses com dados de energia`);
+  return results;
 }
 
 // APsystems light status: 1=Green(normal), 2=Yellow(warning), 3=Red(error), 4=Grey(no data)

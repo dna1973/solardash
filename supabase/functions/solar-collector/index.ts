@@ -161,6 +161,16 @@ serve(async (req) => {
           case "collect_energy":
             if (!plant_external_id) throw new Error("plant_external_id required");
             result = await apsystems.collectEnergy(apSession, plant_external_id, device_serial); break;
+          case "collect_historical": {
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            const { start_date, end_date, level } = body;
+            if (level === "monthly") {
+              result = await apsystems.collectMonthlyEnergy(apSession, plant_external_id, start_date, end_date);
+            } else {
+              result = await apsystems.collectDailyEnergy(apSession, plant_external_id, start_date, end_date);
+            }
+            break;
+          }
           default: throw new Error(`Unsupported action: ${action}`);
         }
         break;
@@ -169,7 +179,7 @@ serve(async (req) => {
         throw new Error(`Unsupported manufacturer: ${manufacturer}`);
     }
 
-    if (action === "collect_energy" && Array.isArray(result)) {
+    if ((action === "collect_energy" || action === "collect_historical") && Array.isArray(result)) {
       await persistEnergyData(supabase, profile.tenant_id, result);
     }
 
@@ -285,13 +295,38 @@ async function syncIntegration(
           break;
         case "apsystems":
           if (session) {
+            // Collect today's hourly data
             energyData = await apsystems.collectEnergy(session, plant.external_id);
+            
+            // Also collect daily data for the last 30 days for historical reports
+            try {
+              const endDate = new Date().toISOString().split("T")[0];
+              const startDate30 = new Date();
+              startDate30.setDate(startDate30.getDate() - 30);
+              const startDateStr = startDate30.toISOString().split("T")[0];
+              const dailyData = await apsystems.collectDailyEnergy(session, plant.external_id, startDateStr, endDate);
+              energyData = [...energyData, ...dailyData];
+            } catch (histErr) {
+              console.log(`syncIntegration: erro ao coletar histórico diário APsystems: ${histErr}`);
+            }
+
+            // Collect monthly data for the last 12 months
+            try {
+              const now = new Date();
+              const endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+              const start12 = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+              const startMonth = `${start12.getFullYear()}-${String(start12.getMonth() + 1).padStart(2, "0")}`;
+              const monthlyData = await apsystems.collectMonthlyEnergy(session, plant.external_id, startMonth, endMonth);
+              energyData = [...energyData, ...monthlyData];
+            } catch (histErr) {
+              console.log(`syncIntegration: erro ao coletar histórico mensal APsystems: ${histErr}`);
+            }
           }
           break;
       }
 
       for (const entry of energyData) {
-        await supabase.from("energy_data").insert({
+        const { error: upsertErr } = await supabase.from("energy_data").upsert({
           plant_id: plantId,
           device_id: null,
           timestamp: entry.timestamp,
@@ -303,8 +338,8 @@ async function syncIntegration(
           current: entry.current || null,
           temperature: entry.temperature || null,
           status: entry.status || "ok",
-        });
-        energyPoints++;
+        }, { onConflict: "plant_id,timestamp", ignoreDuplicates: true });
+        if (!upsertErr) energyPoints++;
       }
     } catch (e) {
       console.error(`syncIntegration: erro ao coletar energia de ${plant.name}: ${e}`);
