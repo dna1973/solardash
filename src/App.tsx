@@ -17,6 +17,7 @@ import ConsumptionPage from "./pages/ConsumptionPage";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import FullMap from "./pages/FullMap";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -71,6 +72,7 @@ const AppRoutes = () => {
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/map" element={<FullMap />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
