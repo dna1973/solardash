@@ -1,5 +1,5 @@
 import { useAlerts } from "@/hooks/useSupabaseData";
-import { alerts as mockAlerts } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, CheckCircle2, Info, XCircle, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
