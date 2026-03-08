@@ -74,5 +74,5 @@ export interface SolarAdapter {
   getDeviceStatus(session: string, plantId: string, deviceSerial: string): Promise<NormalizedDevice>;
 }
 
-export const SUPPORTED_MANUFACTURERS = ["growatt", "solaredge", "fronius", "apsystems", "goodwe", "huawei", "sma"] as const;
+export const SUPPORTED_MANUFACTURERS = ["growatt", "solaredge", "fronius", "apsystems", "hoymiles", "goodwe", "huawei", "sma"] as const;
 export type ManufacturerSlug = typeof SUPPORTED_MANUFACTURERS[number];

@@ -6,6 +6,7 @@ import * as growatt from "../_shared/adapters/growatt.ts";
 import * as solaredge from "../_shared/adapters/solaredge.ts";
 import * as fronius from "../_shared/adapters/fronius.ts";
 import * as apsystems from "../_shared/adapters/apsystems.ts";
+import * as hoymiles from "../_shared/adapters/hoymiles.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -175,6 +176,20 @@ serve(async (req) => {
         }
         break;
       }
+      case "hoymiles": {
+        const hmSession = await hoymiles.authenticate(credentials);
+        switch (action) {
+          case "list_plants": result = await hoymiles.listPlants(hmSession); break;
+          case "list_devices":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await hoymiles.listDevices(hmSession, plant_external_id); break;
+          case "collect_energy":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await hoymiles.collectEnergy(hmSession, plant_external_id, device_serial); break;
+          default: throw new Error(`Unsupported action: ${action}`);
+        }
+        break;
+      }
       default:
         throw new Error(`Unsupported manufacturer: ${manufacturer}`);
     }
@@ -220,6 +235,10 @@ async function syncIntegration(
     case "apsystems":
       session = await apsystems.authenticate(credentials);
       plants = await apsystems.listPlants(session);
+      break;
+    case "hoymiles":
+      session = await hoymiles.authenticate(credentials);
+      plants = await hoymiles.listPlants(session);
       break;
     default:
       throw new Error(`Fabricante não suportado: ${manufacturer}`);
@@ -332,6 +351,11 @@ async function syncIntegration(
             } catch (histErr) {
               console.log(`syncIntegration: erro ao coletar histórico mensal APsystems: ${histErr}`);
             }
+          }
+          break;
+        case "hoymiles":
+          if (session) {
+            energyData = await hoymiles.collectEnergy(session, plant.external_id);
           }
           break;
       }
