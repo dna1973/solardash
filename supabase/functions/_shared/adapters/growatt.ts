@@ -32,23 +32,44 @@ async function safeJson(response: Response, context: string): Promise<any> {
 export async function authenticate(
   credentials: AdapterCredentials
 ): Promise<GrowattSession> {
+  if (!credentials.username || !credentials.password) {
+    throw new Error("Growatt: credenciais (usuário e senha) são obrigatórias");
+  }
+
   const baseUrl = credentials.base_url || GROWATT_SERVERS.global;
 
-  const response = await fetch(`${baseUrl}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      account: credentials.username || "",
-      password: credentials.password || "",
-    }),
-    redirect: "manual",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        account: credentials.username,
+        password: credentials.password,
+      }),
+      redirect: "manual",
+    });
+  } catch (e) {
+    throw new Error(`Growatt: não foi possível conectar ao servidor (${baseUrl}). Verifique a URL.`);
+  }
 
   const cookies = response.headers.get("set-cookie") || "";
-  const body = await safeJson(response, "login").catch(() => ({}));
+  
+  // Try to parse response - login may return HTML on some servers
+  let body: any = {};
+  const text = await response.text();
+  try {
+    body = JSON.parse(text);
+  } catch {
+    // If login returns HTML, cookies might still be valid
+    if (!cookies) {
+      throw new Error("Growatt: autenticação falhou. Verifique usuário, senha e URL do servidor.");
+    }
+  }
 
-  if (!body.back?.success && !cookies) {
-    throw new Error("Growatt authentication failed");
+  const success = body.back?.success || body.result === 1 || !!cookies;
+  if (!success) {
+    throw new Error("Growatt: credenciais inválidas. Verifique usuário e senha no portal Growatt.");
   }
 
   return {
