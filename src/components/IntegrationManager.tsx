@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2 } from "lucide-react";
+import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -73,6 +73,7 @@ export function IntegrationManager() {
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [savedIntegrations, setSavedIntegrations] = useState<SavedIntegration[]>([]);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,6 +129,38 @@ export function IntegrationManager() {
     }
   };
 
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Faça login primeiro");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solar-collector`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ action: "sync_all" }),
+        }
+      );
+      const result = await response.json();
+      if (result.success) {
+        toast({ title: "Sincronização concluída!", description: `${result.totalPlants || 0} planta(s) sincronizada(s), ${result.totalEnergy || 0} ponto(s) de energia.` });
+      } else {
+        toast({ title: "Erro na sincronização", description: result.error, variant: "destructive" });
+      }
+      await fetchSavedIntegrations();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedMfr) return;
     setSaving(true);
@@ -156,9 +189,12 @@ export function IntegrationManager() {
         });
       }
 
-      toast({ title: "Salvo!", description: `Credenciais ${selectedMfr.name} salvas com sucesso.` });
+      toast({ title: "Salvo!", description: `Credenciais ${selectedMfr.name} salvas. Iniciando sincronização...` });
       await fetchSavedIntegrations();
       setDialogOpen(false);
+
+      // Auto-sync after saving
+      handleSyncNow();
     } catch (err: any) {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
     } finally {
@@ -177,16 +213,24 @@ export function IntegrationManager() {
   return (
     <Card className="shadow-card border-border/50">
       <CardHeader className="pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Plug className="w-5 h-5 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Plug className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Integrações de Fabricantes</CardTitle>
+              <CardDescription className="text-xs">
+                Conecte inversores Growatt, SolarEdge, Fronius e mais
+              </CardDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-base">Integrações de Fabricantes</CardTitle>
-            <CardDescription className="text-xs">
-              Conecte inversores Growatt, SolarEdge, Fronius e mais
-            </CardDescription>
-          </div>
+          {savedIntegrations.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleSyncNow} disabled={syncing}>
+              {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              Sincronizar
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
