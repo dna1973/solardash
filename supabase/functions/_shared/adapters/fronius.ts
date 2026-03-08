@@ -6,7 +6,7 @@ import type {
   NormalizedPlant,
   NormalizedDevice,
   NormalizedEnergyData,
-} from "../_shared/solar-types.ts";
+} from "../solar-types.ts";
 
 function getBaseUrl(credentials: AdapterCredentials): string {
   const url = credentials.base_url;
