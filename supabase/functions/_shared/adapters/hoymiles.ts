@@ -43,9 +43,12 @@ async function encodePassword(password: string): Promise<string> {
 
 // ─── API helpers ───
 
-const JSON_HEADERS = {
+const JSON_HEADERS: Record<string, string> = {
   "Content-Type": "application/json; charset=utf-8",
   "Accept": "application/json",
+  "User-Agent": "sma/ad/1.4.0/159/0",
+  "Charset": "UTF-8",
+  "language": "en_us",
 };
 
 async function apiPost(session: HoymilesSession, path: string, body: Record<string, any>): Promise<any> {
