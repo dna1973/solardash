@@ -5,9 +5,20 @@ interface EnergyChartProps {
   data: EnergyDataPoint[];
   title: string;
   height?: number;
+  dataKeys?: ("generation" | "consumption")[];
 }
 
-export function EnergyChart({ data, title, height = 300 }: EnergyChartProps) {
+const COLORS = {
+  generation: { stroke: "hsl(152, 60%, 42%)", gradientId: "genGrad" },
+  consumption: { stroke: "hsl(210, 80%, 55%)", gradientId: "conGrad" },
+};
+
+const LABELS: Record<string, string> = {
+  generation: "Geração",
+  consumption: "Consumo",
+};
+
+export function EnergyChart({ data, title, height = 300, dataKeys = ["generation", "consumption"] }: EnergyChartProps) {
   return (
     <div className="rounded-xl bg-card p-5 shadow-card">
       <h3 className="text-sm font-semibold mb-4">{title}</h3>
@@ -36,22 +47,17 @@ export function EnergyChart({ data, title, height = 300 }: EnergyChartProps) {
             formatter={(value: number) => [`${value.toLocaleString('pt-BR')} kWh`, undefined]}
           />
           <Legend wrapperStyle={{ fontSize: '12px' }} />
-          <Area
-            type="monotone"
-            dataKey="generation"
-            name="Geração"
-            stroke="hsl(152, 60%, 42%)"
-            strokeWidth={2}
-            fill="url(#genGrad)"
-          />
-          <Area
-            type="monotone"
-            dataKey="consumption"
-            name="Consumo"
-            stroke="hsl(210, 80%, 55%)"
-            strokeWidth={2}
-            fill="url(#conGrad)"
-          />
+          {dataKeys.map((key) => (
+            <Area
+              key={key}
+              type="monotone"
+              dataKey={key}
+              name={LABELS[key]}
+              stroke={COLORS[key].stroke}
+              strokeWidth={2}
+              fill={`url(#${COLORS[key].gradientId})`}
+            />
+          ))}
         </AreaChart>
       </ResponsiveContainer>
     </div>
