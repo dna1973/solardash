@@ -182,9 +182,10 @@ export async function authenticate(
   }
 
   const userId = String(back.user?.id || back.userId || "");
-  console.log(`Growatt: login OK, userId=${userId}, cookies=${cookieStr ? "yes" : "no"}`);
+  const loginPlants = Array.isArray(back.data) ? back.data : [];
+  console.log(`Growatt: login OK, userId=${userId}, cookies=${cookieStr ? "yes" : "no"}, plants in login=${loginPlants.length}`);
 
-  return { cookie: cookieStr, userId, baseUrl };
+  return { cookie: cookieStr, userId, baseUrl, loginPlants };
 }
 
 /** Fallback: legacy /login endpoint with plain password */
