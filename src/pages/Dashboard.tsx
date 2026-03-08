@@ -81,6 +81,9 @@ export default function Dashboard() {
             <TabsTrigger value="consumption" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Plug className="h-4 w-4" /> Consumo
             </TabsTrigger>
+            <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <MapIcon className="h-4 w-4" /> Mapa
+            </TabsTrigger>
           </TabsList>
 
           {/* GERAÇÃO */}
