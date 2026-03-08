@@ -1,8 +1,7 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { EnergyDataPoint } from "@/data/mockData";
 
 interface EnergyChartProps {
-  data: EnergyDataPoint[];
+  data: Array<{ time: string; generation: number; consumption: number }>;
   title: string;
   height?: number;
   dataKeys?: ("generation" | "consumption")[];
