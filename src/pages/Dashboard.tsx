@@ -73,16 +73,16 @@ export default function Dashboard() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Tabs defaultValue="generation" className="space-y-6">
+        <Tabs defaultValue="map" className="space-y-6">
           <TabsList className="bg-muted/60">
+            <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <MapIcon className="h-4 w-4" /> Mapa
+            </TabsTrigger>
             <TabsTrigger value="generation" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Sun className="h-4 w-4" /> Geração
             </TabsTrigger>
             <TabsTrigger value="consumption" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Plug className="h-4 w-4" /> Consumo
-            </TabsTrigger>
-            <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MapIcon className="h-4 w-4" /> Mapa
             </TabsTrigger>
           </TabsList>
 
