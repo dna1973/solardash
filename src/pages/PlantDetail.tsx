@@ -18,6 +18,9 @@ export default function PlantDetail() {
   const { data: devices, isLoading: loadingDevices } = useDevicesByPlant(id!);
   const { data: alerts } = useAlertsByPlant(id!);
   const { data: energyData } = useEnergyData(id);
+  const { isGestor } = useUserRole();
+  const updatePlant = useUpdatePlant();
+  const [editOpen, setEditOpen] = useState(false);
 
   const activeAlerts = (alerts || []).filter((a) => !a.resolved);
 
