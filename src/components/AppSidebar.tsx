@@ -9,6 +9,8 @@ import {
   Zap,
   Building2,
   LogOut,
+  ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -20,6 +22,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -27,6 +30,11 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -35,8 +43,11 @@ const menuItems = [
   { title: "Consumo", url: "/consumption", icon: Building2 },
   { title: "Alertas", url: "/alerts", icon: AlertTriangle },
   { title: "Relatórios", url: "/reports", icon: FileBarChart },
+];
+
+const managementItems = [
   { title: "Usuários", url: "/users", icon: Users },
-  { title: "Configurações", url: "/settings", icon: Settings },
+  { title: "Integrações", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -53,6 +64,10 @@ export function AppSidebar() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const isManagementActive = managementItems.some(
+    (item) => location.pathname === item.url
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -100,6 +115,48 @@ export function AppSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <Collapsible defaultOpen={isManagementActive}>
+            <CollapsibleTrigger className="w-full">
+              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:text-sidebar-accent-foreground">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {!collapsed && "Gestão do Sistema"}
+                </span>
+                {!collapsed && (
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                )}
+              </SidebarGroupLabel>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {managementItems.map((item) => {
+                    const isActive = location.pathname === item.url;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          className={
+                            isActive
+                              ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          }
+                        >
+                          <NavLink to={item.url} end>
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </Collapsible>
         </SidebarGroup>
       </SidebarContent>
 
