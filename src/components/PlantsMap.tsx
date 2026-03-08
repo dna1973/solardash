@@ -73,8 +73,8 @@ export function PlantsMap({ plants, onPlantClick }: PlantsMapProps) {
   return (
     <MapContainer center={center} zoom={zoom} style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }} scrollWheelZoom={true}>
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> | HOT'
-        url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"
       />
       {plantsWithCoords.map((plant) => (
         <Marker key={plant.id} position={[plant.latitude!, plant.longitude!]} icon={createColorIcon(plant.status)}>
