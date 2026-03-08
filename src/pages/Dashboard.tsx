@@ -102,19 +102,6 @@ export default function Dashboard() {
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
             </div>
 
-            {/* Map */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
-              <h3 className="text-sm font-semibold mb-3">Mapa das Usinas</h3>
-              <div className="h-[360px] rounded-lg overflow-hidden border border-border">
-                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
-              </div>
-              <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary inline-block" /> Online</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-destructive inline-block" /> Offline</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-energy-orange inline-block" /> Alerta</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-energy-blue inline-block" /> Manutenção</span>
-              </div>
-            </motion.div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="xl:col-span-2 rounded-xl bg-card p-5 shadow-card">
