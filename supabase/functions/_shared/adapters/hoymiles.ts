@@ -117,47 +117,64 @@ export async function authenticate(credentials: AdapterCredentials): Promise<Hoy
     console.log(`Hoymiles: erro ao parsear região, usando fallback: ${loginUrl}`);
   }
 
-  // Step 2: Encode password as MD5.Base64(SHA256)
-  const encodedPassword = await encodePassword(password);
-  console.log(`Hoymiles: senha codificada (formato MD5.B64SHA256)`);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  
+  // Compute MD5 and SHA256
+  const md5Buffer = await stdCrypto.subtle.digest("MD5", data);
+  const md5Hash = encodeHex(new Uint8Array(md5Buffer));
+  
+  const sha256Buffer = await stdCrypto.subtle.digest("SHA-256", data);
+  const sha256Bytes = new Uint8Array(sha256Buffer);
+  let binary = "";
+  for (const byte of sha256Bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  const base64Sha256 = btoa(binary);
 
-  // Step 3: Login
-  const loginEndpoint = `${loginUrl}/iam/pub/0/c/login_c`;
-  console.log(`Hoymiles: POST ${loginEndpoint}`);
+  // Try multiple password formats: MD5.Base64SHA256, just MD5, plain password
+  const passwordFormats = [
+    { label: "MD5.B64SHA256", value: `${md5Hash}.${base64Sha256}` },
+    { label: "MD5 only", value: md5Hash },
+    { label: "plain", value: password },
+  ];
 
-  const loginResp = await fetch(loginEndpoint, {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify({
-      user_name: username,
-      password: encodedPassword,
-    }),
-  });
+  for (const fmt of passwordFormats) {
+    const loginEndpoint = `${loginUrl}/iam/pub/0/c/login_c`;
+    console.log(`Hoymiles: tentando formato ${fmt.label} em ${loginEndpoint}`);
 
-  const loginText = await loginResp.text();
-  console.log(`Hoymiles auth response (HTTP ${loginResp.status}): ${loginText.substring(0, 300)}`);
+    const loginResp = await fetch(loginEndpoint, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        user_name: username,
+        password: fmt.value,
+      }),
+    });
 
-  let loginJson: any;
-  try {
-    loginJson = JSON.parse(loginText);
-  } catch {
-    throw new Error(`Hoymiles: resposta de autenticação inválida (HTTP ${loginResp.status})`);
+    const loginText = await loginResp.text();
+    console.log(`Hoymiles auth response (${fmt.label}, HTTP ${loginResp.status}): ${loginText.substring(0, 300)}`);
+
+    let loginJson: any;
+    try {
+      loginJson = JSON.parse(loginText);
+    } catch {
+      continue;
+    }
+
+    if (loginJson.status === "0" || loginJson.status === 0) {
+      const token = loginJson.data?.token;
+      if (!token) {
+        throw new Error("Hoymiles: token não encontrado na resposta");
+      }
+      console.log(`Hoymiles: autenticação bem-sucedida com formato ${fmt.label}`);
+      return { token, baseUrl: loginUrl };
+    }
+
+    console.log(`Hoymiles: formato ${fmt.label} falhou — ${loginJson.message}`);
   }
 
-  if (loginJson.status !== "0" && loginJson.status !== 0) {
-    throw new Error(`Hoymiles: autenticação falhou — ${loginJson.message || "credenciais inválidas"} (status=${loginJson.status})`);
-  }
-
-  const token = loginJson.data?.token;
-  if (!token) {
-    throw new Error("Hoymiles: token não encontrado na resposta");
-  }
-
-  console.log("Hoymiles: autenticação bem-sucedida");
-
-  // Use neapi.hoymiles.com as the data API base
-  const dataBaseUrl = "https://neapi.hoymiles.com";
-  return { token, baseUrl: dataBaseUrl };
+  throw new Error(`Hoymiles: autenticação falhou — verifique usuário e senha`);
 }
 
 export async function listPlants(session: HoymilesSession): Promise<NormalizedPlant[]> {
