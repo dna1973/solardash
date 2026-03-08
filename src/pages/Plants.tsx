@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 export default function Plants() {
+  const navigate = useNavigate();
   const { data: dbPlants, isLoading } = usePlants();
 
   const plants = (dbPlants || []).map((p) => ({
