@@ -1,5 +1,5 @@
-// Hoymiles Adapter — S-Miles Cloud API (neapi.hoymiles.com)
-// Based on reverse-engineered API from Home Assistant integrations
+// Hoymiles Adapter — S-Miles Cloud API
+// Based on reverse-engineered API from krikk/hoymiles-ms-a2-to-mqtt and dmslabsbr/hoymiles
 import type {
   AdapterCredentials,
   NormalizedPlant,
@@ -9,22 +9,12 @@ import type {
 
 interface HoymilesSession {
   token: string;
-  baseUrl: string;
+  baseUrl: string; // e.g. https://neapi.hoymiles.com
 }
 
-const DEFAULT_BASE_URL = "https://neapi.hoymiles.com";
+const REGION_URL = "https://euapi.hoymiles.com/iam/pub/0/c/region_c";
 
-function md5(input: string): string {
-  // Deno built-in crypto for MD5
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-  const hashBuffer = new Uint8Array(
-    // @ts-ignore Deno API
-    Deno.core ? [] : []
-  );
-  // Use Web Crypto — MD5 is not in SubtleCrypto, so we implement a simple one
-  return simpleMD5(input);
-}
+// ─── Crypto helpers ───
 
 // Minimal MD5 implementation for Deno edge functions
 function simpleMD5(string: string): string {
@@ -104,34 +94,58 @@ function simpleMD5(string: string): string {
   return hex(md51(string));
 }
 
+// Encode password as: MD5(password).Base64(SHA256(password))
+async function encodePassword(password: string): Promise<string> {
+  const md5Hash = simpleMD5(password);
+
+  // SHA-256 using Web Crypto API
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const sha256Buffer = await crypto.subtle.digest("SHA-256", data);
+  const sha256Bytes = new Uint8Array(sha256Buffer);
+
+  // Base64 encode the SHA-256 hash
+  let binary = "";
+  for (const byte of sha256Bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  const base64Hash = btoa(binary);
+
+  return `${md5Hash}.${base64Hash}`;
+}
+
 // ─── API helpers ───
+
+const JSON_HEADERS = {
+  "Content-Type": "application/json; charset=utf-8",
+  "Accept": "application/json",
+};
 
 async function apiPost(session: HoymilesSession, path: string, body: Record<string, any>): Promise<any> {
   const url = `${session.baseUrl}${path}`;
-  console.log(`Hoymiles API POST: ${path}`);
+  console.log(`Hoymiles API POST: ${url}`);
 
   const resp = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
+      ...JSON_HEADERS,
       "Authorization": session.token,
     },
     body: JSON.stringify(body),
   });
 
   const text = await resp.text();
-  console.log(`Hoymiles API response (${path}): ${text.substring(0, 500)}`);
+  console.log(`Hoymiles API response (${path}): status=${resp.status}, body=${text.substring(0, 500)}`);
 
   try {
     const json = JSON.parse(text);
-    if (json.status !== "0" || json.message !== "success") {
+    if (json.status !== "0" && json.status !== 0) {
       throw new Error(`Hoymiles API error: status=${json.status}, message=${json.message}`);
     }
     return json;
   } catch (e) {
     if (e instanceof SyntaxError) {
-      throw new Error(`Hoymiles API: resposta não é JSON (${text.substring(0, 100)})`);
+      throw new Error(`Hoymiles API: resposta não é JSON (HTTP ${resp.status}: ${text.substring(0, 100)})`);
     }
     throw e;
   }
@@ -147,105 +161,109 @@ export async function authenticate(credentials: AdapterCredentials): Promise<Hoy
     throw new Error("Hoymiles: usuário e senha são obrigatórios");
   }
 
-  let baseUrl = DEFAULT_BASE_URL;
-  if (credentials.base_url) {
-    let u = credentials.base_url.trim();
-    if (!u.startsWith("http")) u = `https://${u}`;
-    try { baseUrl = new URL(u).origin; } catch { baseUrl = u.replace(/\/+$/, ""); }
+  console.log(`Hoymiles: autenticando usuário ${username}`);
+
+  // Step 1: Get region / login_url for the user
+  console.log(`Hoymiles: buscando região para ${username}`);
+  const regionResp = await fetch(REGION_URL, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ email: username }),
+  });
+
+  const regionText = await regionResp.text();
+  console.log(`Hoymiles region response (HTTP ${regionResp.status}): ${regionText.substring(0, 300)}`);
+
+  let loginUrl = "https://neapi.hoymiles.com"; // fallback
+  try {
+    const regionJson = JSON.parse(regionText);
+    if (regionJson.status === "0" && regionJson.data?.login_url) {
+      loginUrl = regionJson.data.login_url;
+      console.log(`Hoymiles: login_url da região: ${loginUrl}`);
+    } else {
+      console.log(`Hoymiles: região não retornou login_url, usando fallback: ${loginUrl}`);
+    }
+  } catch {
+    console.log(`Hoymiles: erro ao parsear região, usando fallback: ${loginUrl}`);
   }
 
-  console.log(`Hoymiles: autenticando usuário ${username} em ${baseUrl}`);
+  // Step 2: Encode password as MD5.Base64(SHA256)
+  const encodedPassword = await encodePassword(password);
+  console.log(`Hoymiles: senha codificada (formato MD5.B64SHA256)`);
 
-  const md5Password = simpleMD5(password);
+  // Step 3: Login
+  const loginEndpoint = `${loginUrl}/iam/pub/0/c/login_c`;
+  console.log(`Hoymiles: POST ${loginEndpoint}`);
 
-  const resp = await fetch(`${baseUrl}/iam/pub/0/auth/login`, {
+  const loginResp = await fetch(loginEndpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    },
+    headers: JSON_HEADERS,
     body: JSON.stringify({
       user_name: username,
-      password: md5Password,
+      password: encodedPassword,
     }),
   });
 
-  const text = await resp.text();
-  console.log(`Hoymiles auth response: ${text.substring(0, 300)}`);
+  const loginText = await loginResp.text();
+  console.log(`Hoymiles auth response (HTTP ${loginResp.status}): ${loginText.substring(0, 300)}`);
 
-  let json: any;
+  let loginJson: any;
   try {
-    json = JSON.parse(text);
+    loginJson = JSON.parse(loginText);
   } catch {
-    throw new Error(`Hoymiles: resposta de autenticação inválida`);
+    throw new Error(`Hoymiles: resposta de autenticação inválida (HTTP ${loginResp.status})`);
   }
 
-  if (json.status !== "0" || json.message !== "success") {
-    throw new Error(`Hoymiles: autenticação falhou — ${json.message || "credenciais inválidas"}`);
+  if (loginJson.status !== "0" && loginJson.status !== 0) {
+    throw new Error(`Hoymiles: autenticação falhou — ${loginJson.message || "credenciais inválidas"} (status=${loginJson.status})`);
   }
 
-  const token = json.data?.token;
+  const token = loginJson.data?.token;
   if (!token) {
     throw new Error("Hoymiles: token não encontrado na resposta");
   }
 
   console.log("Hoymiles: autenticação bem-sucedida");
-  return { token, baseUrl };
+
+  // Use neapi.hoymiles.com as the data API base
+  const dataBaseUrl = "https://neapi.hoymiles.com";
+  return { token, baseUrl: dataBaseUrl };
 }
 
 export async function listPlants(session: HoymilesSession): Promise<NormalizedPlant[]> {
   const allPlants: NormalizedPlant[] = [];
-  let pageNum = 1;
-  const pageSize = 20;
 
-  do {
-    const result = await apiPost(session, "/pvm/api/0/station/select_by_page", {
-      page_size: pageSize,
-      page_num: pageNum,
-    });
+  const result = await apiPost(session, "/pvmc/api/0/station/select_by_page_c", {
+    page: 1,
+    page_size: 50,
+  });
 
-    const list = result?.data?.list || [];
-    if (list.length === 0) break;
+  const list = result?.data?.list || [];
 
-    for (const s of list) {
-      const stationId = String(s.id);
+  for (const s of list) {
+    if (!s) continue;
+    const stationId = String(s.sid || s.id);
+    if (!stationId || stationId === "undefined") continue;
 
-      // Try to get real-time data for capacity/power info
-      let realTimeData: any = {};
-      try {
-        const rtResult = await apiPost(session, "/pvm-data/api/0/station/data/count_station_real_data", {
-          sid: parseInt(stationId),
-        });
-        realTimeData = rtResult?.data || {};
-      } catch (e) {
-        console.log(`Hoymiles: erro ao obter dados em tempo real da estação ${stationId}: ${e}`);
-      }
+    const capacityKwp = parseFloat(String(s.capacity || s.installed_capacity || s.plant_capacity || 0)) / 1000;
 
-      const currentPower = parseFloat(String(realTimeData.real_power || realTimeData.last_data_time_power || 0)) / 1000; // W → kW
-      const capacityKwp = parseFloat(String(s.capacity || s.installed_capacity || 0)) / 1000; // W → kWp
-
-      let status: NormalizedPlant["status"] = "offline";
-      if (currentPower > 0) {
-        status = "online";
-      } else if (s.warn_flag === 1) {
-        status = "warning";
-      }
-
-      allPlants.push({
-        external_id: stationId,
-        name: s.name || `Station ${stationId}`,
-        location: s.address || s.location_address || "",
-        latitude: s.latitude ? parseFloat(String(s.latitude)) : undefined,
-        longitude: s.longitude ? parseFloat(String(s.longitude)) : undefined,
-        capacity_kwp: capacityKwp > 0 ? capacityKwp : undefined,
-        status,
-      });
+    let status: NormalizedPlant["status"] = "offline";
+    if (s.real_power && parseFloat(String(s.real_power)) > 0) {
+      status = "online";
+    } else if (s.warn_flag === 1) {
+      status = "warning";
     }
 
-    const total = result?.data?.total || 0;
-    if (allPlants.length >= total) break;
-    pageNum++;
-  } while (true);
+    allPlants.push({
+      external_id: stationId,
+      name: s.name || s.station_name || `Station ${stationId}`,
+      location: s.address || s.location_address || "",
+      latitude: s.latitude ? parseFloat(String(s.latitude)) : undefined,
+      longitude: s.longitude ? parseFloat(String(s.longitude)) : undefined,
+      capacity_kwp: capacityKwp > 0 ? capacityKwp : undefined,
+      status,
+    });
+  }
 
   console.log(`Hoymiles: ${allPlants.length} estação(ões) listada(s)`);
   return allPlants;
@@ -255,27 +273,37 @@ export async function listDevices(session: HoymilesSession, stationId: string): 
   const allDevices: NormalizedDevice[] = [];
 
   try {
-    const result = await apiPost(session, "/pvm/api/0/dev/micro/select_by_station", {
+    // Use the station device tree endpoint
+    const result = await apiPost(session, "/pvmc/api/0/station/get_sd_uri_c", {
       sid: parseInt(stationId),
-      page_size: 100,
-      page_num: 1,
-      show_warn: 0,
     });
 
-    const list = result?.data?.list || [];
+    // Also try to get device list from station data
+    const stationResult = await apiPost(session, "/pvmc/api/0/station/select_by_page_c", {
+      page: 1,
+      page_size: 50,
+    });
 
-    for (const d of list) {
-      const deviceId = String(d.id || d.sn);
-      allDevices.push({
-        external_id: deviceId,
-        plant_external_id: stationId,
-        manufacturer: "Hoymiles",
-        model: d.model_no || d.model || "Microinverter",
-        serial_number: d.sn || d.device_sn || deviceId,
-        device_type: "inverter",
-        status: d.warn_flag === 0 ? "online" : d.warn_flag === 1 ? "warning" : "offline",
-        last_communication: d.last_data_time || undefined,
-      });
+    const stations = stationResult?.data?.list || [];
+    const station = stations.find((s: any) => String(s.sid || s.id) === stationId);
+
+    if (station?.devices) {
+      for (const d of station.devices) {
+        if (!d) continue;
+        const deviceId = String(d.id || d.sn || d.device_sn);
+        if (deviceId && deviceId !== "undefined") {
+          allDevices.push({
+            external_id: deviceId,
+            plant_external_id: stationId,
+            manufacturer: "Hoymiles",
+            model: d.model_no || d.model || "Microinverter",
+            serial_number: d.sn || d.device_sn || deviceId,
+            device_type: "inverter",
+            status: d.warn_flag === 0 ? "online" : d.warn_flag === 1 ? "warning" : "offline",
+            last_communication: d.last_data_time || undefined,
+          });
+        }
+      }
     }
   } catch (e) {
     console.error(`Hoymiles: erro ao listar dispositivos da estação ${stationId}: ${e}`);
@@ -292,22 +320,20 @@ export async function collectEnergy(
 ): Promise<NormalizedEnergyData[]> {
   const results: NormalizedEnergyData[] = [];
 
-  // Get real-time station data
   try {
+    // Get real-time station data
     const rtResult = await apiPost(session, "/pvm-data/api/0/station/data/count_station_real_data", {
       sid: parseInt(stationId),
     });
 
     const data = rtResult?.data || {};
 
-    // Power values from Hoymiles are typically in Watts
     const currentPowerW = parseFloat(String(data.real_power || data.last_data_time_power || 0));
     const todayEnergyWh = parseFloat(String(data.today_eq || 0));
-    const totalEnergyWh = parseFloat(String(data.total_eq || 0));
     const consumptionPowerW = parseFloat(String(data.co_real_power || 0));
     const consumptionTodayWh = parseFloat(String(data.co_today_eq || 0));
 
-    console.log(`Hoymiles collectEnergy ${stationId}: power=${currentPowerW}W, today=${todayEnergyWh}Wh, total=${totalEnergyWh}Wh`);
+    console.log(`Hoymiles collectEnergy ${stationId}: power=${currentPowerW}W, today=${todayEnergyWh}Wh`);
 
     results.push({
       plant_external_id: stationId,

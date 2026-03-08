@@ -67,7 +67,7 @@ const MANUFACTURERS: ManufacturerConfig[] = [
     fields: [
       { key: "username", label: "Usuário (e-mail)", type: "email", placeholder: "seu-email@exemplo.com" },
       { key: "password", label: "Senha", type: "password", placeholder: "Senha do S-Miles Cloud" },
-      { key: "base_url", label: "Servidor (opcional)", type: "text", placeholder: "https://neapi.hoymiles.com" },
+      { key: "base_url", label: "Servidor (opcional)", type: "text", placeholder: "https://global.hoymiles.com" },
     ],
   },
 ];
