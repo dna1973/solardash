@@ -239,15 +239,33 @@ function extractSid(session: APSystemsSession, plantId: string): string {
   return match ? match[1] : (session.systemId || plantId);
 }
 
-// End User API: GET /user/api/v2/systems/energy/{sid}?energy_level=hourly&date_range=yyyy-MM-dd
-export async function collectEnergy(session: APSystemsSession, plantId: string, _deviceSerial?: string): Promise<NormalizedEnergyData[]> {
-  const today = new Date().toISOString().split("T")[0]; // yyyy-MM-dd
+// Cache ECU count to avoid repeated API calls during a single sync
+let _cachedEcuCount: number | null = null;
 
-  // Try hourly energy for today first
+async function getEcuCount(session: APSystemsSession, sid: string): Promise<number> {
+  if (_cachedEcuCount !== null) return _cachedEcuCount;
+  try {
+    const data = await apiRequest(session, `/user/api/v2/systems/details/${sid}`);
+    const ecus = data.data?.ecu || [];
+    _cachedEcuCount = ecus.length || 1;
+  } catch {
+    _cachedEcuCount = 1;
+  }
+  return _cachedEcuCount;
+}
+
+// Energy API only works at system (sid) level. For ECU-based plants we divide proportionally.
+export async function collectEnergy(session: APSystemsSession, plantId: string, _deviceSerial?: string): Promise<NormalizedEnergyData[]> {
+  const today = new Date().toISOString().split("T")[0];
+  const sid = extractSid(session, plantId);
+  const isEcuPlant = extractEcuId(plantId) !== null;
+  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+
+  // Try hourly energy for today
   try {
     const data = await apiRequest(
       session,
-      `/user/api/v2/systems/energy/${plantId}`,
+      `/user/api/v2/systems/energy/${sid}`,
       { energy_level: "hourly", date_range: today }
     );
 
@@ -256,10 +274,7 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
       return entries.map((val: string, idx: number) => ({
         plant_external_id: plantId,
         timestamp: `${today}T${String(idx).padStart(2, "0")}:00:00Z`,
-        generation_power_kw: undefined,
-        energy_generated_kwh: val ? parseFloat(val) : 0,
-        consumption_power_kw: undefined,
-        energy_consumed_kwh: undefined,
+        energy_generated_kwh: val ? parseFloat(val) / divisor : 0,
         status: "ok",
       })).filter(e => (e.energy_generated_kwh ?? 0) > 0);
     }
@@ -267,18 +282,15 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
     console.log("apsystems: falha ao buscar energia horária, tentando sumário:", e);
   }
 
-  // Fallback: summary endpoint
+  // Fallback: summary
   try {
-    const data = await apiRequest(session, `/user/api/v2/systems/summary/${plantId}`);
+    const data = await apiRequest(session, `/user/api/v2/systems/summary/${sid}`);
     const summary = data.data;
     if (summary) {
       return [{
         plant_external_id: plantId,
         timestamp: new Date().toISOString(),
-        generation_power_kw: 0,
-        energy_generated_kwh: summary.today ? parseFloat(summary.today) : 0,
-        consumption_power_kw: undefined,
-        energy_consumed_kwh: undefined,
+        energy_generated_kwh: summary.today ? parseFloat(summary.today) / divisor : 0,
         status: "ok",
       }];
     }
@@ -290,18 +302,21 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
 }
 
 // Collect daily energy for a date range
-// GET /user/api/v2/systems/energy/{sid}?energy_level=daily&date_range=yyyy-MM-dd,yyyy-MM-dd
 export async function collectDailyEnergy(
   session: APSystemsSession,
   plantId: string,
   startDate: string,
   endDate: string
 ): Promise<NormalizedEnergyData[]> {
-  console.log(`apsystems: coletando energia diária de ${startDate} a ${endDate}`);
+  const sid = extractSid(session, plantId);
+  const isEcuPlant = extractEcuId(plantId) !== null;
+  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+
+  console.log(`apsystems: coletando energia diária de ${startDate} a ${endDate} (divisor=${divisor})`);
   
   const data = await apiRequest(
     session,
-    `/user/api/v2/systems/energy/${plantId}`,
+    `/user/api/v2/systems/energy/${sid}`,
     { energy_level: "daily", date_range: `${startDate},${endDate}` }
   );
 
@@ -310,32 +325,29 @@ export async function collectDailyEnergy(
 
   const results: NormalizedEnergyData[] = [];
 
-  // API returns { "yyyy-MM-dd": "value_kwh", ... } or array
   if (Array.isArray(entries)) {
-    // Array format: each entry corresponds to a day
     const start = new Date(startDate);
     entries.forEach((val: string, idx: number) => {
       const date = new Date(start);
       date.setDate(date.getDate() + idx);
-      const kwh = val ? parseFloat(val) : 0;
+      const kwh = val ? parseFloat(val) / divisor : 0;
       if (kwh > 0) {
         results.push({
           plant_external_id: plantId,
           timestamp: `${date.toISOString().split("T")[0]}T12:00:00Z`,
-          energy_generated_kwh: kwh,
+          energy_generated_kwh: Math.round(kwh * 100) / 100,
           status: "ok",
         });
       }
     });
   } else {
-    // Object format: { "2026-03-01": "12.5", ... }
     for (const [dateStr, val] of Object.entries(entries)) {
-      const kwh = val ? parseFloat(String(val)) : 0;
+      const kwh = val ? parseFloat(String(val)) / divisor : 0;
       if (kwh > 0) {
         results.push({
           plant_external_id: plantId,
           timestamp: `${dateStr}T12:00:00Z`,
-          energy_generated_kwh: kwh,
+          energy_generated_kwh: Math.round(kwh * 100) / 100,
           status: "ok",
         });
       }
@@ -347,18 +359,21 @@ export async function collectDailyEnergy(
 }
 
 // Collect monthly energy for a date range
-// GET /user/api/v2/systems/energy/{sid}?energy_level=monthly&date_range=yyyy-MM,yyyy-MM
 export async function collectMonthlyEnergy(
   session: APSystemsSession,
   plantId: string,
   startMonth: string,
   endMonth: string
 ): Promise<NormalizedEnergyData[]> {
-  console.log(`apsystems: coletando energia mensal de ${startMonth} a ${endMonth}`);
+  const sid = extractSid(session, plantId);
+  const isEcuPlant = extractEcuId(plantId) !== null;
+  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+
+  console.log(`apsystems: coletando energia mensal de ${startMonth} a ${endMonth} (divisor=${divisor})`);
 
   const data = await apiRequest(
     session,
-    `/user/api/v2/systems/energy/${plantId}`,
+    `/user/api/v2/systems/energy/${sid}`,
     { energy_level: "monthly", date_range: `${startMonth},${endMonth}` }
   );
 
@@ -373,24 +388,24 @@ export async function collectMonthlyEnergy(
       const month = startMon + idx;
       const year = startYear + Math.floor((month - 1) / 12);
       const m = ((month - 1) % 12) + 1;
-      const kwh = val ? parseFloat(val) : 0;
+      const kwh = val ? parseFloat(val) / divisor : 0;
       if (kwh > 0) {
         results.push({
           plant_external_id: plantId,
           timestamp: `${year}-${String(m).padStart(2, "0")}-15T12:00:00Z`,
-          energy_generated_kwh: kwh,
+          energy_generated_kwh: Math.round(kwh * 100) / 100,
           status: "ok",
         });
       }
     });
   } else {
     for (const [monthStr, val] of Object.entries(entries)) {
-      const kwh = val ? parseFloat(String(val)) : 0;
+      const kwh = val ? parseFloat(String(val)) / divisor : 0;
       if (kwh > 0) {
         results.push({
           plant_external_id: plantId,
           timestamp: `${monthStr}-15T12:00:00Z`,
-          energy_generated_kwh: kwh,
+          energy_generated_kwh: Math.round(kwh * 100) / 100,
           status: "ok",
         });
       }
@@ -407,12 +422,5 @@ function mapStatus(light: any): "online" | "offline" | "warning" | "maintenance"
   if (l === 1) return "online";
   if (l === 2) return "warning";
   if (l === 3) return "offline";
-  return "offline";
-}
-
-function mapDeviceStatus(status: any): "online" | "offline" | "warning" {
-  const s = String(status).toLowerCase();
-  if (s === "normal" || s === "1" || s === "online") return "online";
-  if (s === "warning" || s === "2") return "warning";
   return "offline";
 }
