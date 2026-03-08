@@ -1,6 +1,5 @@
 import { useAlerts } from "@/hooks/useSupabaseData";
 import { supabase } from "@/integrations/supabase/client";
-import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, CheckCircle2, Info, XCircle, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AnomalyDetector } from "@/components/AnomalyDetector";
