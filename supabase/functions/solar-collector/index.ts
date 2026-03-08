@@ -207,6 +207,10 @@ async function syncIntegration(
     case "fronius":
       plants = await fronius.listPlants(credentials);
       break;
+    case "apsystems":
+      session = await apsystems.authenticate(credentials);
+      plants = await apsystems.listPlants(session);
+      break;
     default:
       throw new Error(`Fabricante não suportado: ${manufacturer}`);
   }
