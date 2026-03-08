@@ -266,7 +266,7 @@ export default function Alerts() {
                       {alert.plant_name} • {new Date(alert.timestamp).toLocaleString("pt-BR")}
                     </p>
                   </div>
-                  {!alert.resolved && hasReal && (
+                  {!alert.resolved && (
                     <Button
                       variant="ghost"
                       size="sm"
