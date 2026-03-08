@@ -236,6 +236,10 @@ async function syncIntegration(
       session = await apsystems.authenticate(credentials);
       plants = await apsystems.listPlants(session);
       break;
+    case "hoymiles":
+      session = await hoymiles.authenticate(credentials);
+      plants = await hoymiles.listPlants(session);
+      break;
     default:
       throw new Error(`Fabricante não suportado: ${manufacturer}`);
   }
