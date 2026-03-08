@@ -1,13 +1,25 @@
 import { useAlerts } from "@/hooks/useSupabaseData";
 import { alerts as mockAlerts } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, CheckCircle2, Info, XCircle, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, XCircle, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AnomalyDetector } from "@/components/AnomalyDetector";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const typeConfig: Record<string, { icon: any; bg: string; border: string; iconColor: string; label: string }> = {
   critical: { icon: XCircle, bg: "bg-energy-red-light", border: "border-l-destructive", iconColor: "text-destructive", label: "Crítico" },
@@ -20,6 +32,8 @@ export default function Alerts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [checking, setChecking] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   const hasReal = dbAlerts && dbAlerts.length > 0;
 
@@ -41,6 +55,23 @@ export default function Alerts() {
 
   const activeCount = alerts.filter((a) => !a.resolved).length;
 
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === sorted.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(sorted.map((a) => a.id)));
+    }
+  };
+
   const handleResolve = async (alertId: string) => {
     const { error } = await supabase
       .from("alerts")
@@ -53,6 +84,42 @@ export default function Alerts() {
       toast({ title: "Alerta resolvido" });
       queryClient.invalidateQueries({ queryKey: ["alerts"] });
     }
+  };
+
+  const handleBulkResolve = async () => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase
+      .from("alerts")
+      .update({ resolved: true, resolved_at: new Date().toISOString() })
+      .in("id", ids);
+
+    if (error) {
+      toast({ title: "Erro ao resolver alertas", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${ids.length} alerta(s) resolvido(s)` });
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    setDeleting(true);
+    const ids = Array.from(selected);
+    const { error } = await supabase
+      .from("alerts")
+      .delete()
+      .in("id", ids);
+
+    if (error) {
+      toast({ title: "Erro ao apagar alertas", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `${ids.length} alerta(s) apagado(s)` });
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+    }
+    setDeleting(false);
   };
 
   const handleCheckNow = async () => {
@@ -87,6 +154,11 @@ export default function Alerts() {
     }
   };
 
+  const selectedUnresolved = Array.from(selected).filter((id) => {
+    const a = alerts.find((al) => al.id === id);
+    return a && !a.resolved;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -111,9 +183,59 @@ export default function Alerts() {
         </div>
       ) : (
         <div>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Alertas do Sistema
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              {hasReal && (
+                <Checkbox
+                  checked={sorted.length > 0 && selected.size === sorted.length}
+                  onCheckedChange={toggleAll}
+                  aria-label="Selecionar todos"
+                />
+              )}
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Alertas do Sistema
+                {selected.size > 0 && (
+                  <span className="ml-2 text-xs font-normal normal-case text-foreground">
+                    ({selected.size} selecionado{selected.size > 1 ? "s" : ""})
+                  </span>
+                )}
+              </h2>
+            </div>
+
+            {selected.size > 0 && hasReal && (
+              <div className="flex items-center gap-2">
+                {selectedUnresolved.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={handleBulkResolve}>
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    Resolver ({selectedUnresolved.length})
+                  </Button>
+                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={deleting}>
+                      {deleting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+                      Apagar ({selected.size})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Apagar alertas?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja apagar {selected.size} alerta{selected.size > 1 ? "s" : ""}? Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Apagar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
+          </div>
+
           <div className="space-y-3">
             {sorted.map((alert, i) => {
               const config = typeConfig[alert.type] || typeConfig.info;
@@ -124,8 +246,16 @@ export default function Alerts() {
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className={`rounded-xl p-4 border-l-4 flex items-start gap-4 ${config.bg} ${config.border} ${alert.resolved ? "opacity-50" : ""}`}
+                  className={`rounded-xl p-4 border-l-4 flex items-start gap-4 ${config.bg} ${config.border} ${alert.resolved ? "opacity-50" : ""} ${selected.has(alert.id) ? "ring-2 ring-primary/30" : ""}`}
                 >
+                  {hasReal && (
+                    <Checkbox
+                      checked={selected.has(alert.id)}
+                      onCheckedChange={() => toggleSelect(alert.id)}
+                      className="mt-0.5"
+                      aria-label={`Selecionar alerta: ${alert.message}`}
+                    />
+                  )}
                   <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${config.iconColor}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -155,6 +285,9 @@ export default function Alerts() {
                 </motion.div>
               );
             })}
+            {sorted.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">Nenhum alerta encontrado.</p>
+            )}
           </div>
         </div>
       )}
