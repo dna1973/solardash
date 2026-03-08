@@ -2,10 +2,12 @@ import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2 } fro
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
+import { PlantsMap } from "@/components/PlantsMap";
 import { usePlants, useAlerts, useEnergyData } from "@/hooks/useSupabaseData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useAuth();
