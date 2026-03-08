@@ -197,7 +197,7 @@ export default function Alerts() {
               </h2>
             </div>
 
-            {selected.size > 0 && hasReal && (
+            {selected.size > 0 && (
               <div className="flex items-center gap-2">
                 {selectedUnresolved.length > 0 && (
                   <Button variant="outline" size="sm" onClick={handleBulkResolve}>
