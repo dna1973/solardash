@@ -156,19 +156,31 @@ export default function Alerts({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Alertas</h1>
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Alertas</h1>
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? "Carregando..." : `${activeCount} alertas ativos`}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleCheckNow} disabled={checking}>
+            {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+            Verificar Agora
+          </Button>
+        </div>
+      )}
+      {embedded && (
+        <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {isLoading ? "Carregando..." : `${activeCount} alertas ativos`}
-            
           </p>
+          <Button variant="outline" size="sm" onClick={handleCheckNow} disabled={checking}>
+            {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+            Verificar Agora
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={handleCheckNow} disabled={checking}>
-          {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-          Verificar Agora
-        </Button>
-      </div>
+      )}
 
       <AnomalyDetector />
 
