@@ -61,19 +61,17 @@ serve(async (req) => {
     switch (manufacturer.toLowerCase()) {
       case "growatt": {
         const session = await growatt.authenticate(credentials);
-        let baseUrl = (credentials.base_url || "https://openapi.growatt.com").trim().replace(/\/+$/, "");
-        if (!baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`;
         switch (action) {
           case "list_plants":
-            result = await growatt.listPlants(session, baseUrl);
+            result = await growatt.listPlants(session);
             break;
           case "list_devices":
             if (!plant_external_id) throw new Error("plant_external_id required");
-            result = await growatt.listDevices(session, plant_external_id, baseUrl);
+            result = await growatt.listDevices(session, plant_external_id);
             break;
           case "collect_energy":
             if (!plant_external_id) throw new Error("plant_external_id required");
-            result = await growatt.collectEnergy(session, plant_external_id, device_serial, baseUrl);
+            result = await growatt.collectEnergy(session, plant_external_id, device_serial);
             break;
           default:
             throw new Error(`Unsupported action: ${action}`);
