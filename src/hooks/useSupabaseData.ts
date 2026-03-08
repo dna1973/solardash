@@ -43,7 +43,74 @@ export function useAlerts() {
   });
 }
 
+export function usePlantById(id: string) {
+  return useQuery({
+    queryKey: ["plant", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plants")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useDevicesByPlant(plantId: string) {
+  return useQuery({
+    queryKey: ["devices", "plant", plantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devices")
+        .select("*")
+        .eq("plant_id", plantId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!plantId,
+  });
+}
+
+export function useAlertsByPlant(plantId: string) {
+  return useQuery({
+    queryKey: ["alerts", "plant", plantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("alerts")
+        .select("*")
+        .eq("plant_id", plantId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!plantId,
+  });
+}
+
 export function useEnergyData(plantId?: string) {
+  return useQuery({
+    queryKey: ["energy_data", plantId],
+    queryFn: async () => {
+      let query = supabase
+        .from("energy_data")
+        .select("*")
+        .order("timestamp", { ascending: true })
+        .limit(500);
+
+      if (plantId) {
+        query = query.eq("plant_id", plantId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
   return useQuery({
     queryKey: ["energy_data", plantId],
     queryFn: async () => {
