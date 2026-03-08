@@ -58,8 +58,10 @@ export default function Reports() {
     }
 
     try {
-      const { default: jsPDF } = await import("jspdf");
-      await import("jspdf-autotable");
+      const jsPDFModule = await import("jspdf");
+      const jsPDF = jsPDFModule.default;
+      const autoTableModule = await import("jspdf-autotable");
+      const autoTable = autoTableModule.default;
 
       const doc = new jsPDF();
       const now = new Date().toLocaleDateString("pt-BR");
