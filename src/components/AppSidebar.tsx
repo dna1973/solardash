@@ -31,7 +31,6 @@ const menuItems = [
   { title: "Usinas", url: "/plants", icon: Sun },
   { title: "Equipamentos", url: "/devices", icon: Cpu },
   { title: "Consumo", url: "/consumption", icon: Building2 },
-  { title: "Alertas", url: "/alerts", icon: AlertTriangle },
   { title: "Relatórios", url: "/reports", icon: FileBarChart },
   { title: "Gestão do Sistema", url: "/management", icon: ShieldCheck },
 ];

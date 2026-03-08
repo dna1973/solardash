@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Plants from "./pages/Plants";
 import PlantDetail from "./pages/PlantDetail";
 import Devices from "./pages/Devices";
-import Alerts from "./pages/Alerts";
+
 import Reports from "./pages/Reports";
 import SystemManagementPage from "./pages/SystemManagementPage";
 import ConsumptionPage from "./pages/ConsumptionPage";
