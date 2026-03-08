@@ -73,6 +73,7 @@ export function IntegrationManager() {
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [savedIntegrations, setSavedIntegrations] = useState<SavedIntegration[]>([]);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
