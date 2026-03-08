@@ -97,13 +97,17 @@ export default function ConsumptionPage() {
             Gestão de consumo e geração de energia por unidade consumidora
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary gap-2" size="sm">
-              <Plus className="w-4 h-4" /> Novo Imóvel
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
+            <FileUp className="w-4 h-4" /> Importar Conta (OCR)
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary gap-2" size="sm">
+                <Plus className="w-4 h-4" /> Novo Imóvel
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Cadastrar Imóvel</DialogTitle>
               <DialogDescription>Adicione uma nova unidade consumidora ao sistema</DialogDescription>
