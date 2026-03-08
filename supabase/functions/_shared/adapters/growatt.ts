@@ -252,56 +252,6 @@ export async function authenticate(
   return { cookie: finalCookieStr, userId, baseUrl, loginPlants };
 }
 
-async function authenticateLegacy(
-  credentials: AdapterCredentials,
-  baseUrl: string,
-  existingCookies?: string
-): Promise<GrowattSession> {
-  const loginUrl = `${baseUrl}/login`;
-  console.log(`Growatt: tentando login legado em ${loginUrl}`);
-
-  const reqHeaders: Record<string, string> = {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent": AGENT,
-  };
-  if (existingCookies) reqHeaders["Cookie"] = existingCookies;
-
-  const response = await fetch(loginUrl, {
-    method: "POST",
-    headers: reqHeaders,
-    body: new URLSearchParams({
-      account: credentials.username!,
-      password: credentials.password!,
-      validateCode: "",
-      isReadPact: "0",
-    }),
-    redirect: "manual",
-  });
-
-  const cookies: string[] = [];
-  response.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "set-cookie") {
-      cookies.push(value.split(";")[0]);
-    }
-  });
-  const cookieStr = [existingCookies, ...cookies].filter(Boolean).join("; ");
-
-  const text = await response.text();
-  let body: any = {};
-  try {
-    body = JSON.parse(text);
-  } catch {
-    // HTML redirect = success if we have cookies
-  }
-
-  const userId = String(body.back?.userId || body.back?.user?.id || "");
-  if (!cookieStr && !userId) {
-    throw new Error("Growatt: login falhou — nenhum cookie ou userId retornado");
-  }
-
-  return { cookie: cookieStr, userId, baseUrl };
-}
-
 /** Fetch plant detail to get capacity_kwp, real status, and current power */
 async function fetchPlantDetail(
   session: GrowattSession,
