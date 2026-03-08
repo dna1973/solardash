@@ -59,6 +59,17 @@ const MANUFACTURERS: ManufacturerConfig[] = [
       { key: "base_url", label: "IP/URL do Datalogger", type: "text", placeholder: "http://192.168.1.100" },
     ],
   },
+  {
+    slug: "hoymiles",
+    name: "Hoymiles",
+    logo: "🟡",
+    authType: "credentials",
+    fields: [
+      { key: "username", label: "Usuário (e-mail)", type: "email", placeholder: "seu-email@exemplo.com" },
+      { key: "password", label: "Senha", type: "password", placeholder: "Senha do S-Miles Cloud" },
+      { key: "base_url", label: "Servidor (opcional)", type: "text", placeholder: "https://neapi.hoymiles.com" },
+    ],
+  },
 ];
 
 interface TestResult {

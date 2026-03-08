@@ -353,6 +353,11 @@ async function syncIntegration(
             }
           }
           break;
+        case "hoymiles":
+          if (session) {
+            energyData = await hoymiles.collectEnergy(session, plant.external_id);
+          }
+          break;
       }
 
       for (const entry of energyData) {
