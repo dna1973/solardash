@@ -161,6 +161,16 @@ serve(async (req) => {
           case "collect_energy":
             if (!plant_external_id) throw new Error("plant_external_id required");
             result = await apsystems.collectEnergy(apSession, plant_external_id, device_serial); break;
+          case "collect_historical": {
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            const { start_date, end_date, level } = body;
+            if (level === "monthly") {
+              result = await apsystems.collectMonthlyEnergy(apSession, plant_external_id, start_date, end_date);
+            } else {
+              result = await apsystems.collectDailyEnergy(apSession, plant_external_id, start_date, end_date);
+            }
+            break;
+          }
           default: throw new Error(`Unsupported action: ${action}`);
         }
         break;
