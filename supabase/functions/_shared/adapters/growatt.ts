@@ -186,11 +186,11 @@ export async function authenticate(
   return { cookie: cookieStr, userId, baseUrl };
 }
 
-/** Fallback: legacy /login endpoint */
+/** Fallback: legacy /login endpoint with plain password */
 async function authenticateLegacy(
   credentials: AdapterCredentials,
   baseUrl: string,
-  existingCookies: string
+  existingCookies?: string
 ): Promise<GrowattSession> {
   const loginUrl = `${baseUrl}/login`;
   console.log(`Growatt: tentando login legado em ${loginUrl}`);
