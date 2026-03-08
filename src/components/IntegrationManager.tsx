@@ -35,11 +35,10 @@ const MANUFACTURERS: ManufacturerConfig[] = [
     slug: "growatt",
     name: "Growatt",
     logo: "🟢",
-    authType: "credentials",
+    authType: "api_key",
     fields: [
-      { key: "username", label: "Usuário Growatt", type: "text", placeholder: "seu_usuario" },
-      { key: "password", label: "Senha", type: "password", placeholder: "••••••••" },
-      { key: "base_url", label: "Servidor", type: "text", placeholder: "server.growatt.com" },
+      { key: "token", label: "Token OpenAPI V1", type: "password", placeholder: "Seu token de 32 caracteres" },
+      { key: "base_url", label: "Servidor (opcional)", type: "text", placeholder: "https://openapi.growatt.com" },
     ],
   },
   {
