@@ -180,7 +180,7 @@ export default function Alerts() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              {hasReal && (
+              {sorted.length > 0 && (
                 <Checkbox
                   checked={sorted.length > 0 && selected.size === sorted.length}
                   onCheckedChange={toggleAll}
