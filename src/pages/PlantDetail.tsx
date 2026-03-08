@@ -74,7 +74,29 @@ export default function PlantDetail() {
             {plant.location || "Sem localização"}
           </div>
         </div>
+        {isGestor && (
+          <button
+            onClick={() => setEditOpen(true)}
+            className="flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Editar
+          </button>
+        )}
       </motion.div>
+
+      {/* Edit Dialog */}
+      {isGestor && plant && (
+        <PlantEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          plant={plant}
+          onSave={async (data) => {
+            await updatePlant.mutateAsync({ id: plant.id, ...data });
+            toast.success("Usina atualizada com sucesso!");
+          }}
+        />
+      )}
 
       {/* Stats row */}
       <motion.div
