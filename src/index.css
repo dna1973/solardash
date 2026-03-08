@@ -89,6 +89,20 @@
     --border: 220 20% 18%;
     --input: 220 20% 18%;
     --ring: 152 60% 50%;
+
+    --energy-green-light: 152 40% 18%;
+    --energy-yellow-light: 45 40% 18%;
+    --energy-blue-light: 210 40% 18%;
+    --energy-red-light: 0 40% 18%;
+
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.3), 0 1px 2px hsl(0 0% 0% / 0.2);
+    --shadow-card-hover: 0 10px 25px hsl(0 0% 0% / 0.4), 0 4px 10px hsl(0 0% 0% / 0.2);
+
+    --sidebar-background: 220 25% 6%;
+    --sidebar-foreground: 220 10% 70%;
+    --sidebar-accent: 220 20% 12%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 220 20% 14%;
   }
 }
 
@@ -139,5 +153,5 @@
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(220 10% 75%); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(220 10% 55%); }
+::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
