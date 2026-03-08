@@ -243,16 +243,27 @@ async function syncIntegration(
 
     if (existing) {
       plantId = existing.id;
+      // Only update fields that won't overwrite user-edited data
+      // Location, latitude, longitude are preserved if the API returns null/empty
+      const updateData: Record<string, any> = {
+        capacity_kwp: plant.capacity_kwp || undefined,
+        status: plant.status || "offline",
+        updated_at: new Date().toISOString(),
+      };
+      // Only overwrite location/coords if API provides actual values AND DB has none
+      if (plant.location) {
+        const { data: current } = await supabase
+          .from("plants")
+          .select("location, latitude, longitude")
+          .eq("id", existing.id)
+          .single();
+        if (!current?.location) updateData.location = plant.location;
+        if (plant.latitude && !current?.latitude) updateData.latitude = plant.latitude;
+        if (plant.longitude && !current?.longitude) updateData.longitude = plant.longitude;
+      }
       await supabase
         .from("plants")
-        .update({
-          location: plant.location || null,
-          latitude: plant.latitude || null,
-          longitude: plant.longitude || null,
-          capacity_kwp: plant.capacity_kwp || 0,
-          status: plant.status || "offline",
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", plantId);
     } else {
       const { data: newPlant, error: insertErr } = await supabase
