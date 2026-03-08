@@ -66,7 +66,7 @@ async function callManageUsers(action: string, params: Record<string, unknown>) 
   return data;
 }
 
-export default function UsersPage() {
+export default function UsersPage({ embedded = false }: { embedded?: boolean }) {
   const { data: users = [], isLoading } = useUsers();
   const { isAdmin, isLoading: roleLoading } = useUserRole();
   const { user: currentUser } = useAuth();
