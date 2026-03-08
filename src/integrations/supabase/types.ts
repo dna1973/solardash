@@ -14,6 +14,226 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: string
+          message: string
+          plant_id: string
+          resolved: boolean
+          resolved_at: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          message: string
+          plant_id: string
+          resolved?: boolean
+          resolved_at?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          message?: string
+          plant_id?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          api_endpoint: string | null
+          auth_token: string | null
+          collection_interval_minutes: number
+          created_at: string
+          device_type: string
+          id: string
+          last_communication: string | null
+          manufacturer: string
+          model: string
+          plant_id: string
+          serial_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          auth_token?: string | null
+          collection_interval_minutes?: number
+          created_at?: string
+          device_type: string
+          id?: string
+          last_communication?: string | null
+          manufacturer: string
+          model: string
+          plant_id: string
+          serial_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          auth_token?: string | null
+          collection_interval_minutes?: number
+          created_at?: string
+          device_type?: string
+          id?: string
+          last_communication?: string | null
+          manufacturer?: string
+          model?: string
+          plant_id?: string
+          serial_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devices_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      energy_data: {
+        Row: {
+          consumption_power_kw: number | null
+          created_at: string
+          current: number | null
+          device_id: string | null
+          energy_consumed_kwh: number | null
+          energy_generated_kwh: number | null
+          generation_power_kw: number | null
+          id: string
+          plant_id: string
+          status: string | null
+          temperature: number | null
+          timestamp: string
+          voltage: number | null
+        }
+        Insert: {
+          consumption_power_kw?: number | null
+          created_at?: string
+          current?: number | null
+          device_id?: string | null
+          energy_consumed_kwh?: number | null
+          energy_generated_kwh?: number | null
+          generation_power_kw?: number | null
+          id?: string
+          plant_id: string
+          status?: string | null
+          temperature?: number | null
+          timestamp: string
+          voltage?: number | null
+        }
+        Update: {
+          consumption_power_kw?: number | null
+          created_at?: string
+          current?: number | null
+          device_id?: string | null
+          energy_consumed_kwh?: number | null
+          energy_generated_kwh?: number | null
+          generation_power_kw?: number | null
+          id?: string
+          plant_id?: string
+          status?: string | null
+          temperature?: number | null
+          timestamp?: string
+          voltage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "energy_data_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "energy_data_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plants: {
+        Row: {
+          capacity_kwp: number
+          created_at: string
+          id: string
+          installation_date: string | null
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          name: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          utility_company: string | null
+        }
+        Insert: {
+          capacity_kwp?: number
+          created_at?: string
+          id?: string
+          installation_date?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          name: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          utility_company?: string | null
+        }
+        Update: {
+          capacity_kwp?: number
+          created_at?: string
+          id?: string
+          installation_date?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          name?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          utility_company?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -105,6 +325,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      device_belongs_to_tenant: {
+        Args: { _plant_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
