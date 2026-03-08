@@ -176,6 +176,20 @@ serve(async (req) => {
         }
         break;
       }
+      case "hoymiles": {
+        const hmSession = await hoymiles.authenticate(credentials);
+        switch (action) {
+          case "list_plants": result = await hoymiles.listPlants(hmSession); break;
+          case "list_devices":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await hoymiles.listDevices(hmSession, plant_external_id); break;
+          case "collect_energy":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await hoymiles.collectEnergy(hmSession, plant_external_id, device_serial); break;
+          default: throw new Error(`Unsupported action: ${action}`);
+        }
+        break;
+      }
       default:
         throw new Error(`Unsupported manufacturer: ${manufacturer}`);
     }
