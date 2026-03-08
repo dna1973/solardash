@@ -54,7 +54,9 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
 
   // APsystems End User docs Section 2.2.2:
   // stringToSign = X-CA-Timestamp + "/" + X-CA-Nonce + "/" + X-CA-AppId + "/" + RequestPath + "/" + HTTPMethod + "/" + X-CA-Signature-Method
-  const stringToSign = `${timestamp}/${nonce}/${session.appId}/${endpoint}/${method}/${signatureMethod}`;
+  // RequestPath must NOT have leading slash to avoid double-slash in signature
+  const requestPath = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+  const stringToSign = `${timestamp}/${nonce}/${session.appId}/${requestPath}/${method}/${signatureMethod}`;
   console.log(`apsystems: stringToSign: ${stringToSign}`);
 
   const signature = await generateSignature(session.appSecret, stringToSign);
