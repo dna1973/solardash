@@ -29,11 +29,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <NotificationBell />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-white">
-                  AD
-                </div>
-              </div>
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
