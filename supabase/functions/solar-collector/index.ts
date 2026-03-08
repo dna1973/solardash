@@ -61,7 +61,8 @@ serve(async (req) => {
     switch (manufacturer.toLowerCase()) {
       case "growatt": {
         const session = await growatt.authenticate(credentials);
-        const baseUrl = credentials.base_url || "https://openapi.growatt.com";
+        let baseUrl = (credentials.base_url || "https://openapi.growatt.com").trim().replace(/\/+$/, "");
+        if (!baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`;
         switch (action) {
           case "list_plants":
             result = await growatt.listPlants(session, baseUrl);
