@@ -1,4 +1,4 @@
-import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2 } from "lucide-react";
+import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
