@@ -322,6 +322,13 @@ export default function ConsumptionPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Bill Import Dialog */}
+      <BillImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => toast.success("Conta importada! Atualize a página para ver os dados.")}
+      />
     </div>
   );
 }
