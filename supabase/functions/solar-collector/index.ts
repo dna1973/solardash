@@ -5,6 +5,7 @@ import type { CollectorRequest, NormalizedEnergyData, NormalizedPlant } from "..
 import * as growatt from "../_shared/adapters/growatt.ts";
 import * as solaredge from "../_shared/adapters/solaredge.ts";
 import * as fronius from "../_shared/adapters/fronius.ts";
+import * as apsystems from "../_shared/adapters/apsystems.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

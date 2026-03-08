@@ -232,7 +232,7 @@ export function IntegrationManager() {
             <div>
               <CardTitle className="text-base">Integrações de Fabricantes</CardTitle>
               <CardDescription className="text-xs">
-                Conecte inversores Growatt, SolarEdge, Fronius e mais
+                Conecte inversores Growatt, SolarEdge, Fronius, APsystems e mais
               </CardDescription>
             </div>
           </div>
