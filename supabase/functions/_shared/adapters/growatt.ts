@@ -195,13 +195,15 @@ async function authenticateLegacy(
   const loginUrl = `${baseUrl}/login`;
   console.log(`Growatt: tentando login legado em ${loginUrl}`);
 
+  const reqHeaders: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "User-Agent": AGENT,
+  };
+  if (existingCookies) reqHeaders["Cookie"] = existingCookies;
+
   const response = await fetch(loginUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": AGENT,
-      Cookie: existingCookies,
-    },
+    headers: reqHeaders,
     body: new URLSearchParams({
       account: credentials.username!,
       password: credentials.password!,
@@ -211,15 +213,25 @@ async function authenticateLegacy(
     redirect: "manual",
   });
 
+  console.log(`Growatt: login legado status=${response.status}`);
+
   const cookies: string[] = [];
   response.headers.forEach((value, key) => {
     if (key.toLowerCase() === "set-cookie") {
       cookies.push(value.split(";")[0]);
     }
   });
+
+  // Log all response headers for debugging
+  const allHeaders: string[] = [];
+  response.headers.forEach((v, k) => allHeaders.push(`${k}: ${v.substring(0, 100)}`));
+  console.log(`Growatt: login legado headers: ${allHeaders.join(" | ")}`);
+
   const cookieStr = [existingCookies, ...cookies].filter(Boolean).join("; ");
 
   const text = await response.text();
+  console.log(`Growatt: login legado body (${text.length} chars): ${text.substring(0, 500)}`);
+
   let body: any = {};
   try {
     body = JSON.parse(text);
@@ -229,6 +241,10 @@ async function authenticateLegacy(
 
   const userId = String(body.back?.userId || body.back?.user?.id || "");
   console.log(`Growatt: login legado, userId=${userId}, cookies=${cookieStr ? "yes" : "no"}`);
+
+  if (!cookieStr && !userId) {
+    throw new Error("Growatt: login falhou — nenhum cookie ou userId retornado");
+  }
 
   return { cookie: cookieStr, userId, baseUrl };
 }
