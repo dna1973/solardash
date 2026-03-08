@@ -1,5 +1,5 @@
-// Hoymiles Adapter — S-Miles Cloud API (neapi.hoymiles.com)
-// Based on reverse-engineered API from Home Assistant integrations
+// Hoymiles Adapter — S-Miles Cloud API (global.hoymiles.com)
+// Based on reverse-engineered API from Home Assistant integrations (dmslabsbr/hoymiles)
 import type {
   AdapterCredentials,
   NormalizedPlant,
@@ -12,19 +12,8 @@ interface HoymilesSession {
   baseUrl: string;
 }
 
-const DEFAULT_BASE_URL = "https://neapi.hoymiles.com";
-
-function md5(input: string): string {
-  // Deno built-in crypto for MD5
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-  const hashBuffer = new Uint8Array(
-    // @ts-ignore Deno API
-    Deno.core ? [] : []
-  );
-  // Use Web Crypto — MD5 is not in SubtleCrypto, so we implement a simple one
-  return simpleMD5(input);
-}
+const DEFAULT_BASE_URL = "https://global.hoymiles.com";
+const API_PREFIX = "/platform/api/gateway";
 
 // Minimal MD5 implementation for Deno edge functions
 function simpleMD5(string: string): string {
@@ -107,17 +96,20 @@ function simpleMD5(string: string): string {
 // ─── API helpers ───
 
 async function apiPost(session: HoymilesSession, path: string, body: Record<string, any>): Promise<any> {
-  const url = `${session.baseUrl}${path}`;
-  console.log(`Hoymiles API POST: ${path}`);
+  const url = `${session.baseUrl}${API_PREFIX}/${path}`;
+  console.log(`Hoymiles API POST: ${url}`);
 
   const resp = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
-      "Authorization": session.token,
+      "Cookie": `hm_token=${session.token}`,
+      "Authorization": `bearer ${session.token}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      body,
+    }),
   });
 
   const text = await resp.text();
@@ -125,7 +117,7 @@ async function apiPost(session: HoymilesSession, path: string, body: Record<stri
 
   try {
     const json = JSON.parse(text);
-    if (json.status !== "0" || json.message !== "success") {
+    if (json.status !== "0" && json.status !== 0) {
       throw new Error(`Hoymiles API error: status=${json.status}, message=${json.message}`);
     }
     return json;
@@ -158,30 +150,35 @@ export async function authenticate(credentials: AdapterCredentials): Promise<Hoy
 
   const md5Password = simpleMD5(password);
 
-  const resp = await fetch(`${baseUrl}/iam/pub/0/auth/login`, {
+  const loginUrl = `${baseUrl}${API_PREFIX}/iam/auth_login`;
+  console.log(`Hoymiles: POST ${loginUrl}`);
+
+  const resp = await fetch(loginUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
     },
     body: JSON.stringify({
-      user_name: username,
-      password: md5Password,
+      body: {
+        user_name: username,
+        password: md5Password,
+      },
     }),
   });
 
   const text = await resp.text();
-  console.log(`Hoymiles auth response: ${text.substring(0, 300)}`);
+  console.log(`Hoymiles auth response (status ${resp.status}): ${text.substring(0, 300)}`);
 
   let json: any;
   try {
     json = JSON.parse(text);
   } catch {
-    throw new Error(`Hoymiles: resposta de autenticação inválida`);
+    throw new Error(`Hoymiles: resposta de autenticação inválida (HTTP ${resp.status})`);
   }
 
-  if (json.status !== "0" || json.message !== "success") {
-    throw new Error(`Hoymiles: autenticação falhou — ${json.message || "credenciais inválidas"}`);
+  if (json.status !== "0" && json.status !== 0) {
+    throw new Error(`Hoymiles: autenticação falhou — ${json.message || json.msg || "credenciais inválidas"} (status=${json.status})`);
   }
 
   const token = json.data?.token;
@@ -195,57 +192,47 @@ export async function authenticate(credentials: AdapterCredentials): Promise<Hoy
 
 export async function listPlants(session: HoymilesSession): Promise<NormalizedPlant[]> {
   const allPlants: NormalizedPlant[] = [];
-  let pageNum = 1;
-  const pageSize = 20;
 
-  do {
-    const result = await apiPost(session, "/pvm/api/0/station/select_by_page", {
-      page_size: pageSize,
-      page_num: pageNum,
-    });
+  const result = await apiPost(session, "pvm/station_find", {});
 
-    const list = result?.data?.list || [];
-    if (list.length === 0) break;
+  const list = result?.data?.list || result?.data || [];
+  const stations = Array.isArray(list) ? list : [list];
 
-    for (const s of list) {
-      const stationId = String(s.id);
+  for (const s of stations) {
+    if (!s || !s.id) continue;
+    const stationId = String(s.id);
 
-      // Try to get real-time data for capacity/power info
-      let realTimeData: any = {};
-      try {
-        const rtResult = await apiPost(session, "/pvm-data/api/0/station/data/count_station_real_data", {
-          sid: parseInt(stationId),
-        });
-        realTimeData = rtResult?.data || {};
-      } catch (e) {
-        console.log(`Hoymiles: erro ao obter dados em tempo real da estação ${stationId}: ${e}`);
-      }
-
-      const currentPower = parseFloat(String(realTimeData.real_power || realTimeData.last_data_time_power || 0)) / 1000; // W → kW
-      const capacityKwp = parseFloat(String(s.capacity || s.installed_capacity || 0)) / 1000; // W → kWp
-
-      let status: NormalizedPlant["status"] = "offline";
-      if (currentPower > 0) {
-        status = "online";
-      } else if (s.warn_flag === 1) {
-        status = "warning";
-      }
-
-      allPlants.push({
-        external_id: stationId,
-        name: s.name || `Station ${stationId}`,
-        location: s.address || s.location_address || "",
-        latitude: s.latitude ? parseFloat(String(s.latitude)) : undefined,
-        longitude: s.longitude ? parseFloat(String(s.longitude)) : undefined,
-        capacity_kwp: capacityKwp > 0 ? capacityKwp : undefined,
-        status,
+    // Try to get real-time data for capacity/power info
+    let realTimeData: any = {};
+    try {
+      const rtResult = await apiPost(session, "pvm-data/data_count_station_real_data", {
+        sid: parseInt(stationId),
       });
+      realTimeData = rtResult?.data || {};
+    } catch (e) {
+      console.log(`Hoymiles: erro ao obter dados em tempo real da estação ${stationId}: ${e}`);
     }
 
-    const total = result?.data?.total || 0;
-    if (allPlants.length >= total) break;
-    pageNum++;
-  } while (true);
+    const currentPower = parseFloat(String(realTimeData.real_power || realTimeData.last_data_time_power || 0)) / 1000; // W → kW
+    const capacityKwp = parseFloat(String(s.capacity || s.installed_capacity || s.plant_capacity || 0)) / 1000; // W → kWp
+
+    let status: NormalizedPlant["status"] = "offline";
+    if (currentPower > 0) {
+      status = "online";
+    } else if (s.warn_flag === 1) {
+      status = "warning";
+    }
+
+    allPlants.push({
+      external_id: stationId,
+      name: s.name || s.station_name || `Station ${stationId}`,
+      location: s.address || s.location_address || "",
+      latitude: s.latitude ? parseFloat(String(s.latitude)) : undefined,
+      longitude: s.longitude ? parseFloat(String(s.longitude)) : undefined,
+      capacity_kwp: capacityKwp > 0 ? capacityKwp : undefined,
+      status,
+    });
+  }
 
   console.log(`Hoymiles: ${allPlants.length} estação(ões) listada(s)`);
   return allPlants;
@@ -255,27 +242,37 @@ export async function listDevices(session: HoymilesSession, stationId: string): 
   const allDevices: NormalizedDevice[] = [];
 
   try {
-    const result = await apiPost(session, "/pvm/api/0/dev/micro/select_by_station", {
+    const result = await apiPost(session, "pvm/station_select_device_of_tree", {
       sid: parseInt(stationId),
-      page_size: 100,
-      page_num: 1,
-      show_warn: 0,
     });
 
-    const list = result?.data?.list || [];
+    // The device tree can be nested - flatten it
+    const extractDevices = (items: any[]) => {
+      for (const d of items) {
+        if (!d) continue;
+        const deviceId = String(d.id || d.sn || d.device_sn);
+        if (deviceId && deviceId !== "undefined") {
+          allDevices.push({
+            external_id: deviceId,
+            plant_external_id: stationId,
+            manufacturer: "Hoymiles",
+            model: d.model_no || d.model || "Microinverter",
+            serial_number: d.sn || d.device_sn || deviceId,
+            device_type: "inverter",
+            status: d.warn_flag === 0 ? "online" : d.warn_flag === 1 ? "warning" : "offline",
+            last_communication: d.last_data_time || undefined,
+          });
+        }
+        // Check for children
+        if (d.children && Array.isArray(d.children)) {
+          extractDevices(d.children);
+        }
+      }
+    };
 
-    for (const d of list) {
-      const deviceId = String(d.id || d.sn);
-      allDevices.push({
-        external_id: deviceId,
-        plant_external_id: stationId,
-        manufacturer: "Hoymiles",
-        model: d.model_no || d.model || "Microinverter",
-        serial_number: d.sn || d.device_sn || deviceId,
-        device_type: "inverter",
-        status: d.warn_flag === 0 ? "online" : d.warn_flag === 1 ? "warning" : "offline",
-        last_communication: d.last_data_time || undefined,
-      });
+    const list = result?.data?.list || result?.data || [];
+    if (Array.isArray(list)) {
+      extractDevices(list);
     }
   } catch (e) {
     console.error(`Hoymiles: erro ao listar dispositivos da estação ${stationId}: ${e}`);
@@ -294,7 +291,7 @@ export async function collectEnergy(
 
   // Get real-time station data
   try {
-    const rtResult = await apiPost(session, "/pvm-data/api/0/station/data/count_station_real_data", {
+    const rtResult = await apiPost(session, "pvm-data/data_count_station_real_data", {
       sid: parseInt(stationId),
     });
 
