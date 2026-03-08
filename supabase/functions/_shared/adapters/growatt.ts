@@ -170,12 +170,9 @@ export async function authenticate(
   try {
     body = JSON.parse(text);
   } catch {
-    // If we got a redirect/HTML but have cookies, try legacy endpoint
-    if (cookieStr) {
-      console.log("Growatt: newTwoLoginAPI retornou HTML mas temos cookies, tentando login legado...");
-      return authenticateLegacy(credentials, baseUrl, cookieStr);
-    }
-    throw new Error("Growatt: resposta de login não é JSON. Verifique a URL do servidor.");
+    // newTwoLoginAPI.do may not work on all servers — try legacy
+    console.log("Growatt: newTwoLoginAPI não retornou JSON, tentando login legado...");
+    return authenticateLegacy(credentials, baseUrl);
   }
 
   const back = body.back || body;
