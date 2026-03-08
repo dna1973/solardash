@@ -111,3 +111,26 @@ export function useEnergyData(plantId?: string) {
     },
   });
 }
+
+export function useUpdatePlant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...updates
+    }: {
+      id: string;
+      location?: string;
+      utility_company?: string;
+      latitude?: number | null;
+      longitude?: number | null;
+    }) => {
+      const { error } = await supabase.from("plants").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["plant", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["plants"] });
+    },
+  });
+}
