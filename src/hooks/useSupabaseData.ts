@@ -122,6 +122,7 @@ export function useUpdatePlant() {
       id: string;
       location?: string;
       utility_company?: string;
+      integrator?: string;
       latitude?: number | null;
       longitude?: number | null;
     }) => {
