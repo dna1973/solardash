@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { usePlantById, useDevicesByPlant, useAlertsByPlant, useEnergyData } from "@/hooks/useSupabaseData";
+import { usePlantById, useDevicesByPlant, useAlertsByPlant, useEnergyData, useUpdatePlant } from "@/hooks/useSupabaseData";
+import { useUserRole } from "@/hooks/useUserRole";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
+import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { EnergyChart } from "@/components/EnergyChart";
-import { ArrowLeft, Sun, MapPin, Zap, Calendar, Loader2, Cpu, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Sun, MapPin, Zap, Calendar, Loader2, Cpu, AlertTriangle, CheckCircle2, Pencil } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 export default function PlantDetail() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +18,9 @@ export default function PlantDetail() {
   const { data: devices, isLoading: loadingDevices } = useDevicesByPlant(id!);
   const { data: alerts } = useAlertsByPlant(id!);
   const { data: energyData } = useEnergyData(id);
+  const { isGestor } = useUserRole();
+  const updatePlant = useUpdatePlant();
+  const [editOpen, setEditOpen] = useState(false);
 
   const activeAlerts = (alerts || []).filter((a) => !a.resolved);
 
@@ -67,7 +74,29 @@ export default function PlantDetail() {
             {plant.location || "Sem localização"}
           </div>
         </div>
+        {isGestor && (
+          <button
+            onClick={() => setEditOpen(true)}
+            className="flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Editar
+          </button>
+        )}
       </motion.div>
+
+      {/* Edit Dialog */}
+      {isGestor && plant && (
+        <PlantEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          plant={plant}
+          onSave={async (data) => {
+            await updatePlant.mutateAsync({ id: plant.id, ...data });
+            toast.success("Usina atualizada com sucesso!");
+          }}
+        />
+      )}
 
       {/* Stats row */}
       <motion.div
