@@ -161,7 +161,7 @@ export default function Alerts() {
           <h1 className="text-2xl font-bold tracking-tight">Alertas</h1>
           <p className="text-sm text-muted-foreground">
             {isLoading ? "Carregando..." : `${activeCount} alertas ativos`}
-            {!hasReal && !isLoading && <span className="text-[10px] ml-2 text-muted-foreground/60">(dados de demonstração)</span>}
+            
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleCheckNow} disabled={checking}>
