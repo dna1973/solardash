@@ -179,7 +179,7 @@ serve(async (req) => {
         throw new Error(`Unsupported manufacturer: ${manufacturer}`);
     }
 
-    if (action === "collect_energy" && Array.isArray(result)) {
+    if ((action === "collect_energy" || action === "collect_historical") && Array.isArray(result)) {
       await persistEnergyData(supabase, profile.tenant_id, result);
     }
 
