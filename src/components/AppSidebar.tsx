@@ -28,7 +28,7 @@ import {
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Usinas", url: "/plants", icon: Sun },
+  { title: "Geração", url: "/plants", icon: Sun },
   { title: "Consumo", url: "/consumption", icon: Building2 },
   { title: "Relatórios", url: "/reports", icon: FileBarChart },
   { title: "Gestão do Sistema", url: "/management", icon: ShieldCheck },
