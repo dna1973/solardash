@@ -11,6 +11,7 @@ interface GrowattSession {
   cookie: string;
   userId: string;
   baseUrl: string;
+  loginPlants?: any[]; // Plants returned in login response
 }
 
 /** Growatt-specific password hash: MD5 hex with '0' nibble → 'c' at even positions */
