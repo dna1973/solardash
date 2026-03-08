@@ -71,6 +71,7 @@ const AppRoutes = () => {
                 <Route path="/alerts" element={<Alerts />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/management" element={<SystemManagementPage />} />
+                <Route path="/map" element={<FullMap />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
