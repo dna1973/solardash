@@ -7,39 +7,25 @@ import type {
   NormalizedEnergyData,
 } from "../solar-types.ts";
 
-const GROWATT_SERVERS: Record<string, string> = {
-  global: "https://server.growatt.com",
-  us: "https://server-us.growatt.com",
-  openapi: "https://openapi.growatt.com",
-};
-
 interface GrowattSession {
   cookie: string;
   userId: string;
   baseUrl: string;
 }
 
+/** Clean up base URL: ensure https, strip paths like /selectPlant, trailing slashes */
 function normalizeUrl(url: string): string {
-  let u = url.trim().replace(/\/+$/, "");
+  let u = url.trim();
   if (!u.startsWith("http")) u = `https://${u}`;
-  return u;
-}
-
-async function safeJson(response: Response, context: string): Promise<any> {
-  const text = await response.text();
-  if (!response.ok && response.status !== 302) {
-    throw new Error(`Growatt ${context}: HTTP ${response.status} - ${text.substring(0, 200)}`);
-  }
+  // Remove known sub-paths users might copy from browser
   try {
-    return JSON.parse(text);
+    const parsed = new URL(u);
+    // Keep only origin (protocol + host)
+    u = parsed.origin;
   } catch {
-    // Some endpoints return HTML on success (redirect), check for JSON in response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try { return JSON.parse(jsonMatch[0]); } catch { /* fall through */ }
-    }
-    throw new Error(`Growatt ${context}: resposta inesperada do servidor. Verifique suas credenciais.`);
+    u = u.replace(/\/+$/, "");
   }
+  return u;
 }
 
 export async function authenticate(
@@ -49,17 +35,19 @@ export async function authenticate(
     throw new Error("Growatt: credenciais (usuário e senha) são obrigatórias");
   }
 
-  const baseUrl = normalizeUrl(credentials.base_url || GROWATT_SERVERS.global);
+  const baseUrl = normalizeUrl(credentials.base_url || "https://server.growatt.com");
 
-  // Growatt ShineServer login endpoint
   const loginUrl = `${baseUrl}/login`;
-  console.log(`Growatt: tentando login em ${loginUrl}`);
+  console.log(`Growatt: login em ${loginUrl}`);
 
   let response: Response;
   try {
     response = await fetch(loginUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
       body: new URLSearchParams({
         account: credentials.username,
         password: credentials.password,
@@ -72,128 +60,133 @@ export async function authenticate(
     throw new Error(`Growatt: não foi possível conectar a ${baseUrl}. Verifique a URL.`);
   }
 
-  // Collect all cookies
+  // Collect all cookies from response
   const cookies: string[] = [];
   response.headers.forEach((value, key) => {
     if (key.toLowerCase() === "set-cookie") {
       cookies.push(value.split(";")[0]);
     }
   });
-  const cookieStr = cookies.join("; ") || response.headers.get("set-cookie")?.split(";")[0] || "";
+  const cookieStr = cookies.join("; ") || "";
 
-  // Try to parse the login response
+  // Parse login body
   let body: any = {};
   const text = await response.text();
   try {
     body = JSON.parse(text);
   } catch {
-    // Check if we got redirected (success with cookie)
-    if (!cookieStr) {
-      throw new Error("Growatt: autenticação falhou. Verifique usuário e senha.");
-    }
+    // Some servers redirect on success — cookie is the auth
   }
 
-  // Growatt returns { back: { success: true, ... } } or { result: 1 }
   const loginSuccess = body.back?.success === true || body.result === 1 || body.back?.userId;
   if (!loginSuccess && !cookieStr) {
     const errMsg = body.back?.msg || body.error || "credenciais inválidas";
     throw new Error(`Growatt: login falhou — ${errMsg}`);
   }
 
-  console.log(`Growatt: login OK, userId=${body.back?.userId || "?"}, cookies=${cookieStr.length > 0 ? "yes" : "no"}`);
+  const userId = String(body.back?.userId || body.back?.user?.id || body.user?.id || "");
+  console.log(`Growatt: login OK, userId=${userId || "?"}, cookies=${cookieStr ? "yes" : "no"}`);
 
-  return {
-    cookie: cookieStr,
-    userId: body.back?.userId || body.back?.user?.id || "",
-    baseUrl,
-  };
+  return { cookie: cookieStr, userId, baseUrl };
 }
 
 export async function listPlants(
   session: GrowattSession,
   _baseUrl?: string
 ): Promise<NormalizedPlant[]> {
-  const baseUrl = session.baseUrl;
+  const base = session.baseUrl;
+  const headers: Record<string, string> = {
+    Cookie: session.cookie,
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    Accept: "application/json, text/plain, */*",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "X-Requested-With": "XMLHttpRequest",
+  };
 
-  // Try multiple endpoints - ShineServer vs OpenAPI differ
-  const endpoints = [
-    "/index/getPlantListTitle",
-    "/panel/getDevicesByPlantList",
-    "/index/getPlantListTitle_498",
+  // Endpoints to try — ShineServer portal uses POST with pagination
+  const attempts: Array<{ url: string; method: string; body?: string }> = [
+    {
+      url: `${base}/index/getPlantListTitle`,
+      method: "POST",
+      body: new URLSearchParams({ currPage: "1", plantName: "" }).toString(),
+    },
+    {
+      url: `${base}/panel/getDevicesByPlantList`,
+      method: "POST",
+      body: new URLSearchParams({ currPage: "1" }).toString(),
+    },
   ];
 
-  for (const endpoint of endpoints) {
+  // If we have userId, also try the userId-based endpoint
+  if (session.userId) {
+    attempts.push({
+      url: `${base}/panel/getPlantList?userId=${session.userId}`,
+      method: "POST",
+      body: new URLSearchParams({ currPage: "1" }).toString(),
+    });
+  }
+
+  for (const attempt of attempts) {
     try {
-      console.log(`Growatt: tentando ${baseUrl}${endpoint}`);
-      const response = await fetch(`${baseUrl}${endpoint}`, {
-        headers: {
-          Cookie: session.cookie,
-          "User-Agent": "Mozilla/5.0",
-          Accept: "application/json, text/plain, */*",
-        },
+      console.log(`Growatt: tentando ${attempt.method} ${attempt.url}`);
+      const response = await fetch(attempt.url, {
+        method: attempt.method,
+        headers,
+        body: attempt.body,
       });
 
       const text = await response.text();
+      console.log(`Growatt: resposta ${attempt.url} → ${text.substring(0, 300)}`);
+
       let data: any;
       try {
         data = JSON.parse(text);
       } catch {
-        console.log(`Growatt: ${endpoint} retornou HTML, tentando próximo...`);
+        console.log(`Growatt: ${attempt.url} retornou HTML, pulando...`);
         continue;
       }
 
-      // Different response formats
-      const plants = data.back || data.data || data.datas || data.result || [];
-      const plantList = Array.isArray(plants) ? plants : (plants.plantList || plants.data || []);
+      // Extract plants from various response shapes
+      const candidates = [
+        data.back?.data,
+        data.back,
+        data.datas,
+        data.data,
+        data.result,
+        data.obj?.plantList,
+        data.obj?.datas,
+      ];
 
-      if (Array.isArray(plantList) && plantList.length > 0) {
-        console.log(`Growatt: ${plantList.length} planta(s) encontrada(s) via ${endpoint}`);
-        return plantList.map((p: any) => ({
-          external_id: String(p.id || p.plantId),
-          name: p.plantName || p.name || "Unknown",
-          location: [p.city, p.country].filter(Boolean).join(", ") || "",
-          latitude: p.lat ? parseFloat(p.lat) : undefined,
-          longitude: p.lng ? parseFloat(p.lng) : undefined,
-          capacity_kwp: p.nominalPower ? parseFloat(p.nominalPower) : undefined,
-          status: mapPlantStatus(p.status),
-        }));
+      for (const raw of candidates) {
+        const list = Array.isArray(raw) ? raw : (raw?.plantList || raw?.data || null);
+        if (Array.isArray(list) && list.length > 0) {
+          console.log(`Growatt: ${list.length} planta(s) encontrada(s)`);
+          return list.map(mapPlantResponse);
+        }
       }
 
-      console.log(`Growatt: ${endpoint} retornou lista vazia, tentando próximo...`);
+      // Check totalData / total for pagination info
+      const total = data.back?.totalData || data.totalData || data.total || 0;
+      console.log(`Growatt: ${attempt.url} → parsed OK, total=${total}, mas lista vazia`);
     } catch (e) {
-      console.log(`Growatt: erro em ${endpoint}: ${e}`);
-      continue;
+      console.log(`Growatt: erro em ${attempt.url}: ${e}`);
     }
   }
 
-  // If all endpoints returned empty, try with userId
-  if (session.userId) {
-    try {
-      const response = await fetch(`${baseUrl}/panel/getPlantList?userId=${session.userId}`, {
-        headers: {
-          Cookie: session.cookie,
-          "User-Agent": "Mozilla/5.0",
-        },
-      });
-      const data = await safeJson(response, "getPlantList");
-      const plants = data.back?.data || data.datas || data.data || [];
-      if (Array.isArray(plants) && plants.length > 0) {
-        return plants.map((p: any) => ({
-          external_id: String(p.id || p.plantId),
-          name: p.plantName || p.name || "Unknown",
-          location: [p.city, p.country].filter(Boolean).join(", ") || "",
-          latitude: p.lat ? parseFloat(p.lat) : undefined,
-          longitude: p.lng ? parseFloat(p.lng) : undefined,
-          capacity_kwp: p.nominalPower ? parseFloat(p.nominalPower) : undefined,
-          status: mapPlantStatus(p.status),
-        }));
-      }
-    } catch (e) {
-      console.log(`Growatt: getPlantList with userId failed: ${e}`);
-    }
-  }
-
+  console.log("Growatt: nenhuma planta encontrada em nenhum endpoint");
   return [];
+}
+
+function mapPlantResponse(p: any): NormalizedPlant {
+  return {
+    external_id: String(p.id || p.plantId),
+    name: p.plantName || p.name || "Unknown",
+    location: [p.city, p.country].filter(Boolean).join(", ") || p.location || "",
+    latitude: p.lat ? parseFloat(p.lat) : undefined,
+    longitude: p.lng ? parseFloat(p.lng) : undefined,
+    capacity_kwp: p.nominalPower ? parseFloat(p.nominalPower) : undefined,
+    status: mapPlantStatus(p.status),
+  };
 }
 
 export async function listDevices(
@@ -201,17 +194,26 @@ export async function listDevices(
   plantId: string,
   _baseUrl?: string
 ): Promise<NormalizedDevice[]> {
-  const baseUrl = session.baseUrl;
   const response = await fetch(
-    `${baseUrl}/panel/getDevicesByPlant?plantId=${plantId}`,
+    `${session.baseUrl}/panel/getDevicesByPlant?plantId=${plantId}`,
     {
+      method: "POST",
       headers: {
         Cookie: session.cookie,
         "User-Agent": "Mozilla/5.0",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Requested-With": "XMLHttpRequest",
       },
+      body: new URLSearchParams({ currPage: "1" }).toString(),
     }
   );
-  const data = await safeJson(response, "listDevices");
+  const text = await response.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Growatt listDevices: resposta não é JSON`);
+  }
   const devices = data.back?.deviceList || data.obj?.datas || data.data || [];
 
   return (Array.isArray(devices) ? devices : []).map((d: any) => ({
@@ -232,19 +234,24 @@ export async function collectEnergy(
   _deviceSerial?: string,
   _baseUrl?: string
 ): Promise<NormalizedEnergyData[]> {
-  const baseUrl = session.baseUrl;
   const response = await fetch(
-    `${baseUrl}/panel/getPlantData?plantId=${plantId}`,
+    `${session.baseUrl}/panel/getPlantData?plantId=${plantId}`,
     {
       headers: {
         Cookie: session.cookie,
         "User-Agent": "Mozilla/5.0",
+        "X-Requested-With": "XMLHttpRequest",
       },
     }
   );
-  const data = await safeJson(response, "collectEnergy");
+  const text = await response.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Growatt collectEnergy: resposta não é JSON`);
+  }
   const plantData = data.back || data.obj || data.data || {};
-
   const now = new Date().toISOString();
 
   return [
