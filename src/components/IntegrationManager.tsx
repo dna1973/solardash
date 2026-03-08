@@ -48,6 +48,17 @@ const MANUFACTURERS: ManufacturerConfig[] = [
       { key: "base_url", label: "IP/URL do Datalogger", type: "text", placeholder: "http://192.168.1.100" },
     ],
   },
+  {
+    slug: "apsystems",
+    name: "APsystems",
+    logo: "🟠",
+    authType: "api_key",
+    fields: [
+      { key: "api_key", label: "App ID (OpenAPI)", type: "text", placeholder: "Seu App ID do portal EMA" },
+      { key: "token", label: "App Secret", type: "password", placeholder: "Seu App Secret" },
+      { key: "base_url", label: "Servidor (opcional)", type: "text", placeholder: "https://api.apsystemsema.com:9282" },
+    ],
+  },
 ];
 
 interface TestResult {
@@ -221,7 +232,7 @@ export function IntegrationManager() {
             <div>
               <CardTitle className="text-base">Integrações de Fabricantes</CardTitle>
               <CardDescription className="text-xs">
-                Conecte inversores Growatt, SolarEdge, Fronius e mais
+                Conecte inversores Growatt, SolarEdge, Fronius, APsystems e mais
               </CardDescription>
             </div>
           </div>

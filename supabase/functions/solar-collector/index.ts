@@ -5,6 +5,7 @@ import type { CollectorRequest, NormalizedEnergyData, NormalizedPlant } from "..
 import * as growatt from "../_shared/adapters/growatt.ts";
 import * as solaredge from "../_shared/adapters/solaredge.ts";
 import * as fronius from "../_shared/adapters/fronius.ts";
+import * as apsystems from "../_shared/adapters/apsystems.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -150,6 +151,20 @@ serve(async (req) => {
         }
         break;
       }
+      case "apsystems": {
+        const apSession = await apsystems.authenticate(credentials);
+        switch (action) {
+          case "list_plants": result = await apsystems.listPlants(apSession); break;
+          case "list_devices":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await apsystems.listDevices(apSession, plant_external_id); break;
+          case "collect_energy":
+            if (!plant_external_id) throw new Error("plant_external_id required");
+            result = await apsystems.collectEnergy(apSession, plant_external_id, device_serial); break;
+          default: throw new Error(`Unsupported action: ${action}`);
+        }
+        break;
+      }
       default:
         throw new Error(`Unsupported manufacturer: ${manufacturer}`);
     }
@@ -191,6 +206,10 @@ async function syncIntegration(
       break;
     case "fronius":
       plants = await fronius.listPlants(credentials);
+      break;
+    case "apsystems":
+      session = await apsystems.authenticate(credentials);
+      plants = await apsystems.listPlants(session);
       break;
     default:
       throw new Error(`Fabricante não suportado: ${manufacturer}`);
@@ -263,6 +282,11 @@ async function syncIntegration(
           break;
         case "fronius":
           energyData = await fronius.collectEnergy(credentials, plant.external_id);
+          break;
+        case "apsystems":
+          if (session) {
+            energyData = await apsystems.collectEnergy(session, plant.external_id);
+          }
           break;
       }
 
