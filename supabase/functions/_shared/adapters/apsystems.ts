@@ -16,16 +16,16 @@ interface APSystemsSession {
 }
 
 export async function authenticate(credentials: AdapterCredentials): Promise<APSystemsSession> {
-  const appId = credentials.api_key;
-  const appSecret = credentials.token;
-  const baseUrl = credentials.base_url || BASE_URL;
-  const systemId = credentials.system_id || credentials.plant_id;
+  const appId = (credentials.api_key || "").trim();
+  const appSecret = (credentials.token || "").trim();
+  const baseUrl = (credentials.base_url || BASE_URL).trim();
+  const systemId = (credentials.system_id || credentials.plant_id || "").trim() || undefined;
 
   if (!appId || !appSecret) {
     throw new Error("APsystems requer App ID e App Secret da OpenAPI");
   }
 
-  console.log("apsystems: autenticando com appId:", appId.substring(0, 4) + "...");
+  console.log("apsystems: autenticando com appId:", appId.substring(0, 4) + "..., appSecret length:", appSecret.length);
   return { appId, appSecret, baseUrl, systemId };
 }
 
