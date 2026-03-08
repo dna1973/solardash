@@ -142,7 +142,7 @@ export async function authenticate(
     throw new Error("Growatt: credenciais (usuário e senha) são obrigatórias");
   }
 
-  const baseUrl = normalizeUrl(credentials.base_url || "https://openapi.growatt.com");
+  const baseUrl = normalizeUrl(credentials.base_url || "https://server.growatt.com");
   const hashedPwd = await hashPassword(credentials.password);
 
   const loginUrl = `${baseUrl}/newTwoLoginAPI.do`;
