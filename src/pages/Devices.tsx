@@ -42,6 +42,12 @@ export default function Devices() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
+      ) : devices.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+          <ServerOff className="h-12 w-12 mb-4 opacity-40" />
+          <p className="text-lg font-medium">Nenhum equipamento cadastrado</p>
+          <p className="text-sm">Os dispositivos serão sincronizados automaticamente via integração.</p>
+        </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card shadow-card overflow-hidden">
           <div className="overflow-x-auto">
