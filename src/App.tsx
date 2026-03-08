@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Plants from "./pages/Plants";
 import PlantDetail from "./pages/PlantDetail";
 import Devices from "./pages/Devices";
-import Alerts from "./pages/Alerts";
+
 import Reports from "./pages/Reports";
 import SystemManagementPage from "./pages/SystemManagementPage";
 import ConsumptionPage from "./pages/ConsumptionPage";
@@ -68,7 +68,7 @@ const AppRoutes = () => {
                 <Route path="/plants/:id" element={<PlantDetail />} />
                 <Route path="/devices" element={<Devices />} />
                 <Route path="/consumption" element={<ConsumptionPage />} />
-                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/alerts" element={<Navigate to="/plants?tab=alertas" replace />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/management" element={<SystemManagementPage />} />
                 <Route path="/map" element={<FullMap />} />
