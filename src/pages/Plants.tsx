@@ -83,6 +83,14 @@ export default function Plants() {
                   <p className="text-muted-foreground">Status</p>
                   <p className="font-mono font-semibold mt-0.5 capitalize">{plant.status}</p>
                 </div>
+                <div className="rounded-lg bg-muted p-2.5">
+                  <p className="text-muted-foreground flex items-center gap-1"><Factory className="h-3 w-3" />Fabricante</p>
+                  <p className="font-semibold mt-0.5 truncate">{plant.manufacturer}</p>
+                </div>
+                <div className="rounded-lg bg-muted p-2.5">
+                  <p className="text-muted-foreground flex items-center gap-1"><Wrench className="h-3 w-3" />Integrador</p>
+                  <p className="font-semibold mt-0.5 truncate">{plant.integrator}</p>
+                </div>
               </div>
 
               <div className="flex items-center justify-between mt-4 pt-3 border-t text-xs text-muted-foreground">
