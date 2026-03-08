@@ -60,8 +60,6 @@ export default function Reports() {
     try {
       const jsPDFModule = await import("jspdf");
       const jsPDF = jsPDFModule.default;
-      const autoTableModule = await import("jspdf-autotable");
-      const autoTable = autoTableModule.default;
 
       const doc = new jsPDF();
       const now = new Date().toLocaleDateString("pt-BR");
@@ -74,49 +72,61 @@ export default function Reports() {
       doc.setTextColor(120, 120, 120);
       doc.text(`Gerado em ${now}`, 14, 30);
 
-      // Summary
+      // Summary section
       doc.setFontSize(12);
       doc.setTextColor(34, 34, 34);
       doc.text("Resumo Mensal (média)", 14, 44);
 
-      const summaryData = [
+      const summaryItems = [
         ["Energia Gerada", `${(monthlyGen / 1000).toFixed(1)} MWh`],
         ["Energia Injetada", `${(injectedEnergy / 1000).toFixed(1)} MWh`],
         ["Economia Estimada", `R$ ${estimatedSavings.toFixed(0)}`],
         ["CO₂ Evitado", `${co2Monthly.toFixed(1)} ton`],
       ];
 
-      autoTable(doc, {
-        startY: 48,
-        head: [["Indicador", "Valor"]],
-        body: summaryData,
-        theme: "grid",
-        headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 10 },
-        styles: { fontSize: 10, cellPadding: 4 },
-        margin: { left: 14, right: 14 },
-      });
+      doc.setFontSize(10);
+      let y = 52;
+      for (const [label, value] of summaryItems) {
+        doc.setTextColor(80, 80, 80);
+        doc.text(label, 14, y);
+        doc.setTextColor(34, 34, 34);
+        doc.text(value, 100, y);
+        y += 8;
+      }
 
-      // Monthly table
-      const tableY = (doc as any).lastAutoTable.finalY + 12;
+      // Monthly table header
+      y += 8;
       doc.setFontSize(12);
-      doc.text("Dados Mensais", 14, tableY);
+      doc.setTextColor(34, 34, 34);
+      doc.text("Dados Mensais", 14, y);
+      y += 8;
 
-      const tableData = monthlyChart.map((row) => [
-        row.time,
-        `${row.generation.toLocaleString("pt-BR")} kWh`,
-        `${row.consumption.toLocaleString("pt-BR")} kWh`,
-        `${Math.max(0, row.generation - row.consumption).toLocaleString("pt-BR")} kWh`,
-      ]);
+      // Table header
+      doc.setFontSize(9);
+      doc.setFillColor(59, 130, 246);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(14, y - 5, 182, 8, "F");
+      doc.text("Mês", 16, y);
+      doc.text("Geração (kWh)", 55, y);
+      doc.text("Consumo (kWh)", 100, y);
+      doc.text("Injetada (kWh)", 145, y);
+      y += 8;
 
-      autoTable(doc, {
-        startY: tableY + 4,
-        head: [["Mês", "Geração", "Consumo", "Injetada"]],
-        body: tableData,
-        theme: "striped",
-        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 10 },
-        styles: { fontSize: 9, cellPadding: 3 },
-        margin: { left: 14, right: 14 },
-      });
+      // Table rows
+      doc.setTextColor(34, 34, 34);
+      for (let i = 0; i < monthlyChart.length; i++) {
+        const row = monthlyChart[i];
+        if (i % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(14, y - 5, 182, 7, "F");
+        }
+        doc.text(row.time, 16, y);
+        doc.text(row.generation.toLocaleString("pt-BR"), 55, y);
+        doc.text(row.consumption.toLocaleString("pt-BR"), 100, y);
+        doc.text(Math.max(0, row.generation - row.consumption).toLocaleString("pt-BR"), 145, y);
+        y += 7;
+        if (y > 270) { doc.addPage(); y = 20; }
+      }
 
       doc.save(`relatorio-energetico-${now.replace(/\//g, "-")}.pdf`);
       toast({ title: "PDF exportado!", description: "O relatório foi baixado com sucesso." });
