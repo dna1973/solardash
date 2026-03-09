@@ -59,6 +59,7 @@ function navigateDate(period: EnergyPeriod, date: Date, direction: "prev" | "nex
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("map");
   const [period, setPeriod] = useState<EnergyPeriod>("today");
   const [customDate, setCustomDate] = useState<Date>(new Date());
 
