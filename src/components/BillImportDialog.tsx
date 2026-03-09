@@ -99,7 +99,22 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Erro ao processar");
 
-      setExtracted(result.extracted || {});
+      const extractedData = result.extracted || {};
+      
+      // Lookup property location by account_number
+      if (extractedData.account_number) {
+        const { data: locData } = await supabase
+          .from("property_locations")
+          .select("location_name")
+          .eq("account_number", extractedData.account_number)
+          .maybeSingle();
+        
+        if (locData?.location_name) {
+          extractedData.property_name = locData.location_name;
+        }
+      }
+
+      setExtracted(extractedData);
       setPdfPath(result.pdf_path);
       setTenantId(result.tenant_id);
       setStep("review");
