@@ -97,7 +97,7 @@ export default function Dashboard() {
               <StatCard title="CO₂ Evitado" value={`${co2SavedTons.toFixed(1)} t`} icon={Leaf} variant="default" />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
               <EnergyChart data={chartHourly} title="Geração por Hora — Hoje (kW)" dataKeys={["generation"]} />
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
             </div>
