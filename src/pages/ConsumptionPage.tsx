@@ -95,9 +95,9 @@ export default function ConsumptionPage() {
   });
 
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
-  const billsTotalGross = filteredBills.reduce((s, b) => s + ((b as any).gross_value || 0), 0);
   const billsTotalDeductions = filteredBills.reduce((s, b) => s + ((b as any).deductions_value || 0), 0);
   const billsTotalNet = filteredBills.reduce((s, b) => s + ((b as any).net_value || 0), 0);
+  const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
   const getBillsExportData = () =>
     filteredBills.map((b) => ({
@@ -105,7 +105,7 @@ export default function ConsumptionPage() {
       "Nº da Conta": b.account_number || "—",
       "Local": b.address || "—",
       "Consumo KW/H": b.consumption_kwh || 0,
-      "Valor Bruto": b.gross_value || 0,
+      "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
       "Valor Iluminação Pública": b.lighting_cost || 0,
       "Valor Deduções": b.deductions_value || 0,
       "Valor Líquido": b.net_value || 0,
@@ -630,7 +630,7 @@ export default function ConsumptionPage() {
                           {(bill.consumption_kwh || 0).toLocaleString("pt-BR")}
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono">
-                          {((bill as any).gross_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {(((bill as any).net_value || 0) + ((bill as any).deductions_value || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {((bill as any).lighting_cost || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
