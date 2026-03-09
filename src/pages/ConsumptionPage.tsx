@@ -158,7 +158,7 @@ export default function ConsumptionPage() {
     y += 3;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text(`Consumo Total: ${(billsTotalConsumption / 1000).toFixed(1)} MWh  |  Geração Total: ${(billsTotalGeneration / 1000).toFixed(1)} MWh  |  Valor Total: R$ ${billsTotalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, startX, y);
+    doc.text(`Consumo Total: ${(billsTotalConsumption / 1000).toFixed(1)} MWh  |  Valor Bruto: R$ ${billsTotalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}  |  Valor Líquido: R$ ${billsTotalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, startX, y);
 
     doc.save("contas-energia.pdf");
     toast.success("PDF exportado!");
