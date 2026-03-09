@@ -34,6 +34,15 @@ const tools = [
     ]
   },
   {
+    name: "get_daily_generation",
+    description: "Agrega dados de geração por dia em um período. Ideal para relatórios mensais",
+    params: [
+      { name: "plant_id", type: "string", optional: true, description: "ID da usina (opcional, agrega todas se omitido)" },
+      { name: "start_date", type: "string", optional: false, description: "Data de início (ex: 2024-01-01)" },
+      { name: "end_date", type: "string", optional: false, description: "Data de fim (ex: 2024-01-31)" }
+    ]
+  },
+  {
     name: "get_alerts",
     description: "Recupera alertas ativos ou histórico de alertas",
     params: [
