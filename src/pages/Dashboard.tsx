@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
@@ -62,10 +63,15 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("map");
   const [period, setPeriod] = useState<EnergyPeriod>("today");
   const [customDate, setCustomDate] = useState<Date>(new Date());
+  const [selectedPlantId, setSelectedPlantId] = useState<string>("all");
 
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
-  const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(undefined, period, customDate);
+  const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
+    selectedPlantId === "all" ? undefined : selectedPlantId,
+    period,
+    customDate
+  );
 
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
 
@@ -145,8 +151,23 @@ export default function Dashboard() {
   const chartTimeLabel = period === "today" || period === "yesterday" || period === "custom" ? "Hora" : period === "year" ? "Mês" : "Dia";
   const energyLabel = period === "today" || period === "yesterday" || period === "custom" ? "Hoje" : period === "week" ? "Semana" : period === "month" ? "Mês" : "Ano";
 
+  const PlantFilter = () => (
+    <Select value={selectedPlantId} onValueChange={setSelectedPlantId}>
+      <SelectTrigger className="w-[220px] h-9 text-xs">
+        <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+        <SelectValue placeholder="Todas as usinas" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">Todas as usinas</SelectItem>
+        {plants.map((p) => (
+          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   const PeriodFilter = () => (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
       <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
         {PERIOD_OPTIONS.map((opt) => (
           <button
@@ -174,6 +195,7 @@ export default function Dashboard() {
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+      <PlantFilter />
     </div>
   );
 
