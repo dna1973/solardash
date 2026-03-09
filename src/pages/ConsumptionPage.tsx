@@ -105,7 +105,7 @@ export default function ConsumptionPage() {
       "Nº da Conta": b.account_number || "—",
       "Local": b.address || "—",
       "Consumo KW/H": b.consumption_kwh || 0,
-      "Valor Bruto": b.gross_value || 0,
+      "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
       "Valor Iluminação Pública": b.lighting_cost || 0,
       "Valor Deduções": b.deductions_value || 0,
       "Valor Líquido": b.net_value || 0,
