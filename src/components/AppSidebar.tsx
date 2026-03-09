@@ -90,7 +90,7 @@ export function AppSidebar() {
                           : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       }
                     >
-                      <NavLink to={item.url} end={item.url === "/"}>
+                      <NavLink to={item.url} end={item.url === "/dashboard"}>
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span>{item.title}</span>}
                       </NavLink>
