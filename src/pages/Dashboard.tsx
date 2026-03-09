@@ -168,7 +168,7 @@ export default function Dashboard() {
 
           {/* CONSUMO */}
           <TabsContent value="consumption" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
               <StatCard title="Consumo Atual" value={`${avgConsumption} kW`} icon={Plug} variant="default" />
               <StatCard title="Consumo Hoje" value={`${(totalConsumptionToday / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
               <StatCard title="Consumo Mensal" value={`${(totalConsumptionMonth / 1000).toFixed(0)} MWh`} icon={TrendingUp} variant="default" />
