@@ -28,12 +28,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Geração", url: "/plants", icon: Sun },
-  { title: "Consumo", url: "/consumption", icon: Building2 },
-  { title: "Relatórios", url: "/reports", icon: FileBarChart },
-  { title: "Gestão do Sistema", url: "/management", icon: ShieldCheck },
-  { title: "API MCP", url: "/mcp", icon: Plug },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Geração", url: "/dashboard/plants", icon: Sun },
+  { title: "Consumo", url: "/dashboard/consumption", icon: Building2 },
+  { title: "Relatórios", url: "/dashboard/reports", icon: FileBarChart },
+  { title: "Gestão do Sistema", url: "/dashboard/management", icon: ShieldCheck },
+  { title: "API MCP", url: "/dashboard/mcp", icon: Plug },
 ];
 
 export function AppSidebar() {
@@ -77,8 +77,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => {
                 const isActive =
-                  item.url === "/"
-                    ? location.pathname === "/"
+                  item.url === "/dashboard"
+                    ? location.pathname === "/dashboard"
                     : location.pathname.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -90,7 +90,7 @@ export function AppSidebar() {
                           : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       }
                     >
-                      <NavLink to={item.url} end={item.url === "/"}>
+                      <NavLink to={item.url} end={item.url === "/dashboard"}>
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span>{item.title}</span>}
                       </NavLink>

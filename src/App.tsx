@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
+import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Plants from "./pages/Plants";
 import PlantDetail from "./pages/PlantDetail";
@@ -55,11 +56,12 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route
-        path="/*"
+        path="/dashboard/*"
         element={
           <ProtectedRoute>
             <AppLayout>
@@ -67,9 +69,8 @@ const AppRoutes = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/plants" element={<Plants />} />
                 <Route path="/plants/:id" element={<PlantDetail />} />
-                
                 <Route path="/consumption" element={<ConsumptionPage />} />
-                <Route path="/alerts" element={<Navigate to="/plants?tab=alertas" replace />} />
+                <Route path="/alerts" element={<Navigate to="/dashboard/plants?tab=alertas" replace />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/management" element={<SystemManagementPage />} />
                 <Route path="/mcp" element={<McpDocPage />} />
@@ -80,6 +81,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
