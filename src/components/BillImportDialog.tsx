@@ -102,12 +102,12 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
 
       const extractedData = result.extracted || {};
       
-      // Lookup property location by account_number
-      if (extractedData.account_number) {
+      // Lookup property location by client_code
+      if (extractedData.client_code) {
         const { data: locData } = await supabase
           .from("property_locations")
           .select("location_name")
-          .eq("account_number", extractedData.account_number)
+          .eq("account_number", extractedData.client_code)
           .maybeSingle();
         
         if (locData?.location_name) {
