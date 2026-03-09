@@ -390,41 +390,43 @@ export default function ConsumptionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Imóvel / Titular</TableHead>
-                      <TableHead>UC</TableHead>
-                      <TableHead>Concessionária</TableHead>
-                      <TableHead>Mês Ref.</TableHead>
-                      <TableHead className="text-right">Consumo (kWh)</TableHead>
-                      <TableHead className="text-right">Geração (kWh)</TableHead>
-                      <TableHead className="text-right">Valor (R$)</TableHead>
-                      <TableHead>Tarifa</TableHead>
+                      <TableHead>QD</TableHead>
+                      <TableHead>Nº da Conta</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead className="text-right">Consumo KW/H</TableHead>
+                      <TableHead className="text-right">Valor Bruto</TableHead>
+                      <TableHead className="text-right">Valor Ilum. Pública</TableHead>
+                      <TableHead className="text-right">Valor Deduções</TableHead>
+                      <TableHead className="text-right">Valor Líquido</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredBills.map((bill) => (
                       <TableRow key={bill.id}>
-                        <TableCell>
-                          <div>
-                            <p className="text-sm font-medium truncate max-w-[180px]">{bill.property_name || "—"}</p>
-                            <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">{bill.address || ""}</p>
-                          </div>
-                        </TableCell>
+                        <TableCell className="text-xs font-mono">{(bill as any).qd || "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px]">{bill.utility_company || "—"}</Badge>
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[200px]">{bill.address || "—"}</p>
+                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.property_name || ""}</p>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-xs font-medium">{bill.reference_month || "—"}</TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.consumption_kwh || 0).toLocaleString("pt-BR")}
                         </TableCell>
-                        <TableCell className="text-right text-sm font-mono text-primary">
-                          {(bill.generation_kwh || 0).toLocaleString("pt-BR")}
+                        <TableCell className="text-right text-sm font-mono">
+                          {((bill as any).gross_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {((bill as any).lighting_cost || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono text-destructive">
+                          {((bill as any).deductions_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono font-semibold">
-                          {(bill.amount_brl || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {((bill as any).net_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell className="text-xs">{bill.tariff_type || "—"}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
