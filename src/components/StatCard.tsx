@@ -11,10 +11,10 @@ interface StatCardProps {
 }
 
 const variantStyles = {
-  default: "bg-card shadow-card",
-  primary: "bg-card shadow-card border-l-4 border-l-primary",
-  warning: "bg-card shadow-card border-l-4 border-l-energy-yellow",
-  danger: "bg-card shadow-card border-l-4 border-l-destructive",
+  default: "bg-card shadow-card border border-border/50",
+  primary: "bg-card shadow-card border border-primary/20 border-l-4 border-l-primary",
+  warning: "bg-card shadow-card border border-energy-yellow/20 border-l-4 border-l-energy-yellow",
+  danger: "bg-card shadow-card border border-destructive/20 border-l-4 border-l-destructive",
 };
 
 const iconBg = {
