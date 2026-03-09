@@ -103,14 +103,14 @@ export default function ConsumptionPage() {
   };
 
   // Derive unique filters from bills
-  const uniqueProperties = [...new Set(bills.map((b) => b.property_name || b.address).filter(Boolean))] as string[];
+  const uniqueProperties = [...new Set(bills.map((b) => getLocal(b)).filter(Boolean))] as string[];
   const uniqueYears = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
   const uniqueMonths = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
   const monthNames: Record<string, string> = { "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro" };
 
   const filteredBills = bills.filter((b) => {
     const [mm, yyyy] = (b.reference_month || "").split("/");
-    const matchProperty = billFilterProperty === "all" || (b.property_name || b.address) === billFilterProperty;
+    const matchProperty = billFilterProperty === "all" || getLocal(b) === billFilterProperty;
     const matchYear = billFilterYear === "all" || yyyy === billFilterYear;
     const matchMonth = billFilterMonth === "all" || mm === billFilterMonth;
     return matchProperty && matchYear && matchMonth;
