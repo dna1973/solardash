@@ -625,8 +625,8 @@ export default function ConsumptionPage() {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>QD</TableHead>
+                     <TableRow>
+                      <TableHead>Nº da Conta</TableHead>
                       <TableHead>Nº da Conta</TableHead>
                       <TableHead>Local</TableHead>
                       <TableHead className="text-right">Consumo KW/H</TableHead>
