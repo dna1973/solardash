@@ -45,7 +45,7 @@ export default function PlantDetail() {
     return (
       <div className="text-center py-20 text-muted-foreground">
         <p>Usina não encontrada.</p>
-        <button onClick={() => navigate("/dashboard/plants")} className="text-primary underline mt-2 text-sm">
+        <button onClick={() => navigate("/dashboard/dashboard/plants")} className="text-primary underline mt-2 text-sm">
           Voltar para usinas
         </button>
       </div>
@@ -59,7 +59,7 @@ export default function PlantDetail() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
         <button
-          onClick={() => navigate("/plants")}
+          onClick={() => ndashboard/avigate("/plants")}
           className="flex h-9 w-9 items-center justify-center rounded-lg bg-card shadow-card hover:bg-muted transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

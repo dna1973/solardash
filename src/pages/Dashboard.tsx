@@ -224,7 +224,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {plants.map((plant) => (
-                      <tr key={plant.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/plants/${plant.id}`)}>
+                      <tr key={plant.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/dashboard/plants/${plant.id}`)}>
                         <td className="py-3 font-medium">{plant.name}</td>
                         <td className="py-3 text-muted-foreground">{plant.location}</td>
                         <td className="py-3 text-right font-mono text-xs">{plant.capacity_kwp} kWp</td>
