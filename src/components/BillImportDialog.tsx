@@ -346,13 +346,6 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Titular / Imóvel</Label>
-              <Input
-                value={extracted.property_name || ""}
-                onChange={(e) => updateField("property_name", e.target.value)}
-              />
-            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
