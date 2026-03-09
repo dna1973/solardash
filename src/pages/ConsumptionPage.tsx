@@ -23,6 +23,7 @@ interface EnergyBill {
   address: string | null;
   utility_company: string | null;
   account_number: string | null;
+  client_code: string | null;
   reference_month: string | null;
   consumption_kwh: number | null;
   generation_kwh: number | null;
@@ -111,7 +112,7 @@ export default function ConsumptionPage() {
     setBillsLoading(true);
     const { data, error } = await supabase
       .from("energy_bills")
-      .select("id, property_name, address, utility_company, account_number, reference_month, consumption_kwh, generation_kwh, amount_brl, tariff_type, due_date, created_at, qd, invoice_number, invoice_value, gross_value, lighting_cost, deductions_value, net_value")
+      .select("id, property_name, address, utility_company, account_number, client_code, reference_month, consumption_kwh, generation_kwh, amount_brl, tariff_type, due_date, created_at, qd, invoice_number, invoice_value, gross_value, lighting_cost, deductions_value, net_value")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -122,9 +123,9 @@ export default function ConsumptionPage() {
     setBillsLoading(false);
   };
 
-  // Helper: resolve "local" for a bill — prioritize property_locations, then property_name
+  // Helper: resolve "local" for a bill — prioritize property_locations (by client_code), then property_name
   const getLocal = (b: EnergyBill) => {
-    if (b.account_number && locationMap[b.account_number]) return locationMap[b.account_number];
+    if (b.client_code && locationMap[b.client_code]) return locationMap[b.client_code];
     return b.property_name || "Sem identificação";
   };
 
@@ -732,17 +733,17 @@ export default function ConsumptionPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Settings2 className="w-4 h-4" /> Mapeamento Nº da Conta → Local
+                <Settings2 className="w-4 h-4" /> Mapeamento Código do Cliente → Local
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Associe cada número de conta a um nome de local personalizado. Ao importar faturas, o sistema usará esta tabela automaticamente.
+                Associe cada código de cliente a um nome de local personalizado. Ao importar faturas, o sistema usará esta tabela automaticamente.
               </p>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nº da Conta</TableHead>
+                     <TableHead>Código do Cliente</TableHead>
                     <TableHead>Local</TableHead>
                     <TableHead className="w-24 text-right">Ações</TableHead>
                   </TableRow>
@@ -813,7 +814,7 @@ export default function ConsumptionPage() {
                   <TableRow>
                     <TableCell>
                       <Input
-                        placeholder="Nº da conta"
+                        placeholder="Código do cliente"
                         value={newNomAccount}
                         onChange={(e) => setNewNomAccount(e.target.value)}
                         className="h-8 text-xs"

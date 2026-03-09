@@ -10,6 +10,7 @@ import { toast } from "sonner";
 interface ExtractedBillData {
   utility_company?: string;
   account_number?: string;
+  client_code?: string;
   property_name?: string;
   address?: string;
   reference_month?: string;
@@ -101,12 +102,12 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
 
       const extractedData = result.extracted || {};
       
-      // Lookup property location by account_number
-      if (extractedData.account_number) {
+      // Lookup property location by client_code
+      if (extractedData.client_code) {
         const { data: locData } = await supabase
           .from("property_locations")
           .select("location_name")
-          .eq("account_number", extractedData.account_number)
+          .eq("account_number", extractedData.client_code)
           .maybeSingle();
         
         if (locData?.location_name) {
@@ -152,6 +153,7 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
         address: extracted.address || null,
         utility_company: extracted.utility_company || null,
         account_number: extracted.account_number || null,
+        client_code: extracted.client_code || null,
         reference_month: extracted.reference_month || null,
         consumption_kwh: extracted.consumption_kwh || 0,
         generation_kwh: extracted.generation_kwh || 0,
@@ -306,12 +308,19 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Nº da Conta (UC)</Label>
                 <Input
                   value={extracted.account_number || ""}
                   onChange={(e) => updateField("account_number", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Código do Cliente</Label>
+                <Input
+                  value={extracted.client_code || ""}
+                  onChange={(e) => updateField("client_code", e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
