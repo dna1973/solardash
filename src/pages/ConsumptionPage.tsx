@@ -43,6 +43,7 @@ export default function ConsumptionPage() {
   const [search, setSearch] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [mainTab, setMainTab] = useState("properties");
+  const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
@@ -473,7 +474,7 @@ export default function ConsumptionPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.04 }}
                     >
-                      <Card className="shadow-card hover:shadow-card-hover transition-shadow border-border/50">
+                      <Card className="shadow-card hover:shadow-card-hover transition-shadow border-border/50 cursor-pointer" onClick={() => setSelectedProperty(prop.id)}>
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
@@ -670,6 +671,102 @@ export default function ConsumptionPage() {
           fetchBills();
         }}
       />
+
+      {/* Property Detail Dialog */}
+      <Dialog open={!!selectedProperty} onOpenChange={(open) => !open && setSelectedProperty(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          {selectedProperty && (() => {
+            const prop = properties.find((p) => p.id === selectedProperty);
+            if (!prop) return null;
+            const propBills = bills.filter((b) => (b.property_name || b.account_number || "Sem identificação") === selectedProperty);
+            const propDeductions = propBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
+            const propNetValue = propBills.reduce((s, b) => s + (b.net_value || 0), 0);
+            const propGrossValue = propNetValue + propDeductions;
+            const balance = prop.generation - prop.consumption;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" /> {prop.name}
+                  </DialogTitle>
+                  <DialogDescription className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> {prop.address} — <Plug className="w-3 h-3" /> {prop.utility}
+                  </DialogDescription>
+                </DialogHeader>
+
+                {/* Consolidated Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+                  <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Consumo</p>
+                    <p className="text-sm font-bold font-mono">{(prop.consumption / 1000).toFixed(2)} MWh</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Geração</p>
+                    <p className="text-sm font-bold font-mono text-primary">{(prop.generation / 1000).toFixed(2)} MWh</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Balanço</p>
+                    <p className={`text-sm font-bold font-mono ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {balance >= 0 ? "+" : ""}{(balance / 1000).toFixed(2)} MWh
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Faturas</p>
+                    <p className="text-sm font-bold font-mono">{prop.count}</p>
+                  </div>
+                </div>
+
+                {/* Financial Summary */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg border p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Valor Bruto</p>
+                    <p className="text-sm font-bold font-mono">R$ {propGrossValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="rounded-lg border p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Deduções</p>
+                    <p className="text-sm font-bold font-mono text-primary">R$ {propDeductions.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="rounded-lg border p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground">Valor Líquido</p>
+                    <p className="text-sm font-bold font-mono">R$ {propNetValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+
+                {/* Bills Table */}
+                <div className="mt-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground mb-2">Histórico de Faturas</h4>
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Referência</TableHead>
+                          <TableHead className="text-xs text-right">Consumo (kWh)</TableHead>
+                          <TableHead className="text-xs text-right">Valor Bruto</TableHead>
+                          <TableHead className="text-xs text-right">Deduções</TableHead>
+                          <TableHead className="text-xs text-right">Valor Líquido</TableHead>
+                          <TableHead className="text-xs">Vencimento</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {propBills.map((b) => (
+                          <TableRow key={b.id}>
+                            <TableCell className="text-xs">{b.reference_month || "—"}</TableCell>
+                            <TableCell className="text-xs text-right font-mono">{(b.consumption_kwh || 0).toLocaleString("pt-BR")}</TableCell>
+                            <TableCell className="text-xs text-right font-mono">R$ {((b.net_value || 0) + (b.deductions_value || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-xs text-right font-mono">R$ {(b.deductions_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-xs text-right font-mono">R$ {(b.net_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                            <TableCell className="text-xs">{b.due_date || "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
