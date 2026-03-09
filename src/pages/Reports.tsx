@@ -280,23 +280,23 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Relatórios</h1>
-          <p className="text-sm text-muted-foreground">Análise energética detalhada com filtros e comparativos</p>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Relatórios</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Análise energética detalhada com filtros e comparativos</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExportPDF}
             disabled={!hasData}
-            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 border text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" /> PDF
           </button>
           <button
             onClick={handleExportExcel}
             disabled={!hasData && detailedTable.length === 0}
-            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 border text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" /> Excel
           </button>
@@ -304,12 +304,12 @@ export default function Reports() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-4 shadow-card">
+      <div className="flex flex-wrap items-center gap-2 md:gap-3 rounded-xl bg-card p-3 md:p-4 shadow-card">
         <Filter className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">Filtros:</span>
+        <span className="text-xs md:text-sm font-medium text-muted-foreground">Filtros:</span>
 
         <Select value={selectedPlant} onValueChange={setSelectedPlant}>
-          <SelectTrigger className="w-[220px] h-9 text-sm">
+          <SelectTrigger className="w-full sm:w-[220px] h-9 text-sm">
             <SelectValue placeholder="Todas as usinas" />
           </SelectTrigger>
           <SelectContent>
@@ -321,7 +321,7 @@ export default function Reports() {
         </Select>
 
         <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className="w-[140px] h-9 text-sm">
+          <SelectTrigger className="w-full sm:w-[140px] h-9 text-sm">
             <SelectValue placeholder="Todos os anos" />
           </SelectTrigger>
           <SelectContent>

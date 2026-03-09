@@ -32,15 +32,15 @@ export default function Plants() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Usinas Solares</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Usinas Solares</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">
             {isLoading ? "Carregando..." : `${plants.length} usinas cadastradas`}
           </p>
         </div>
         {activeTab === "usinas" && (
-          <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity">
+          <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto">
             + Nova Usina
           </button>
         )}

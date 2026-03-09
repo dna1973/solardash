@@ -62,10 +62,10 @@ export default function Dashboard() {
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Olá, {firstName} 👋</h1>
-        <p className="text-sm text-muted-foreground">Visão geral do sistema de monitoramento solar</p>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">Olá, {firstName} 👋</h1>
+        <p className="text-xs md:text-sm text-muted-foreground">Visão geral do sistema de monitoramento solar</p>
       </div>
 
       {isLoading ? (
@@ -73,22 +73,22 @@ export default function Dashboard() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Tabs defaultValue="map" className="space-y-6">
-          <TabsList className="bg-muted/60">
-            <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MapIcon className="h-4 w-4" /> Mapa
+        <Tabs defaultValue="map" className="space-y-4 md:space-y-6">
+          <TabsList className="bg-muted/60 w-full justify-start overflow-x-auto">
+            <TabsTrigger value="map" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
+              <MapIcon className="h-4 w-4" /> <span className="hidden xs:inline">Mapa</span>
             </TabsTrigger>
-            <TabsTrigger value="generation" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Sun className="h-4 w-4" /> Geração
+            <TabsTrigger value="generation" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
+              <Sun className="h-4 w-4" /> <span className="hidden xs:inline">Geração</span>
             </TabsTrigger>
-            <TabsTrigger value="consumption" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Plug className="h-4 w-4" /> Consumo
+            <TabsTrigger value="consumption" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
+              <Plug className="h-4 w-4" /> <span className="hidden xs:inline">Consumo</span>
             </TabsTrigger>
           </TabsList>
 
           {/* GERAÇÃO */}
           <TabsContent value="generation" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
               <StatCard title="Potência Atual" value={`${currentPowerKw.toFixed(0)} kW`} icon={Zap} variant="primary" />
               <StatCard title="Energia Hoje" value={`${(todayEnergyKwh / 1000).toFixed(1)} MWh`} icon={Sun} variant="primary" />
               <StatCard title="Energia Mensal" value={`${(monthlyEnergyKwh / 1000).toFixed(0)} MWh`} icon={TrendingUp} variant="default" />
@@ -97,7 +97,7 @@ export default function Dashboard() {
               <StatCard title="CO₂ Evitado" value={`${co2SavedTons.toFixed(1)} t`} icon={Leaf} variant="default" />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
               <EnergyChart data={chartHourly} title="Geração por Hora — Hoje (kW)" dataKeys={["generation"]} />
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
             </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
 
           {/* CONSUMO */}
           <TabsContent value="consumption" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
               <StatCard title="Consumo Atual" value={`${avgConsumption} kW`} icon={Plug} variant="default" />
               <StatCard title="Consumo Hoje" value={`${(totalConsumptionToday / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
               <StatCard title="Consumo Mensal" value={`${(totalConsumptionMonth / 1000).toFixed(0)} MWh`} icon={TrendingUp} variant="default" />
@@ -177,7 +177,7 @@ export default function Dashboard() {
               <StatCard title="Injetado na Rede" value={`${(gridInjected / 1000).toFixed(1)} MWh`} icon={Leaf} variant="default" />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
               <EnergyChart data={chartHourly} title="Geração vs Consumo — Hoje (kW)" dataKeys={["generation", "consumption"]} />
             </div>
@@ -185,7 +185,7 @@ export default function Dashboard() {
 
           {/* MAPA */}
           <TabsContent value="map" className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
               <StatCard title="Total de Usinas" value={String(totalPlantsCount)} icon={Battery} variant="default" />
               <StatCard title="Online" value={String(plantsOnline)} icon={Sun} variant="primary" />
               <StatCard title="Offline" value={String(plants.filter(p => p.status === "offline").length)} icon={AlertTriangle} variant={plants.some(p => p.status === "offline") ? "warning" : "default"} />
@@ -198,7 +198,7 @@ export default function Dashboard() {
                   <MapIcon className="h-3.5 w-3.5" /> Tela cheia
                 </button>
               </div>
-              <div className="h-[500px] rounded-lg overflow-hidden border border-border">
+              <div className="h-[300px] md:h-[500px] rounded-lg overflow-hidden border border-border">
                 <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
               </div>
               <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
