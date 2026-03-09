@@ -733,10 +733,10 @@ export default function ConsumptionPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Settings2 className="w-4 h-4" /> Mapeamento Nº da Conta → Local
+                <Settings2 className="w-4 h-4" /> Mapeamento Código do Cliente → Local
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Associe cada número de conta a um nome de local personalizado. Ao importar faturas, o sistema usará esta tabela automaticamente.
+                Associe cada código de cliente a um nome de local personalizado. Ao importar faturas, o sistema usará esta tabela automaticamente.
               </p>
             </CardHeader>
             <CardContent className="p-0">
