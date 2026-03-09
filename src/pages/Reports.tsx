@@ -321,7 +321,7 @@ export default function Reports() {
         </Select>
 
         <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className="w-[140px] h-9 text-sm">
+          <SelectTrigger className="w-full sm:w-[140px] h-9 text-sm">
             <SelectValue placeholder="Todos os anos" />
           </SelectTrigger>
           <SelectContent>

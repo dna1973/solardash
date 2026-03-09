@@ -348,16 +348,18 @@ export default function ConsumptionPage() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex-1" />
-            <Button variant="outline" size="sm" className="gap-2" onClick={exportExcel}>
-              <Download className="w-4 h-4" /> Excel
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={exportPDF}>
-              <Download className="w-4 h-4" /> PDF
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
-              <FileUp className="w-4 h-4" /> Importar Nova Conta
-            </Button>
+            <div className="hidden sm:flex flex-1" />
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={exportExcel}>
+                <Download className="w-4 h-4" /> Excel
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={exportPDF}>
+                <Download className="w-4 h-4" /> PDF
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={() => setImportOpen(true)}>
+                <FileUp className="w-4 h-4" /> Importar
+              </Button>
+            </div>
           </div>
 
           {/* Bills Table */}
