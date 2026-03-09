@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
