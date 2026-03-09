@@ -331,10 +331,18 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Local</Label>
+              <Label className="text-xs">Endereço</Label>
               <Input
                 value={extracted.address || ""}
                 onChange={(e) => updateField("address", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Local (Nomenclatura)</Label>
+              <Input
+                value={extracted.property_name || ""}
+                onChange={(e) => updateField("property_name", e.target.value)}
               />
             </div>
 
