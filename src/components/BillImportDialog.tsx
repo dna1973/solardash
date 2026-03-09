@@ -308,12 +308,19 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Nº da Conta (UC)</Label>
                 <Input
                   value={extracted.account_number || ""}
                   onChange={(e) => updateField("account_number", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Código do Cliente</Label>
+                <Input
+                  value={extracted.client_code || ""}
+                  onChange={(e) => updateField("client_code", e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
