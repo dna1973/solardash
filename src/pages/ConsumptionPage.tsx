@@ -207,7 +207,7 @@ export default function ConsumptionPage() {
 
       {/* Main Tabs: Imóveis vs Contas Importadas */}
       <Tabs value={mainTab} onValueChange={setMainTab}>
-        <TabsList className="bg-muted/60">
+        <TabsList>
           <TabsTrigger value="properties" className="gap-2">
             <Building2 className="w-4 h-4" /> Imóveis
           </TabsTrigger>
