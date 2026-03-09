@@ -235,6 +235,8 @@ async function syncIntegration(
     case "apsystems":
       session = await apsystems.authenticate(credentials);
       plants = await apsystems.listPlants(session);
+      // Delay after listPlants to avoid rate limiting on subsequent calls
+      await new Promise(r => setTimeout(r, 3000));
       break;
     case "hoymiles":
       session = await hoymiles.authenticate(credentials);
@@ -325,7 +327,14 @@ async function syncIntegration(
           break;
         case "apsystems":
           if (session) {
-            // Collect today's hourly/summary data (minimal API calls)
+            // Add delay between plants to avoid rate limiting
+            const plantIndex = plants.indexOf(plant);
+            if (plantIndex > 0) {
+              console.log(`apsystems: aguardando 3s entre plantas...`);
+              await new Promise(r => setTimeout(r, 3000));
+            }
+            
+            // Collect today's hourly/summary data
             energyData = await apsystems.collectEnergy(session, plant.external_id);
             
             // Only collect historical data once per day (check if hour is between 22-23 UTC)
@@ -333,10 +342,8 @@ async function syncIntegration(
             const isHistoricalWindow = currentHour >= 22;
             
             if (isHistoricalWindow) {
-              // Add small delay to avoid rate limiting
-              await new Promise(r => setTimeout(r, 2000));
+              await new Promise(r => setTimeout(r, 3000));
               
-              // Collect daily data for the last 30 days
               try {
                 const endDate = new Date().toISOString().split("T")[0];
                 const startDate30 = new Date();
@@ -348,9 +355,8 @@ async function syncIntegration(
                 console.log(`syncIntegration: erro ao coletar histórico diário APsystems: ${histErr}`);
               }
 
-              await new Promise(r => setTimeout(r, 2000));
+              await new Promise(r => setTimeout(r, 3000));
 
-              // Collect monthly data for the last 12 months
               try {
                 const now = new Date();
                 const endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
