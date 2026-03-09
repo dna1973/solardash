@@ -198,7 +198,7 @@ export default function Dashboard() {
                   <MapIcon className="h-3.5 w-3.5" /> Tela cheia
                 </button>
               </div>
-              <div className="h-[500px] rounded-lg overflow-hidden border border-border">
+              <div className="h-[300px] md:h-[500px] rounded-lg overflow-hidden border border-border">
                 <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
               </div>
               <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
