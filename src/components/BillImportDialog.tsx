@@ -99,7 +99,22 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Erro ao processar");
 
-      setExtracted(result.extracted || {});
+      const extractedData = result.extracted || {};
+      
+      // Lookup property location by account_number
+      if (extractedData.account_number) {
+        const { data: locData } = await supabase
+          .from("property_locations")
+          .select("location_name")
+          .eq("account_number", extractedData.account_number)
+          .maybeSingle();
+        
+        if (locData?.location_name) {
+          extractedData.property_name = locData.location_name;
+        }
+      }
+
+      setExtracted(extractedData);
       setPdfPath(result.pdf_path);
       setTenantId(result.tenant_id);
       setStep("review");
@@ -316,7 +331,7 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Local</Label>
+              <Label className="text-xs">Endereço</Label>
               <Input
                 value={extracted.address || ""}
                 onChange={(e) => updateField("address", e.target.value)}
@@ -324,12 +339,13 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Titular / Imóvel</Label>
+              <Label className="text-xs">Local (Nomenclatura)</Label>
               <Input
                 value={extracted.property_name || ""}
                 onChange={(e) => updateField("property_name", e.target.value)}
               />
             </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

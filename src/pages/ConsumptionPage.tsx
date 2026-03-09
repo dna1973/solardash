@@ -52,6 +52,20 @@ export default function ConsumptionPage() {
   const [billFilterYear, setBillFilterYear] = useState("all");
   const [billFilterMonth, setBillFilterMonth] = useState("all");
 
+  // Property locations lookup (account_number → location_name)
+  const [locationMap, setLocationMap] = useState<Record<string, string>>({});
+
+  const fetchLocations = async () => {
+    const { data } = await supabase
+      .from("property_locations")
+      .select("account_number, location_name");
+    if (data) {
+      const map: Record<string, string> = {};
+      data.forEach((r: any) => { map[r.account_number] = r.location_name; });
+      setLocationMap(map);
+    }
+  };
+
   const fetchBills = async () => {
     setBillsLoading(true);
     const { data, error } = await supabase
@@ -67,7 +81,14 @@ export default function ConsumptionPage() {
     setBillsLoading(false);
   };
 
+  // Helper: resolve "local" for a bill — prioritize property_locations, then property_name
+  const getLocal = (b: EnergyBill) => {
+    if (b.account_number && locationMap[b.account_number]) return locationMap[b.account_number];
+    return b.property_name || "Sem identificação";
+  };
+
   useEffect(() => {
+    fetchLocations();
     fetchBills();
   }, []);
 
@@ -82,14 +103,14 @@ export default function ConsumptionPage() {
   };
 
   // Derive unique filters from bills
-  const uniqueProperties = [...new Set(bills.map((b) => b.property_name || b.address).filter(Boolean))] as string[];
+  const uniqueProperties = [...new Set(bills.map((b) => getLocal(b)).filter(Boolean))] as string[];
   const uniqueYears = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
   const uniqueMonths = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
   const monthNames: Record<string, string> = { "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro" };
 
   const filteredBills = bills.filter((b) => {
     const [mm, yyyy] = (b.reference_month || "").split("/");
-    const matchProperty = billFilterProperty === "all" || (b.property_name || b.address) === billFilterProperty;
+    const matchProperty = billFilterProperty === "all" || getLocal(b) === billFilterProperty;
     const matchYear = billFilterYear === "all" || yyyy === billFilterYear;
     const matchMonth = billFilterMonth === "all" || mm === billFilterMonth;
     return matchProperty && matchYear && matchMonth;
@@ -104,7 +125,7 @@ export default function ConsumptionPage() {
     filteredBills.map((b) => ({
       "QD": b.qd || "—",
       "Nº da Conta": b.account_number || "—",
-      "Local": b.address || "—",
+      "Local": getLocal(b),
       "Consumo KW/H": b.consumption_kwh || 0,
       "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
       "Valor Iluminação Pública": b.lighting_cost || 0,
@@ -369,7 +390,7 @@ export default function ConsumptionPage() {
   // Aggregate bills by property for the "Imóveis" tab
   const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number }>();
   bills.forEach((b) => {
-    const key = b.property_name || b.account_number || "Sem identificação";
+    const key = getLocal(b);
     const existing = propertiesMap.get(key);
     if (existing) {
       existing.consumption += b.consumption_kwh || 0;
@@ -378,7 +399,7 @@ export default function ConsumptionPage() {
       existing.count++;
     } else {
       propertiesMap.set(key, {
-        name: b.property_name || "Sem nome",
+        name: getLocal(b),
         address: b.address || "—",
         utility: b.utility_company || "—",
         consumption: b.consumption_kwh || 0,
@@ -623,8 +644,8 @@ export default function ConsumptionPage() {
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="text-sm font-medium truncate max-w-[200px]">{bill.address || "—"}</p>
-                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.property_name || ""}</p>
+                            <p className="text-sm font-medium truncate max-w-[200px]">{getLocal(bill)}</p>
+                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.address || ""}</p>
                           </div>
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono">
@@ -678,7 +699,7 @@ export default function ConsumptionPage() {
           {selectedProperty && (() => {
             const prop = properties.find((p) => p.id === selectedProperty);
             if (!prop) return null;
-            const propBills = bills.filter((b) => (b.property_name || b.account_number || "Sem identificação") === selectedProperty);
+            const propBills = bills.filter((b) => getLocal(b) === selectedProperty);
             const propDeductions = propBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
             const propNetValue = propBills.reduce((s, b) => s + (b.net_value || 0), 0);
             const propGrossValue = propNetValue + propDeductions;
