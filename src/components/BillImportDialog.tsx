@@ -20,6 +20,13 @@ interface ExtractedBillData {
   off_peak_demand_kw?: number | null;
   tariff_type?: string;
   due_date?: string;
+  qd?: string;
+  invoice_number?: string;
+  invoice_value?: number;
+  gross_value?: number;
+  lighting_cost?: number;
+  deductions_value?: number;
+  net_value?: number;
 }
 
 interface BillImportDialogProps {
