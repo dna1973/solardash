@@ -73,16 +73,16 @@ export default function Dashboard() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Tabs defaultValue="map" className="space-y-6">
-          <TabsList className="bg-muted/60">
-            <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <MapIcon className="h-4 w-4" /> Mapa
+        <Tabs defaultValue="map" className="space-y-4 md:space-y-6">
+          <TabsList className="bg-muted/60 w-full justify-start overflow-x-auto">
+            <TabsTrigger value="map" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
+              <MapIcon className="h-4 w-4" /> <span className="hidden xs:inline">Mapa</span>
             </TabsTrigger>
-            <TabsTrigger value="generation" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Sun className="h-4 w-4" /> Geração
+            <TabsTrigger value="generation" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
+              <Sun className="h-4 w-4" /> <span className="hidden xs:inline">Geração</span>
             </TabsTrigger>
-            <TabsTrigger value="consumption" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Plug className="h-4 w-4" /> Consumo
+            <TabsTrigger value="consumption" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
+              <Plug className="h-4 w-4" /> <span className="hidden xs:inline">Consumo</span>
             </TabsTrigger>
           </TabsList>
 
