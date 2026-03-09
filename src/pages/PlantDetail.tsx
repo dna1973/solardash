@@ -45,7 +45,7 @@ export default function PlantDetail() {
     return (
       <div className="text-center py-20 text-muted-foreground">
         <p>Usina não encontrada.</p>
-        <button onClick={() => navigate("/plants")} className="text-primary underline mt-2 text-sm">
+        <button onClick={() => navigate("/dashboard/plants")} className="text-primary underline mt-2 text-sm">
           Voltar para usinas
         </button>
       </div>
