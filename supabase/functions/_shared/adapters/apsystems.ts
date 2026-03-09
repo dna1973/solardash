@@ -274,29 +274,36 @@ function extractSid(session: APSystemsSession, plantId: string): string {
   return match ? match[1] : (session.systemId || plantId);
 }
 
-// Cache ECU count to avoid repeated API calls during a single sync
-let _cachedEcuCount: number | null = null;
-
-async function getEcuCount(session: APSystemsSession, sid: string): Promise<number> {
-  if (_cachedEcuCount !== null) return _cachedEcuCount;
-  try {
-    const data = await apiRequest(session, `/user/api/v2/systems/details/${sid}`);
-    const ecus = data.data?.ecu || [];
-    _cachedEcuCount = ecus.length || 1;
-  } catch {
-    _cachedEcuCount = 1;
-  }
-  return _cachedEcuCount;
-}
-
 // Energy API only works at system (sid) level. For ECU-based plants we divide proportionally.
-export async function collectEnergy(session: APSystemsSession, plantId: string, _deviceSerial?: string): Promise<NormalizedEnergyData[]> {
+// ecuCount can be passed externally to avoid an extra API call to /details
+export async function collectEnergy(session: APSystemsSession, plantId: string, _deviceSerial?: string, ecuCount?: number): Promise<NormalizedEnergyData[]> {
   const today = new Date().toISOString().split("T")[0];
   const sid = extractSid(session, plantId);
   const isEcuPlant = extractEcuId(plantId) !== null;
-  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+  const divisor = isEcuPlant ? (ecuCount || 1) : 1;
 
-  // Try hourly energy for today
+  // Strategy: try summary FIRST (1 cheap call), then hourly if needed
+  // Summary gives today's total with minimal API cost
+  try {
+    console.log(`apsystems: tentando summary primeiro para ${sid} (divisor=${divisor})`);
+    const data = await apiRequest(session, `/user/api/v2/systems/summary/${sid}`);
+    const summary = data.data;
+    const todayValue = summary?.today ? parseFloat(summary.today) / divisor : 0;
+    if (summary && todayValue > 0) {
+      console.log(`apsystems: summary retornou ${todayValue} kWh para hoje`);
+      return [{
+        plant_external_id: plantId,
+        timestamp: new Date().toISOString(),
+        energy_generated_kwh: Math.round(todayValue * 100) / 100,
+        status: "ok",
+      }];
+    }
+    console.log("apsystems: summary retornou 0 para hoje, tentando hourly");
+  } catch (e) {
+    console.log("apsystems: falha no summary, tentando hourly:", e);
+  }
+
+  // Fallback: hourly energy (more granular but costs another call)
   try {
     const data = await apiRequest(
       session,
@@ -314,24 +321,7 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
       })).filter(e => (e.energy_generated_kwh ?? 0) > 0);
     }
   } catch (e) {
-    console.log("apsystems: falha ao buscar energia horária, tentando sumário:", e);
-  }
-
-  // Fallback: summary
-  try {
-    const data = await apiRequest(session, `/user/api/v2/systems/summary/${sid}`);
-    const summary = data.data;
-    const todayValue = summary?.today ? parseFloat(summary.today) / divisor : 0;
-    if (summary && todayValue > 0) {
-      return [{
-        plant_external_id: plantId,
-        timestamp: new Date().toISOString(),
-        energy_generated_kwh: todayValue,
-        status: "ok",
-      }];
-    }
-  } catch (e2) {
-    console.error("apsystems: falha ao coletar sumário:", e2);
+    console.error("apsystems: falha também no hourly:", e);
   }
 
   return [];
@@ -342,11 +332,12 @@ export async function collectDailyEnergy(
   session: APSystemsSession,
   plantId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  ecuCount?: number
 ): Promise<NormalizedEnergyData[]> {
   const sid = extractSid(session, plantId);
   const isEcuPlant = extractEcuId(plantId) !== null;
-  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+  const divisor = isEcuPlant ? (ecuCount || 1) : 1;
 
   console.log(`apsystems: coletando energia diária de ${startDate} a ${endDate} (divisor=${divisor})`);
   
@@ -399,11 +390,12 @@ export async function collectMonthlyEnergy(
   session: APSystemsSession,
   plantId: string,
   startMonth: string,
-  endMonth: string
+  endMonth: string,
+  ecuCount?: number
 ): Promise<NormalizedEnergyData[]> {
   const sid = extractSid(session, plantId);
   const isEcuPlant = extractEcuId(plantId) !== null;
-  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+  const divisor = isEcuPlant ? (ecuCount || 1) : 1;
 
   console.log(`apsystems: coletando energia mensal de ${startMonth} a ${endMonth} (divisor=${divisor})`);
 

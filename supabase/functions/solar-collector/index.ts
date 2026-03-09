@@ -398,14 +398,14 @@ async function syncAPsystemsOptimized(
   }
 
   // ─── Optimized path: plants already exist, only collect energy ───
-  console.log(`apsystems: ${dbPlants.length} plantas no DB, coletando apenas energia`);
+  const ecuCount = dbPlants.length;
+  console.log(`apsystems: ${ecuCount} plantas no DB, coletando apenas energia (summary-first)`);
 
   const sid = credentials.system_id || "";
   let energyPoints = 0;
 
   for (let i = 0; i < dbPlants.length; i++) {
     const plant = dbPlants[i];
-    // Extract ECU ID from plant name "ECU 216000037518" → "216000037518"
     const ecuId = plant.name.replace("ECU ", "").trim();
     const externalId = `${sid}_ECU_${ecuId}`;
 
@@ -417,7 +417,8 @@ async function syncAPsystemsOptimized(
 
     try {
       console.log(`apsystems: coletando energia ECU ${ecuId} (plant ${plant.id})`);
-      const energyData = await apsystems.collectEnergy(session, externalId);
+      // Pass ecuCount to avoid extra API call to /details
+      const energyData = await apsystems.collectEnergy(session, externalId, undefined, ecuCount);
       console.log(`apsystems: ECU ${ecuId} retornou ${energyData.length} pontos`);
       energyPoints += await persistEnergyEntries(supabase, plant.id, energyData);
 
