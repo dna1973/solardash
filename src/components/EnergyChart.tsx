@@ -19,10 +19,11 @@ const LABELS: Record<string, string> = {
 
 export function EnergyChart({ data, title, height = 300, dataKeys = ["generation", "consumption"] }: EnergyChartProps) {
   return (
-    <div className="rounded-xl bg-card p-5 shadow-card">
-      <h3 className="text-sm font-semibold mb-4">{title}</h3>
+    <div className="rounded-xl bg-card p-3 md:p-5 shadow-card">
+      <h3 className="text-xs md:text-sm font-semibold mb-3 md:mb-4">{title}</h3>
+      <div className="h-[200px] md:h-auto">
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="genGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="hsl(152, 60%, 42%)" stopOpacity={0.3} />
