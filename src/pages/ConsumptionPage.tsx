@@ -235,7 +235,7 @@ export default function ConsumptionPage() {
 
     // ── COLUMN DEFINITIONS ──
     const cols = [
-      { header: "QD", width: 18, align: "left" as const },
+      { header: "Nº", width: 12, align: "left" as const },
       { header: "Nº DA CONTA", width: 28, align: "left" as const },
       { header: "LOCAL", width: 72, align: "left" as const },
       { header: "CONSUMO\nKW/H", width: 28, align: "right" as const },
