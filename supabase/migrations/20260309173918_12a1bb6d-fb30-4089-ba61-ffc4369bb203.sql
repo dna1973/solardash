@@ -1,0 +1,1 @@
+ALTER TABLE public.property_locations ADD COLUMN plant_id uuid REFERENCES public.plants(id) ON DELETE SET NULL DEFAULT NULL;

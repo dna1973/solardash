@@ -1,9 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Settings, Plug } from "lucide-react";
+import { Users, Settings, Plug, MapPin } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import UsersPage from "./UsersPage";
 import SettingsPage from "./SettingsPage";
 import McpDocPage from "./McpDocPage";
+import NomenclaturesPage from "./NomenclaturesPage";
 
 export default function SystemManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,6 +27,10 @@ export default function SystemManagementPage() {
             <Users className="h-4 w-4" />
             Usuários
           </TabsTrigger>
+          <TabsTrigger value="nomenclaturas" className="gap-2">
+            <MapPin className="h-4 w-4" />
+            Nomenclaturas
+          </TabsTrigger>
           <TabsTrigger value="integracoes" className="gap-2">
             <Settings className="h-4 w-4" />
             Integrações
@@ -38,6 +43,10 @@ export default function SystemManagementPage() {
 
         <TabsContent value="usuarios" className="mt-6">
           <UsersPage embedded />
+        </TabsContent>
+
+        <TabsContent value="nomenclaturas" className="mt-6">
+          <NomenclaturesPage />
         </TabsContent>
 
         <TabsContent value="integracoes" className="mt-6">

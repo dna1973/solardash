@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Building2, Plus, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download, Settings2, Pencil, Save, X } from "lucide-react";
+import { Building2, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,13 +46,8 @@ export default function ConsumptionPage() {
   const [mainTab, setMainTab] = useState("properties");
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
-  // Nomenclature management state
-  const [nomenclatures, setNomenclatures] = useState<Array<{ id: string; account_number: string; location_name: string }>>([]);
-  const [editingNom, setEditingNom] = useState<string | null>(null);
-  const [editNomAccount, setEditNomAccount] = useState("");
-  const [editNomLocation, setEditNomLocation] = useState("");
-  const [newNomAccount, setNewNomAccount] = useState("");
-  const [newNomLocation, setNewNomLocation] = useState("");
+  // Property locations lookup (client_code → location_name)
+  const [locationMap, setLocationMap] = useState<Record<string, string>>({});
 
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
@@ -60,9 +55,6 @@ export default function ConsumptionPage() {
   const [billFilterProperty, setBillFilterProperty] = useState("all");
   const [billFilterYear, setBillFilterYear] = useState("all");
   const [billFilterMonth, setBillFilterMonth] = useState("all");
-
-  // Property locations lookup (account_number → location_name)
-  const [locationMap, setLocationMap] = useState<Record<string, string>>({});
 
   const fetchLocations = async () => {
     const { data } = await supabase
@@ -73,39 +65,7 @@ export default function ConsumptionPage() {
       const map: Record<string, string> = {};
       data.forEach((r: any) => { map[r.account_number] = r.location_name; });
       setLocationMap(map);
-      setNomenclatures(data as any);
     }
-  };
-
-  const saveNomenclature = async (accountNumber: string, locationName: string, existingId?: string) => {
-    if (!accountNumber.trim() || !locationName.trim()) { toast.error("Preencha todos os campos"); return; }
-    const { data: profile } = await supabase.from("profiles").select("tenant_id").limit(1).single();
-    if (!profile) { toast.error("Erro ao obter tenant"); return; }
-
-    if (existingId) {
-      const { error } = await supabase.from("property_locations").update({ account_number: accountNumber.trim(), location_name: locationName.trim() }).eq("id", existingId);
-      if (error) { toast.error("Erro ao atualizar"); return; }
-      toast.success("Nomenclatura atualizada");
-    } else {
-      const { error } = await supabase.from("property_locations").insert({ tenant_id: profile.tenant_id, account_number: accountNumber.trim(), location_name: locationName.trim() } as any);
-      if (error) {
-        if (error.code === "23505") toast.error("Este nº de conta já está cadastrado");
-        else toast.error("Erro ao salvar");
-        return;
-      }
-      toast.success("Nomenclatura adicionada");
-    }
-    setEditingNom(null);
-    setNewNomAccount("");
-    setNewNomLocation("");
-    fetchLocations();
-  };
-
-  const deleteNomenclature = async (id: string) => {
-    const { error } = await supabase.from("property_locations").delete().eq("id", id);
-    if (error) { toast.error("Erro ao excluir"); return; }
-    toast.success("Nomenclatura excluída");
-    fetchLocations();
   };
 
   const fetchBills = async () => {
@@ -489,12 +449,6 @@ export default function ConsumptionPage() {
               <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{bills.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="nomenclatures" className="gap-2">
-            <Settings2 className="w-4 h-4" /> Nomenclaturas
-            {nomenclatures.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{nomenclatures.length}</Badge>
-            )}
-          </TabsTrigger>
         </TabsList>
 
         {/* TAB: IMÓVEIS */}
@@ -728,123 +682,6 @@ export default function ConsumptionPage() {
           )}
         </TabsContent>
 
-        {/* TAB: NOMENCLATURAS */}
-        <TabsContent value="nomenclatures" className="space-y-6 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Settings2 className="w-4 h-4" /> Mapeamento Código do Cliente → Local
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Associe cada código de cliente a um nome de local personalizado. Ao importar faturas, o sistema usará esta tabela automaticamente.
-              </p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                     <TableHead>Código do Cliente</TableHead>
-                    <TableHead>Local</TableHead>
-                    <TableHead className="w-24 text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {nomenclatures.map((nom) => (
-                    <TableRow key={nom.id}>
-                      {editingNom === nom.id ? (
-                        <>
-                          <TableCell>
-                            <Input
-                              value={editNomAccount}
-                              onChange={(e) => setEditNomAccount(e.target.value)}
-                              className="h-8 text-xs"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={editNomLocation}
-                              onChange={(e) => setEditNomLocation(e.target.value)}
-                              className="h-8 text-xs"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-1 justify-end">
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => saveNomenclature(editNomAccount, editNomLocation, nom.id)}>
-                                <Save className="w-3.5 h-3.5 text-primary" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingNom(null)}>
-                                <X className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell className="text-xs font-mono">{nom.account_number}</TableCell>
-                          <TableCell className="text-sm font-medium">{nom.location_name}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-1 justify-end">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => {
-                                  setEditingNom(nom.id);
-                                  setEditNomAccount(nom.account_number);
-                                  setEditNomLocation(nom.location_name);
-                                }}
-                              >
-                                <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                onClick={() => deleteNomenclature(nom.id)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </>
-                      )}
-                    </TableRow>
-                  ))}
-                  {/* Add new row */}
-                  <TableRow>
-                    <TableCell>
-                      <Input
-                        placeholder="Código do cliente"
-                        value={newNomAccount}
-                        onChange={(e) => setNewNomAccount(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        placeholder="Nome do local"
-                        value={newNomLocation}
-                        onChange={(e) => setNewNomLocation(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 text-xs"
-                        onClick={() => saveNomenclature(newNomAccount, newNomLocation)}
-                        disabled={!newNomAccount.trim() || !newNomLocation.trim()}
-                      >
-                        <Plus className="w-3 h-3" /> Adicionar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* Bill Import Dialog */}
