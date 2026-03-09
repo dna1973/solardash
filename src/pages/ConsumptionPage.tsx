@@ -47,9 +47,9 @@ export default function ConsumptionPage() {
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
   const [billsLoading, setBillsLoading] = useState(false);
-  const [billFilterMonth, setBillFilterMonth] = useState("all");
-  const [billFilterUtility, setBillFilterUtility] = useState("all");
   const [billFilterProperty, setBillFilterProperty] = useState("all");
+  const [billFilterYear, setBillFilterYear] = useState("all");
+  const [billFilterMonth, setBillFilterMonth] = useState("all");
 
   const fetchBills = async () => {
     setBillsLoading(true);
@@ -80,16 +80,18 @@ export default function ConsumptionPage() {
     }
   };
 
-  // Derive unique months and utilities from bills for filters
-  const uniqueMonths = [...new Set(bills.map((b) => b.reference_month).filter(Boolean))] as string[];
-  const uniqueUtilities = [...new Set(bills.map((b) => b.utility_company).filter(Boolean))] as string[];
+  // Derive unique filters from bills
   const uniqueProperties = [...new Set(bills.map((b) => b.property_name || b.address).filter(Boolean))] as string[];
+  const uniqueYears = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
+  const uniqueMonths = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
+  const monthNames: Record<string, string> = { "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro" };
 
   const filteredBills = bills.filter((b) => {
-    const matchMonth = billFilterMonth === "all" || b.reference_month === billFilterMonth;
-    const matchUtility = billFilterUtility === "all" || b.utility_company === billFilterUtility;
+    const [mm, yyyy] = (b.reference_month || "").split("/");
     const matchProperty = billFilterProperty === "all" || (b.property_name || b.address) === billFilterProperty;
-    return matchMonth && matchUtility && matchProperty;
+    const matchYear = billFilterYear === "all" || yyyy === billFilterYear;
+    const matchMonth = billFilterMonth === "all" || mm === billFilterMonth;
+    return matchProperty && matchYear && matchMonth;
   });
 
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
@@ -337,36 +339,36 @@ export default function ConsumptionPage() {
 
           {/* Bills Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Select value={billFilterMonth} onValueChange={setBillFilterMonth}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Mês de referência" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os meses</SelectItem>
-                {uniqueMonths.map((m) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={billFilterUtility} onValueChange={setBillFilterUtility}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Concessionária" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas concessionárias</SelectItem>
-                {uniqueUtilities.map((u) => (
-                  <SelectItem key={u} value={u}>{u}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={billFilterProperty} onValueChange={setBillFilterProperty}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder="Imóvel" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os imóveis</SelectItem>
                 {uniqueProperties.map((p) => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={billFilterYear} onValueChange={setBillFilterYear}>
+              <SelectTrigger className="w-full sm:w-36">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os anos</SelectItem>
+                {uniqueYears.map((y) => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={billFilterMonth} onValueChange={setBillFilterMonth}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os meses</SelectItem>
+                {uniqueMonths.map((m) => (
+                  <SelectItem key={m} value={m}>{monthNames[m] || m}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
