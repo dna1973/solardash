@@ -359,6 +359,17 @@ export default function ConsumptionPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={billFilterProperty} onValueChange={setBillFilterProperty}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Imóvel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os imóveis</SelectItem>
+                {uniqueProperties.map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="hidden sm:flex flex-1" />
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={exportExcel}>
