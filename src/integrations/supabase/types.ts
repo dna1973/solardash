@@ -125,13 +125,20 @@ export type Database = {
           amount_brl: number | null
           consumption_kwh: number | null
           created_at: string
+          deductions_value: number | null
           due_date: string | null
           generation_kwh: number | null
+          gross_value: number | null
           id: string
+          invoice_number: string | null
+          invoice_value: number | null
+          lighting_cost: number | null
+          net_value: number | null
           off_peak_demand_kw: number | null
           pdf_path: string | null
           peak_demand_kw: number | null
           property_name: string | null
+          qd: string | null
           raw_ocr_data: Json | null
           reference_month: string | null
           tariff_type: string | null
@@ -145,13 +152,20 @@ export type Database = {
           amount_brl?: number | null
           consumption_kwh?: number | null
           created_at?: string
+          deductions_value?: number | null
           due_date?: string | null
           generation_kwh?: number | null
+          gross_value?: number | null
           id?: string
+          invoice_number?: string | null
+          invoice_value?: number | null
+          lighting_cost?: number | null
+          net_value?: number | null
           off_peak_demand_kw?: number | null
           pdf_path?: string | null
           peak_demand_kw?: number | null
           property_name?: string | null
+          qd?: string | null
           raw_ocr_data?: Json | null
           reference_month?: string | null
           tariff_type?: string | null
@@ -165,13 +179,20 @@ export type Database = {
           amount_brl?: number | null
           consumption_kwh?: number | null
           created_at?: string
+          deductions_value?: number | null
           due_date?: string | null
           generation_kwh?: number | null
+          gross_value?: number | null
           id?: string
+          invoice_number?: string | null
+          invoice_value?: number | null
+          lighting_cost?: number | null
+          net_value?: number | null
           off_peak_demand_kw?: number | null
           pdf_path?: string | null
           peak_demand_kw?: number | null
           property_name?: string | null
+          qd?: string | null
           raw_ocr_data?: Json | null
           reference_month?: string | null
           tariff_type?: string | null
