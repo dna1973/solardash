@@ -124,7 +124,7 @@ export default function Dashboard() {
                           <tr
                             key={plant.id}
                             className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                            onClick={() => navigate(`/plants/${plant.id}`)}
+                            onClick={() => navigate(`/dashboard/plants/${plant.id}`)}
                           >
                             <td className="py-3 font-medium">{plant.name}</td>
                             <td className="py-3 text-muted-foreground">{plant.location}</td>
