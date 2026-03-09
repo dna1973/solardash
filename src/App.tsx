@@ -55,7 +55,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
+      <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <Index />} />
       <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
