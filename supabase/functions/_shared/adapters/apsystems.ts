@@ -166,9 +166,10 @@ export async function listPlants(session: APSystemsSession): Promise<NormalizedP
     }];
   }
 
-  // Also fetch inverters to get per-ECU details
+  // Also fetch inverters to get per-ECU details (with delay to avoid rate limit)
   let ecuInverterMap: Record<string, any[]> = {};
   try {
+    await new Promise(r => setTimeout(r, 1500)); // Rate limit protection
     const invData = await apiRequest(session, `/user/api/v2/systems/inverters/${session.systemId}`);
     const ecuList = invData.data || [];
     if (Array.isArray(ecuList)) {
