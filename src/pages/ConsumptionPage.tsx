@@ -644,8 +644,8 @@ export default function ConsumptionPage() {
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="text-sm font-medium truncate max-w-[200px]">{bill.address || "—"}</p>
-                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.property_name || ""}</p>
+                            <p className="text-sm font-medium truncate max-w-[200px]">{getLocal(bill)}</p>
+                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.address || ""}</p>
                           </div>
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono">
