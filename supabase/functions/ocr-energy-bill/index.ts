@@ -76,25 +76,37 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um especialista em extração de dados de contas de energia elétrica brasileiras.
+            content: `Você é um especialista em extração de dados de contas de energia elétrica brasileiras (Neoenergia, CEMIG, CPFL, Enel, etc).
 Analise a imagem da conta de energia e extraia os seguintes dados em formato JSON.
 Retorne APENAS o JSON, sem markdown ou texto adicional.
 
-Campos obrigatórios:
-{
-  "utility_company": "nome da concessionária",
-  "account_number": "número da conta/UC",
-  "property_name": "nome do titular ou identificação",
-  "address": "endereço da unidade consumidora",
-  "reference_month": "mês/ano de referência (MM/YYYY)",
-  "consumption_kwh": número em kWh consumido,
-  "generation_kwh": número em kWh gerado/injetado (0 se não houver),
-  "amount_brl": valor total da fatura em reais,
-  "peak_demand_kw": demanda ponta em kW (null se não houver),
-  "off_peak_demand_kw": demanda fora ponta em kW (null se não houver),
-  "tariff_type": "tipo de tarifa (B1, B2, B3, A4, etc.)",
-  "due_date": "data de vencimento (YYYY-MM-DD)"
-}
+Instruções de extração — siga rigorosamente:
+
+1. "utility_company": Nome da concessionária (ex: "Neoenergia Pernambuco", "CEMIG", "Enel").
+2. "account_number": Código da instalação / Número da UC (ex: "2795739"). NÃO confundir com código do cliente.
+3. "invoice_number": Número da Nota Fiscal (ex: "383406885"). Procure por "NOTA FISCAL N°" ou "NF-e".
+4. "property_name": Nome do titular/cliente. Procure por "NOME DO CLIENTE" ou no boleto "PAGADOR".
+5. "address": Endereço completo da unidade consumidora com bairro/cidade.
+6. "reference_month": Mês/ano de referência no formato "MM/YYYY" (ex: "10/2025"). Procure por "REF:MÊS/ANO".
+7. "consumption_kwh": Soma total de consumo em kWh. Some TODAS as linhas de "Consumo" nos itens da fatura (Consumo-TUSD + Consumo-TE, Ponta + Fora Ponta). Use a coluna "QUANT." das linhas que tenham unidade "kWh". NÃO duplique — some apenas as quantidades únicas. Se houver linhas TUSD e TE para o mesmo posto (ponta/fora ponta), a quantidade kWh é a mesma em ambas, então conte apenas uma vez por posto.
+8. "generation_kwh": Energia injetada/compensada em kWh. Se não houver créditos de geração, use 0.
+9. "gross_value": Valor bruto — soma de TODOS os itens positivos da coluna "VALOR COM TRIB.(R$)" na tabela de itens da fatura (excluindo deduções/descontos negativos e iluminação pública).
+10. "lighting_cost": Valor da Iluminação Pública / CIP / COSIP. Procure por "Ilum. Púb. Municipal" ou "CIP" ou "COSIP".
+11. "deductions_value": Soma dos valores negativos/descontos (Tributo Federal, PIS/COFINS deduzidos, etc). Procure valores com sinal negativo ou com sufixo "-". Retorne como número POSITIVO.
+12. "net_value": Valor líquido / TOTAL A PAGAR. É o valor final da fatura. Procure "TOTAL A PAGAR R$" ou a linha "TOTAL" dos itens.
+13. "invoice_value": Mesmo valor do "TOTAL A PAGAR" / Valor do Documento no boleto.
+14. "amount_brl": Mesmo valor do net_value (total a pagar).
+15. "tariff_type": Classificação tarifária (ex: "A4 Horo-sazonal Verde", "B1", "B3"). Procure por "CLASSIFICAÇÃO:".
+16. "due_date": Data de vencimento no formato "YYYY-MM-DD" (ex: "2025-12-19").
+17. "peak_demand_kw": Demanda contratada/medida Ponta em kW (null se não houver).
+18. "off_peak_demand_kw": Demanda contratada/medida Fora Ponta em kW (null se não houver). Se houver apenas "Demanda Ativa" sem distinção ponta/fora ponta, coloque em peak_demand_kw.
+19. "qd": Quadra ou código QD se presente no documento (null se não houver).
+
+IMPORTANTE sobre consumo_kwh:
+- Em faturas horossazonais (A4, A3, etc), há linhas separadas para Ponta e Fora Ponta.
+- Cada posto (Ponta/Fora Ponta) pode ter duas linhas: TUSD e TE, mas a QUANTIDADE kWh é a MESMA.
+- Some: kWh Ponta + kWh Fora Ponta (não duplique TUSD+TE do mesmo posto).
+- Exemplo: se Consumo-TUSD NPonta = 736,10 kWh e Consumo-TUSD F.Ponta = 10.157,75 kWh → total = 10.893,85 kWh.
 
 Se algum campo não for encontrado, use null. Para valores numéricos não encontrados, use 0.`,
           },
