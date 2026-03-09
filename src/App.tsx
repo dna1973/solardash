@@ -13,7 +13,6 @@ import PlantDetail from "./pages/PlantDetail";
 import Devices from "./pages/Devices";
 
 import Reports from "./pages/Reports";
-import McpDocPage from "./pages/McpDocPage";
 import SystemManagementPage from "./pages/SystemManagementPage";
 import ConsumptionPage from "./pages/ConsumptionPage";
 import Login from "./pages/Login";
@@ -73,7 +72,7 @@ const AppRoutes = () => {
                 <Route path="/alerts" element={<Navigate to="/dashboard/plants?tab=alertas" replace />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/management" element={<SystemManagementPage />} />
-                <Route path="/mcp" element={<McpDocPage />} />
+                <Route path="/mcp" element={<Navigate to="/dashboard/management?tab=api" replace />} />
                 <Route path="/map" element={<FullMap />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
