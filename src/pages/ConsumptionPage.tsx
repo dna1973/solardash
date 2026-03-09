@@ -674,7 +674,6 @@ export default function ConsumptionPage() {
                   <TableHeader>
                      <TableRow>
                       <TableHead>Nº da Conta</TableHead>
-                      <TableHead>Nº da Conta</TableHead>
                       <TableHead>Local</TableHead>
                       <TableHead className="text-right">Consumo KW/H</TableHead>
                       <TableHead className="text-right">Valor Bruto</TableHead>
