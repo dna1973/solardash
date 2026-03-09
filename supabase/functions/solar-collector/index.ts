@@ -235,6 +235,8 @@ async function syncIntegration(
     case "apsystems":
       session = await apsystems.authenticate(credentials);
       plants = await apsystems.listPlants(session);
+      // Delay after listPlants to avoid rate limiting on subsequent calls
+      await new Promise(r => setTimeout(r, 3000));
       break;
     case "hoymiles":
       session = await hoymiles.authenticate(credentials);

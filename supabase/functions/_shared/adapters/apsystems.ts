@@ -321,11 +321,12 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
   try {
     const data = await apiRequest(session, `/user/api/v2/systems/summary/${sid}`);
     const summary = data.data;
-    if (summary) {
+    const todayValue = summary?.today ? parseFloat(summary.today) / divisor : 0;
+    if (summary && todayValue > 0) {
       return [{
         plant_external_id: plantId,
         timestamp: new Date().toISOString(),
-        energy_generated_kwh: summary.today ? parseFloat(summary.today) / divisor : 0,
+        energy_generated_kwh: todayValue,
         status: "ok",
       }];
     }
