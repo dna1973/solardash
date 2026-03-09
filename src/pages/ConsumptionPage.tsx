@@ -814,7 +814,7 @@ export default function ConsumptionPage() {
                   <TableRow>
                     <TableCell>
                       <Input
-                        placeholder="Nº da conta"
+                        placeholder="Código do cliente"
                         value={newNomAccount}
                         onChange={(e) => setNewNomAccount(e.target.value)}
                         className="h-8 text-xs"
