@@ -1,0 +1,1 @@
+ALTER TABLE public.energy_bills ADD COLUMN client_code text DEFAULT NULL;

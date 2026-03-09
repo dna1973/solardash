@@ -123,6 +123,7 @@ export type Database = {
           account_number: string | null
           address: string | null
           amount_brl: number | null
+          client_code: string | null
           consumption_kwh: number | null
           created_at: string
           deductions_value: number | null
@@ -150,6 +151,7 @@ export type Database = {
           account_number?: string | null
           address?: string | null
           amount_brl?: number | null
+          client_code?: string | null
           consumption_kwh?: number | null
           created_at?: string
           deductions_value?: number | null
@@ -177,6 +179,7 @@ export type Database = {
           account_number?: string | null
           address?: string | null
           amount_brl?: number | null
+          client_code?: string | null
           consumption_kwh?: number | null
           created_at?: string
           deductions_value?: number | null
