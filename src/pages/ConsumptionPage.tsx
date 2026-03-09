@@ -449,12 +449,6 @@ export default function ConsumptionPage() {
               <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{bills.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="nomenclatures" className="gap-2">
-            <Settings2 className="w-4 h-4" /> Nomenclaturas
-            {nomenclatures.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{nomenclatures.length}</Badge>
-            )}
-          </TabsTrigger>
         </TabsList>
 
         {/* TAB: IMÓVEIS */}
