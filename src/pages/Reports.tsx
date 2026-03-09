@@ -304,12 +304,12 @@ export default function Reports() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-4 shadow-card">
+      <div className="flex flex-wrap items-center gap-2 md:gap-3 rounded-xl bg-card p-3 md:p-4 shadow-card">
         <Filter className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">Filtros:</span>
+        <span className="text-xs md:text-sm font-medium text-muted-foreground">Filtros:</span>
 
         <Select value={selectedPlant} onValueChange={setSelectedPlant}>
-          <SelectTrigger className="w-[220px] h-9 text-sm">
+          <SelectTrigger className="w-full sm:w-[220px] h-9 text-sm">
             <SelectValue placeholder="Todas as usinas" />
           </SelectTrigger>
           <SelectContent>
