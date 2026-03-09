@@ -390,11 +390,12 @@ export async function collectMonthlyEnergy(
   session: APSystemsSession,
   plantId: string,
   startMonth: string,
-  endMonth: string
+  endMonth: string,
+  ecuCount?: number
 ): Promise<NormalizedEnergyData[]> {
   const sid = extractSid(session, plantId);
   const isEcuPlant = extractEcuId(plantId) !== null;
-  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+  const divisor = isEcuPlant ? (ecuCount || 1) : 1;
 
   console.log(`apsystems: coletando energia mensal de ${startMonth} a ${endMonth} (divisor=${divisor})`);
 
