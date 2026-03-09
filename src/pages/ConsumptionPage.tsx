@@ -52,6 +52,20 @@ export default function ConsumptionPage() {
   const [billFilterYear, setBillFilterYear] = useState("all");
   const [billFilterMonth, setBillFilterMonth] = useState("all");
 
+  // Property locations lookup (account_number → location_name)
+  const [locationMap, setLocationMap] = useState<Record<string, string>>({});
+
+  const fetchLocations = async () => {
+    const { data } = await supabase
+      .from("property_locations")
+      .select("account_number, location_name");
+    if (data) {
+      const map: Record<string, string> = {};
+      data.forEach((r: any) => { map[r.account_number] = r.location_name; });
+      setLocationMap(map);
+    }
+  };
+
   const fetchBills = async () => {
     setBillsLoading(true);
     const { data, error } = await supabase
@@ -67,7 +81,14 @@ export default function ConsumptionPage() {
     setBillsLoading(false);
   };
 
+  // Helper: resolve "local" for a bill — prioritize property_locations, then property_name
+  const getLocal = (b: EnergyBill) => {
+    if (b.account_number && locationMap[b.account_number]) return locationMap[b.account_number];
+    return b.property_name || "Sem identificação";
+  };
+
   useEffect(() => {
+    fetchLocations();
     fetchBills();
   }, []);
 
