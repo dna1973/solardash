@@ -185,7 +185,7 @@ export default function Dashboard() {
 
           {/* MAPA */}
           <TabsContent value="map" className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
               <StatCard title="Total de Usinas" value={String(totalPlantsCount)} icon={Battery} variant="default" />
               <StatCard title="Online" value={String(plantsOnline)} icon={Sun} variant="primary" />
               <StatCard title="Offline" value={String(plants.filter(p => p.status === "offline").length)} icon={AlertTriangle} variant={plants.some(p => p.status === "offline") ? "warning" : "default"} />
