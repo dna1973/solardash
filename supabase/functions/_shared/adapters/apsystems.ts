@@ -105,8 +105,33 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
 
   // APsystems uses "code": 0 for success
   if (data.code !== undefined && data.code !== 0 && data.code !== "0") {
-    const msg = data.message || data.msg || `code ${data.code}`;
-    throw new Error(`APsystems API erro: ${msg}`);
+    const code = Number(data.code);
+    // Map error codes per APsystems manual Annex 4.1
+    const errorMessages: Record<number, string> = {
+      1000: "Exceção de dados",
+      1001: "Sem dados disponíveis",
+      2000: "Exceção na conta da aplicação",
+      2001: "Conta de aplicação inválida",
+      2002: "Conta de aplicação não autorizada",
+      2003: "Autorização da conta expirou",
+      2004: "Conta sem permissão para este recurso",
+      2005: "Limite de acessos da conta excedido (rate limit)",
+      3000: "Exceção no token de acesso",
+      4000: "Exceção nos parâmetros da requisição",
+      4001: "Parâmetro de requisição inválido",
+      5000: "Erro interno do servidor APsystems",
+      7001: "Limite de acesso ao servidor excedido",
+      7002: "Muitas requisições — tente novamente mais tarde",
+      7003: "Servidor ocupado — tente novamente mais tarde",
+    };
+    const friendlyMsg = errorMessages[code] || data.message || data.msg || `código ${code}`;
+    const isRateLimit = [2005, 7001, 7002, 7003].includes(code);
+    
+    if (isRateLimit) {
+      console.warn(`apsystems: RATE LIMIT atingido (code ${code}). Reduzir frequência de chamadas.`);
+    }
+    
+    throw new Error(`APsystems API erro (code ${code}): ${friendlyMsg}`);
   }
 
   return data;
