@@ -153,6 +153,7 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
         address: extracted.address || null,
         utility_company: extracted.utility_company || null,
         account_number: extracted.account_number || null,
+        client_code: extracted.client_code || null,
         reference_month: extracted.reference_month || null,
         consumption_kwh: extracted.consumption_kwh || 0,
         generation_kwh: extracted.generation_kwh || 0,
