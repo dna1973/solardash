@@ -84,6 +84,7 @@ Instruções de extração — siga rigorosamente:
 
 1. "utility_company": Nome da concessionária (ex: "Neoenergia Pernambuco", "CEMIG", "Enel").
 2. "account_number": Código da instalação / Número da UC (ex: "2795739"). NÃO confundir com código do cliente.
+20. "client_code": Código do cliente (ex: "2770007014"). Procure por "CÓDIGO DO CLIENTE" ou "Cód. Cliente". É um número diferente do número da UC/instalação.
 3. "invoice_number": Número da Nota Fiscal (ex: "383406885"). Procure por "NOTA FISCAL N°" ou "NF-e".
 4. "property_name": Nome do titular/cliente. Procure por "NOME DO CLIENTE" ou no boleto "PAGADOR".
 5. "address": Endereço completo da unidade consumidora com bairro/cidade.

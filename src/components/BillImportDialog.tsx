@@ -10,6 +10,7 @@ import { toast } from "sonner";
 interface ExtractedBillData {
   utility_company?: string;
   account_number?: string;
+  client_code?: string;
   property_name?: string;
   address?: string;
   reference_month?: string;
