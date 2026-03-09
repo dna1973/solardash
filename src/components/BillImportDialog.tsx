@@ -20,6 +20,13 @@ interface ExtractedBillData {
   off_peak_demand_kw?: number | null;
   tariff_type?: string;
   due_date?: string;
+  qd?: string;
+  invoice_number?: string;
+  invoice_value?: number;
+  gross_value?: number;
+  lighting_cost?: number;
+  deductions_value?: number;
+  net_value?: number;
 }
 
 interface BillImportDialogProps {
@@ -140,7 +147,14 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
         due_date: extracted.due_date || null,
         pdf_path: pdfPath,
         raw_ocr_data: extracted as any,
-      });
+        qd: extracted.qd || null,
+        invoice_number: extracted.invoice_number || null,
+        invoice_value: extracted.invoice_value || 0,
+        gross_value: extracted.gross_value || 0,
+        lighting_cost: extracted.lighting_cost || 0,
+        deductions_value: extracted.deductions_value || 0,
+        net_value: extracted.net_value || 0,
+      } as any);
 
       if (error) {
         if (error.code === "23505") {
@@ -269,12 +283,44 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Nº Conta/UC</Label>
+                <Label className="text-xs">Mês Referência</Label>
+                <Input
+                  value={extracted.reference_month || ""}
+                  onChange={(e) => updateField("reference_month", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">QD</Label>
+                <Input
+                  value={extracted.qd || ""}
+                  onChange={(e) => updateField("qd", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nº da Conta (UC)</Label>
                 <Input
                   value={extracted.account_number || ""}
                   onChange={(e) => updateField("account_number", e.target.value)}
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nº Nota Fiscal</Label>
+                <Input
+                  value={extracted.invoice_number || ""}
+                  onChange={(e) => updateField("invoice_number", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Local</Label>
+              <Input
+                value={extracted.address || ""}
+                onChange={(e) => updateField("address", e.target.value)}
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -285,32 +331,7 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Endereço</Label>
-              <Input
-                value={extracted.address || ""}
-                onChange={(e) => updateField("address", e.target.value)}
-              />
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Mês Referência</Label>
-                <Input
-                  value={extracted.reference_month || ""}
-                  onChange={(e) => updateField("reference_month", e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Tipo Tarifa</Label>
-                <Input
-                  value={extracted.tariff_type || ""}
-                  onChange={(e) => updateField("tariff_type", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Consumo (kWh)</Label>
                 <Input
@@ -320,6 +341,60 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
                 />
               </div>
               <div className="space-y-1.5">
+                <Label className="text-xs">Valor Bruto (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.gross_value ?? 0}
+                  onChange={(e) => updateField("gross_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Iluminação Pública (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.lighting_cost ?? 0}
+                  onChange={(e) => updateField("lighting_cost", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Deduções (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.deductions_value ?? 0}
+                  onChange={(e) => updateField("deductions_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Líquido (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.net_value ?? 0}
+                  onChange={(e) => updateField("net_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Nota Fiscal (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.invoice_value ?? 0}
+                  onChange={(e) => updateField("invoice_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
                 <Label className="text-xs">Geração (kWh)</Label>
                 <Input
                   type="number"
@@ -328,31 +403,10 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Valor (R$)</Label>
+                <Label className="text-xs">Tipo Tarifa</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  value={extracted.amount_brl ?? 0}
-                  onChange={(e) => updateField("amount_brl", parseFloat(e.target.value) || 0)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Demanda Ponta (kW)</Label>
-                <Input
-                  type="number"
-                  value={extracted.peak_demand_kw ?? ""}
-                  onChange={(e) => updateField("peak_demand_kw", e.target.value ? parseFloat(e.target.value) : null)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Demanda F. Ponta (kW)</Label>
-                <Input
-                  type="number"
-                  value={extracted.off_peak_demand_kw ?? ""}
-                  onChange={(e) => updateField("off_peak_demand_kw", e.target.value ? parseFloat(e.target.value) : null)}
+                  value={extracted.tariff_type || ""}
+                  onChange={(e) => updateField("tariff_type", e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">

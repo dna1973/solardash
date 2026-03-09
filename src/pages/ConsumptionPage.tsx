@@ -30,6 +30,13 @@ interface EnergyBill {
   tariff_type: string | null;
   due_date: string | null;
   created_at: string;
+  qd: string | null;
+  invoice_number: string | null;
+  invoice_value: number | null;
+  gross_value: number | null;
+  lighting_cost: number | null;
+  deductions_value: number | null;
+  net_value: number | null;
 }
 
 export default function ConsumptionPage() {
@@ -47,7 +54,7 @@ export default function ConsumptionPage() {
     setBillsLoading(true);
     const { data, error } = await supabase
       .from("energy_bills")
-      .select("id, property_name, address, utility_company, account_number, reference_month, consumption_kwh, generation_kwh, amount_brl, tariff_type, due_date, created_at")
+      .select("id, property_name, address, utility_company, account_number, reference_month, consumption_kwh, generation_kwh, amount_brl, tariff_type, due_date, created_at, qd, invoice_number, invoice_value, gross_value, lighting_cost, deductions_value, net_value")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -83,20 +90,20 @@ export default function ConsumptionPage() {
   });
 
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
-  const billsTotalGeneration = filteredBills.reduce((s, b) => s + (b.generation_kwh || 0), 0);
-  const billsTotalAmount = filteredBills.reduce((s, b) => s + (b.amount_brl || 0), 0);
+  const billsTotalGross = filteredBills.reduce((s, b) => s + ((b as any).gross_value || 0), 0);
+  const billsTotalDeductions = filteredBills.reduce((s, b) => s + ((b as any).deductions_value || 0), 0);
+  const billsTotalNet = filteredBills.reduce((s, b) => s + ((b as any).net_value || 0), 0);
 
   const getBillsExportData = () =>
     filteredBills.map((b) => ({
-      "Imóvel": b.property_name || "—",
-      "Endereço": b.address || "—",
-      "UC": b.account_number || "—",
-      "Concessionária": b.utility_company || "—",
-      "Mês Ref.": b.reference_month || "—",
-      "Consumo (kWh)": b.consumption_kwh || 0,
-      "Geração (kWh)": b.generation_kwh || 0,
-      "Valor (R$)": b.amount_brl || 0,
-      "Tarifa": b.tariff_type || "—",
+      "QD": b.qd || "—",
+      "Nº da Conta": b.account_number || "—",
+      "Local": b.address || "—",
+      "Consumo KW/H": b.consumption_kwh || 0,
+      "Valor Bruto": b.gross_value || 0,
+      "Valor Iluminação Pública": b.lighting_cost || 0,
+      "Valor Deduções": b.deductions_value || 0,
+      "Valor Líquido": b.net_value || 0,
     }));
 
   const exportExcel = () => {
@@ -151,7 +158,7 @@ export default function ConsumptionPage() {
     y += 3;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text(`Consumo Total: ${(billsTotalConsumption / 1000).toFixed(1)} MWh  |  Geração Total: ${(billsTotalGeneration / 1000).toFixed(1)} MWh  |  Valor Total: R$ ${billsTotalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, startX, y);
+    doc.text(`Consumo Total: ${(billsTotalConsumption / 1000).toFixed(1)} MWh  |  Valor Bruto: R$ ${billsTotalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}  |  Valor Líquido: R$ ${billsTotalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, startX, y);
 
     doc.save("contas-energia.pdf");
     toast.success("PDF exportado!");
@@ -318,10 +325,11 @@ export default function ConsumptionPage() {
         {/* TAB: CONTAS IMPORTADAS */}
         <TabsContent value="bills" className="space-y-6 mt-4">
           {/* Bills Summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <StatCard title="Consumo Total" value={`${(billsTotalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
-            <StatCard title="Geração Total" value={`${(billsTotalGeneration / 1000).toFixed(1)} MWh`} icon={TrendingUp} variant="primary" />
-            <StatCard title="Valor Total" value={`R$ ${billsTotalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+            <StatCard title="Valor Bruto" value={`R$ ${billsTotalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+            <StatCard title="Total Deduções" value={`R$ ${billsTotalDeductions.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={TrendingUp} variant="primary" />
+            <StatCard title="Valor Líquido" value={`R$ ${billsTotalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
           </div>
 
           {/* Bills Filters */}
@@ -384,41 +392,43 @@ export default function ConsumptionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Imóvel / Titular</TableHead>
-                      <TableHead>UC</TableHead>
-                      <TableHead>Concessionária</TableHead>
-                      <TableHead>Mês Ref.</TableHead>
-                      <TableHead className="text-right">Consumo (kWh)</TableHead>
-                      <TableHead className="text-right">Geração (kWh)</TableHead>
-                      <TableHead className="text-right">Valor (R$)</TableHead>
-                      <TableHead>Tarifa</TableHead>
+                      <TableHead>QD</TableHead>
+                      <TableHead>Nº da Conta</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead className="text-right">Consumo KW/H</TableHead>
+                      <TableHead className="text-right">Valor Bruto</TableHead>
+                      <TableHead className="text-right">Valor Ilum. Pública</TableHead>
+                      <TableHead className="text-right">Valor Deduções</TableHead>
+                      <TableHead className="text-right">Valor Líquido</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredBills.map((bill) => (
                       <TableRow key={bill.id}>
-                        <TableCell>
-                          <div>
-                            <p className="text-sm font-medium truncate max-w-[180px]">{bill.property_name || "—"}</p>
-                            <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">{bill.address || ""}</p>
-                          </div>
-                        </TableCell>
+                        <TableCell className="text-xs font-mono">{(bill as any).qd || "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px]">{bill.utility_company || "—"}</Badge>
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[200px]">{bill.address || "—"}</p>
+                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.property_name || ""}</p>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-xs font-medium">{bill.reference_month || "—"}</TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.consumption_kwh || 0).toLocaleString("pt-BR")}
                         </TableCell>
-                        <TableCell className="text-right text-sm font-mono text-primary">
-                          {(bill.generation_kwh || 0).toLocaleString("pt-BR")}
+                        <TableCell className="text-right text-sm font-mono">
+                          {((bill as any).gross_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {((bill as any).lighting_cost || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono text-destructive">
+                          {((bill as any).deductions_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono font-semibold">
-                          {(bill.amount_brl || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          {((bill as any).net_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell className="text-xs">{bill.tariff_type || "—"}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
