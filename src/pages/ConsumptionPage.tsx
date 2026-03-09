@@ -325,10 +325,11 @@ export default function ConsumptionPage() {
         {/* TAB: CONTAS IMPORTADAS */}
         <TabsContent value="bills" className="space-y-6 mt-4">
           {/* Bills Summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <StatCard title="Consumo Total" value={`${(billsTotalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
-            <StatCard title="Geração Total" value={`${(billsTotalGeneration / 1000).toFixed(1)} MWh`} icon={TrendingUp} variant="primary" />
-            <StatCard title="Valor Total" value={`R$ ${billsTotalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+            <StatCard title="Valor Bruto" value={`R$ ${billsTotalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+            <StatCard title="Total Deduções" value={`R$ ${billsTotalDeductions.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={TrendingUp} variant="primary" />
+            <StatCard title="Valor Líquido" value={`R$ ${billsTotalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
           </div>
 
           {/* Bills Filters */}
