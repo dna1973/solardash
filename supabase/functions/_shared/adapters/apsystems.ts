@@ -332,11 +332,12 @@ export async function collectDailyEnergy(
   session: APSystemsSession,
   plantId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  ecuCount?: number
 ): Promise<NormalizedEnergyData[]> {
   const sid = extractSid(session, plantId);
   const isEcuPlant = extractEcuId(plantId) !== null;
-  const divisor = isEcuPlant ? await getEcuCount(session, sid) : 1;
+  const divisor = isEcuPlant ? (ecuCount || 1) : 1;
 
   console.log(`apsystems: coletando energia diária de ${startDate} a ${endDate} (divisor=${divisor})`);
   
