@@ -12,6 +12,7 @@ import PlantDetail from "./pages/PlantDetail";
 import Devices from "./pages/Devices";
 
 import Reports from "./pages/Reports";
+import McpDocPage from "./pages/McpDocPage";
 import SystemManagementPage from "./pages/SystemManagementPage";
 import ConsumptionPage from "./pages/ConsumptionPage";
 import Login from "./pages/Login";
