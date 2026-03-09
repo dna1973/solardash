@@ -60,6 +60,7 @@ export function EnergyChart({ data, title, height = 300, dataKeys = ["generation
           ))}
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
