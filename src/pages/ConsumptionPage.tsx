@@ -125,47 +125,256 @@ export default function ConsumptionPage() {
     const data = getBillsExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    const headers = Object.keys(data[0]);
-    const colWidths = [40, 45, 25, 30, 22, 25, 25, 25, 20];
-    const startX = 10;
-    let y = 15;
+    const pageW = 297;
+    const pageH = 210;
+    const mx = 10; // margin x
+    const tableW = pageW - mx * 2;
 
-    doc.setFontSize(14);
-    doc.text("Contas de Energia Importadas", startX, y);
-    y += 10;
+    // Helper: wrap text into lines that fit a given width
+    const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
+      doc.setFontSize(fontSize);
+      const words = text.split(" ");
+      const lines: string[] = [];
+      let current = "";
+      for (const word of words) {
+        const test = current ? `${current} ${word}` : word;
+        if (doc.getTextWidth(test) > maxWidth - 2) {
+          if (current) lines.push(current);
+          current = word;
+        } else {
+          current = test;
+        }
+      }
+      if (current) lines.push(current);
+      return lines.length ? lines : [""];
+    };
 
-    // Header row
-    doc.setFontSize(7);
+    const fmtNum = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+    const fmtMoney = (v: number) => `R$ ${fmtNum(v)}`;
+
+    // Determine active filter labels
+    const monthLabel = billFilterMonth !== "all" ? (monthNames[billFilterMonth] || billFilterMonth) : "";
+    const yearLabel = billFilterYear !== "all" ? billFilterYear : "";
+    const refLabel = [monthLabel, yearLabel].filter(Boolean).join("/") || "Todos";
+    const propLabel = billFilterProperty !== "all" ? billFilterProperty : "Todos os imóveis";
+
+    // ── HEADER SECTION ──
+    let y = 14;
+    const headerH = 28;
+    const headerLabelW = 45;
+    const headerCol1W = 90;
+
+    // Background
+    doc.setFillColor(240, 244, 248);
+    doc.rect(mx, y - 4, tableW, headerH, "F");
+    doc.setDrawColor(180, 190, 200);
+    doc.rect(mx, y - 4, tableW, headerH, "S");
+
+    // Left: Title block
     doc.setFont("helvetica", "bold");
-    headers.forEach((h, i) => {
-      const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-      doc.text(h, x, y);
-    });
-    y += 5;
-    doc.setDrawColor(200);
-    doc.line(startX, y - 3, 287, y - 3);
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.text("EXTRATO DE FATURAS", mx + 3, y + 1);
 
-    // Data rows
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    doc.text("Mês de Referência:", mx + 3, y + 7);
+    doc.setFont("helvetica", "bold");
+    doc.text(refLabel, mx + 3 + doc.getTextWidth("Mês de Referência: "), y + 7);
+
+    doc.setFont("helvetica", "normal");
+    doc.text("Imóvel:", mx + 3, y + 12);
+    doc.setFont("helvetica", "bold");
+    const propLines = wrapText(propLabel, headerCol1W, 7);
+    propLines.forEach((line, i) => {
+      doc.text(line, mx + 3 + doc.getTextWidth("Imóvel: "), y + 12 + i * 3.5);
+    });
+
+    // Right: Totals summary
+    const rightX = pageW - mx - 85;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(80, 80, 80);
+
+    const summaryItems = [
+      { label: "Valor Bruto:", value: fmtMoney(billsTotalGross) },
+      { label: "Total de Dedução:", value: fmtMoney(billsTotalDeductions) },
+      { label: "Valor Líquido:", value: fmtMoney(billsTotalNet) },
+    ];
+    summaryItems.forEach((item, i) => {
+      doc.setFont("helvetica", "normal");
+      doc.text(item.label, rightX, y + 1 + i * 5);
+      doc.setFont("helvetica", "bold");
+      doc.text(item.value, rightX + 80, y + 1 + i * 5, { align: "right" });
+    });
+
+    y += headerH + 4;
+
+    // ── COLUMN DEFINITIONS ──
+    const cols = [
+      { header: "QD", width: 18, align: "left" as const },
+      { header: "Nº DA CONTA", width: 28, align: "left" as const },
+      { header: "LOCAL", width: 72, align: "left" as const },
+      { header: "CONSUMO\nKW/H", width: 28, align: "right" as const },
+      { header: "Valor\nBruto", width: 28, align: "right" as const },
+      { header: "Valor Ilum.\nPública", width: 28, align: "right" as const },
+      { header: "Valor\nDeduções", width: 28, align: "right" as const },
+      { header: "Valor\nLíquido", width: 28, align: "right" as const },
+    ];
+    // Adjust last col to fill remaining width
+    const usedW = cols.reduce((s, c) => s + c.width, 0);
+    if (usedW < tableW) cols[cols.length - 1].width += tableW - usedW;
+
+    // ── TABLE HEADER ──
+    const drawTableHeader = () => {
+      // "DEDUÇÃO" spanning last 2 cols
+      const dedStart = cols.slice(0, 6).reduce((s, c) => s + c.width, 0) + mx;
+      const dedW = cols[6].width + cols[7].width;
+      doc.setFillColor(220, 228, 236);
+      doc.rect(dedStart, y - 4, dedW, 5, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.setTextColor(40, 40, 40);
+      doc.text("DEDUÇÃO", dedStart + dedW / 2, y - 0.5, { align: "center" });
+      y += 2;
+
+      // Column header row with blue background
+      doc.setFillColor(200, 215, 230);
+      doc.rect(mx, y - 3, tableW, 10, "F");
+      doc.setDrawColor(160, 175, 190);
+      doc.line(mx, y - 3, mx + tableW, y - 3);
+      doc.line(mx, y + 7, mx + tableW, y + 7);
+
+      let cx = mx;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.setTextColor(30, 30, 30);
+      cols.forEach((col) => {
+        const lines = col.header.split("\n");
+        const textY = lines.length > 1 ? y : y + 1.5;
+        lines.forEach((line, li) => {
+          const tx = col.align === "right" ? cx + col.width - 2 : cx + 2;
+          doc.text(line, tx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
+        });
+        // Vertical separator
+        doc.setDrawColor(180, 190, 200);
+        doc.line(cx, y - 3, cx, y + 7);
+        cx += col.width;
+      });
+      doc.line(mx + tableW, y - 3, mx + tableW, y + 7);
+      y += 9;
+    };
+
+    drawTableHeader();
+
+    // ── DATA ROWS ──
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
-    data.forEach((row) => {
-      if (y > 190) { doc.addPage(); y = 15; }
+    doc.setTextColor(30, 30, 30);
+    const rowFontSize = 6.5;
+    const lineH = 3.5;
+
+    data.forEach((row, rowIdx) => {
       const values = Object.values(row);
+      // Calculate row height by wrapping LOCAL column
+      const localText = String(values[2] || "");
+      const localLines = wrapText(localText, cols[2].width, rowFontSize);
+      const rowH = Math.max(localLines.length * lineH, 5);
+
+      // Page break check
+      if (y + rowH > pageH - 20) {
+        doc.addPage();
+        y = 14;
+        drawTableHeader();
+      }
+
+      // Alternate row background
+      if (rowIdx % 2 === 0) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(mx, y - 2.5, tableW, rowH, "F");
+      }
+
+      // Row border
+      doc.setDrawColor(220, 225, 230);
+      doc.line(mx, y - 2.5 + rowH, mx + tableW, y - 2.5 + rowH);
+
+      let cx = mx;
       values.forEach((v, i) => {
-        const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-        const text = typeof v === "number" ? v.toLocaleString("pt-BR", { minimumFractionDigits: v % 1 === 0 ? 0 : 2 }) : String(v);
-        doc.text(text.substring(0, 25), x, y);
+        const col = cols[i];
+        if (!col) return;
+        const text = typeof v === "number" ? fmtNum(v) : String(v);
+
+        if (i === 2) {
+          // LOCAL column — wrap text
+          localLines.forEach((line, li) => {
+            doc.text(line, cx + 2, y + li * lineH);
+          });
+        } else {
+          const tx = col.align === "right" ? cx + col.width - 2 : cx + 2;
+          doc.text(text.substring(0, 30), tx, y, { align: col.align === "right" ? "right" : "left" });
+        }
+
+        // Vertical lines
+        doc.setDrawColor(220, 225, 230);
+        doc.line(cx, y - 2.5, cx, y - 2.5 + rowH);
+        cx += col.width;
       });
-      y += 4.5;
+      doc.line(mx + tableW, y - 2.5, mx + tableW, y - 2.5 + rowH);
+
+      y += rowH;
     });
 
-    // Totals
-    y += 3;
+    // ── TOTALS ROW ──
+    y += 1;
+    doc.setDrawColor(160, 175, 190);
+    doc.setFillColor(230, 238, 245);
+    doc.rect(mx, y - 3, tableW, 7, "F");
+    doc.line(mx, y - 3, mx + tableW, y - 3);
+    doc.line(mx, y + 4, mx + tableW, y + 4);
+
+    // "TOTAL:" label in LOCAL column
+    const totalLabelX = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text(`Consumo Total: ${(billsTotalConsumption / 1000).toFixed(1)} MWh  |  Valor Bruto: R$ ${billsTotalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}  |  Valor Líquido: R$ ${billsTotalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, startX, y);
+    doc.text("TOTAL:", totalLabelX, y + 0.5, { align: "right" });
 
-    doc.save("contas-energia.pdf");
+    // Total values
+    const totalValues = [
+      fmtNum(billsTotalConsumption),
+      fmtMoney(billsTotalGross),
+      "",
+      fmtMoney(billsTotalDeductions),
+      fmtMoney(billsTotalNet),
+    ];
+    let tx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
+    totalValues.forEach((val, i) => {
+      const col = cols[i + 3];
+      if (val) {
+        doc.text(val, tx + col.width - 2, y + 0.5, { align: "right" });
+      }
+      tx += col.width;
+    });
+
+    // ── SUMMARY FOOTER ──
+    y += 10;
+    const footerItems = [
+      { label: "Valor Bruto", value: fmtMoney(billsTotalGross) },
+      { label: "Total de Dedução", value: fmtMoney(billsTotalDeductions) },
+      { label: "Valor Líquido", value: fmtMoney(billsTotalNet) },
+    ];
+    const footerX = pageW - mx - 80;
+    footerItems.forEach((item, i) => {
+      doc.setDrawColor(200, 210, 220);
+      doc.line(footerX, y + i * 6 + 2, footerX + 80, y + i * 6 + 2);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text(item.label, footerX + 2, y + i * 6);
+      doc.setFont("helvetica", "bold");
+      doc.text(item.value, footerX + 78, y + i * 6, { align: "right" });
+    });
+
+    doc.save("extrato-faturas.pdf");
     toast.success("PDF exportado!");
   };
 
