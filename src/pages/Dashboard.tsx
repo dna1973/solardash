@@ -124,7 +124,7 @@ export default function Dashboard() {
                           <tr
                             key={plant.id}
                             className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                            onClick={() => navigate(`/plants/${plant.id}`)}
+                            onClick={() => navigate(`/dashboard/plants/${plant.id}`)}
                           >
                             <td className="py-3 font-medium">{plant.name}</td>
                             <td className="py-3 text-muted-foreground">{plant.location}</td>
@@ -199,7 +199,7 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="h-[300px] md:h-[500px] rounded-lg overflow-hidden border border-border">
-                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
+                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/dashboard/plants/${id}`)} />
               </div>
               <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary inline-block" /> Online</span>
@@ -224,7 +224,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {plants.map((plant) => (
-                      <tr key={plant.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/plants/${plant.id}`)}>
+                      <tr key={plant.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/dashboard/plants/${plant.id}`)}>
                         <td className="py-3 font-medium">{plant.name}</td>
                         <td className="py-3 text-muted-foreground">{plant.location}</td>
                         <td className="py-3 text-right font-mono text-xs">{plant.capacity_kwp} kWp</td>

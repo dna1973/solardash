@@ -45,7 +45,7 @@ export default function FullMap() {
       </div>
       {/* Map fills remaining space */}
       <div className="flex-1">
-        <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
+        <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/dashboard/plants/${id}`)} />
       </div>
     </div>
   );
