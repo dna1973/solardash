@@ -11,10 +11,10 @@ interface StatCardProps {
 }
 
 const variantStyles = {
-  default: "bg-card shadow-card",
-  primary: "bg-card shadow-card border-l-4 border-l-primary",
-  warning: "bg-card shadow-card border-l-4 border-l-energy-yellow",
-  danger: "bg-card shadow-card border-l-4 border-l-destructive",
+  default: "bg-card shadow-card border border-border/50",
+  primary: "bg-card shadow-card border border-primary/20 border-l-4 border-l-primary",
+  warning: "bg-card shadow-card border border-energy-yellow/20 border-l-4 border-l-energy-yellow",
+  danger: "bg-card shadow-card border border-destructive/20 border-l-4 border-l-destructive",
 };
 
 const iconBg = {
@@ -29,7 +29,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, variant = 
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl p-3 md:p-5 transition-shadow hover:shadow-card-hover ${variantStyles[variant]}`}
+      className={`rounded-2xl p-3 md:p-5 transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5 ${variantStyles[variant]}`}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-0.5 md:space-y-1 min-w-0">

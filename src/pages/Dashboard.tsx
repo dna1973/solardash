@@ -74,15 +74,15 @@ export default function Dashboard() {
         </div>
       ) : (
         <Tabs defaultValue="map" className="space-y-4 md:space-y-6">
-          <TabsList className="bg-muted/60 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="map" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
-              <MapIcon className="h-4 w-4" /> <span className="hidden xs:inline">Mapa</span>
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="map" className="gap-1.5 text-xs md:text-sm">
+              <MapIcon className="h-4 w-4" /> Mapa
             </TabsTrigger>
-            <TabsTrigger value="generation" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
-              <Sun className="h-4 w-4" /> <span className="hidden xs:inline">Geração</span>
+            <TabsTrigger value="generation" className="gap-1.5 text-xs md:text-sm">
+              <Sun className="h-4 w-4" /> Geração
             </TabsTrigger>
-            <TabsTrigger value="consumption" className="gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs md:text-sm">
-              <Plug className="h-4 w-4" /> <span className="hidden xs:inline">Consumo</span>
+            <TabsTrigger value="consumption" className="gap-1.5 text-xs md:text-sm">
+              <Plug className="h-4 w-4" /> Consumo
             </TabsTrigger>
           </TabsList>
 
