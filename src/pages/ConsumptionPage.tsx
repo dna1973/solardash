@@ -49,6 +49,7 @@ export default function ConsumptionPage() {
   const [billsLoading, setBillsLoading] = useState(false);
   const [billFilterMonth, setBillFilterMonth] = useState("all");
   const [billFilterUtility, setBillFilterUtility] = useState("all");
+  const [billFilterProperty, setBillFilterProperty] = useState("all");
 
   const fetchBills = async () => {
     setBillsLoading(true);
