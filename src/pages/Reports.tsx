@@ -280,23 +280,23 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Relatórios</h1>
-          <p className="text-sm text-muted-foreground">Análise energética detalhada com filtros e comparativos</p>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Relatórios</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Análise energética detalhada com filtros e comparativos</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExportPDF}
             disabled={!hasData}
-            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 border text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" /> PDF
           </button>
           <button
             onClick={handleExportExcel}
             disabled={!hasData && detailedTable.length === 0}
-            className="flex items-center gap-2 border text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 border text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" /> Excel
           </button>
