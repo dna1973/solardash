@@ -62,10 +62,10 @@ export default function Dashboard() {
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Olá, {firstName} 👋</h1>
-        <p className="text-sm text-muted-foreground">Visão geral do sistema de monitoramento solar</p>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">Olá, {firstName} 👋</h1>
+        <p className="text-xs md:text-sm text-muted-foreground">Visão geral do sistema de monitoramento solar</p>
       </div>
 
       {isLoading ? (
