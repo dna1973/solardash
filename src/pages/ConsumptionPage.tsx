@@ -95,15 +95,14 @@ export default function ConsumptionPage() {
 
   const getBillsExportData = () =>
     filteredBills.map((b) => ({
-      "Imóvel": b.property_name || "—",
-      "Endereço": b.address || "—",
-      "UC": b.account_number || "—",
-      "Concessionária": b.utility_company || "—",
-      "Mês Ref.": b.reference_month || "—",
-      "Consumo (kWh)": b.consumption_kwh || 0,
-      "Geração (kWh)": b.generation_kwh || 0,
-      "Valor (R$)": b.amount_brl || 0,
-      "Tarifa": b.tariff_type || "—",
+      "QD": b.qd || "—",
+      "Nº da Conta": b.account_number || "—",
+      "Local": b.address || "—",
+      "Consumo KW/H": b.consumption_kwh || 0,
+      "Valor Bruto": b.gross_value || 0,
+      "Valor Iluminação Pública": b.lighting_cost || 0,
+      "Valor Deduções": b.deductions_value || 0,
+      "Valor Líquido": b.net_value || 0,
     }));
 
   const exportExcel = () => {
