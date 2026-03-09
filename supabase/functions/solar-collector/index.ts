@@ -218,10 +218,17 @@ async function syncIntegration(
 ): Promise<{ synced: number; energyPoints: number }> {
   console.log(`syncIntegration: ${manufacturer} para tenant ${tenantId}`);
 
+  const mfr = manufacturer.toLowerCase();
+
+  // ─── APsystems: optimized path — skip listPlants, use DB plants directly ───
+  if (mfr === "apsystems") {
+    return await syncAPsystemsOptimized(supabase, tenantId, credentials, integrationId);
+  }
+
   let plants: NormalizedPlant[] = [];
   let session: any = null;
 
-  switch (manufacturer.toLowerCase()) {
+  switch (mfr) {
     case "growatt":
       session = await growatt.authenticate(credentials);
       plants = await growatt.listPlants(session);
@@ -231,12 +238,6 @@ async function syncIntegration(
       break;
     case "fronius":
       plants = await fronius.listPlants(credentials);
-      break;
-    case "apsystems":
-      session = await apsystems.authenticate(credentials);
-      plants = await apsystems.listPlants(session);
-      // Delay after listPlants to avoid rate limiting on subsequent calls
-      await new Promise(r => setTimeout(r, 3000));
       break;
     case "hoymiles":
       session = await hoymiles.authenticate(credentials);
@@ -251,7 +252,6 @@ async function syncIntegration(
   let energyPoints = 0;
 
   for (const plant of plants) {
-    // Upsert plant — check if exists by name+tenant
     const { data: existing } = await supabase
       .from("plants")
       .select("id")
@@ -264,14 +264,11 @@ async function syncIntegration(
 
     if (existing) {
       plantId = existing.id;
-      // Only update fields that won't overwrite user-edited data
-      // Location, latitude, longitude are preserved if the API returns null/empty
       const updateData: Record<string, any> = {
         capacity_kwp: plant.capacity_kwp || undefined,
         status: plant.status || "offline",
         updated_at: new Date().toISOString(),
       };
-      // Only overwrite location/coords if API provides actual values AND DB has none
       if (plant.location) {
         const { data: current } = await supabase
           .from("plants")
@@ -282,10 +279,7 @@ async function syncIntegration(
         if (plant.latitude && !current?.latitude) updateData.latitude = plant.latitude;
         if (plant.longitude && !current?.longitude) updateData.longitude = plant.longitude;
       }
-      await supabase
-        .from("plants")
-        .update(updateData)
-        .eq("id", plantId);
+      await supabase.from("plants").update(updateData).eq("id", plantId);
     } else {
       const { data: newPlant, error: insertErr } = await supabase
         .from("plants")
@@ -309,15 +303,12 @@ async function syncIntegration(
       console.log(`syncIntegration: nova planta criada: ${plant.name} → ${plantId}`);
     }
 
-    // Collect energy data
     try {
       let energyData: NormalizedEnergyData[] = [];
 
-      switch (manufacturer.toLowerCase()) {
+      switch (mfr) {
         case "growatt":
-          if (session) {
-            energyData = await growatt.collectEnergy(session, plant.external_id);
-          }
+          if (session) energyData = await growatt.collectEnergy(session, plant.external_id);
           break;
         case "solaredge":
           energyData = await solaredge.collectEnergy(credentials, plant.external_id);
@@ -325,57 +316,8 @@ async function syncIntegration(
         case "fronius":
           energyData = await fronius.collectEnergy(credentials, plant.external_id);
           break;
-        case "apsystems":
-          if (session) {
-            // Add delay between plants to avoid rate limiting
-            const plantIndex = plants.indexOf(plant);
-            if (plantIndex > 0) {
-              console.log(`apsystems: aguardando 3s entre plantas...`);
-              await new Promise(r => setTimeout(r, 3000));
-            }
-            
-            // Collect today's hourly/summary data
-            energyData = await apsystems.collectEnergy(session, plant.external_id);
-            
-            // Only collect historical data once per day (check if hour is between 22-23 UTC)
-            const currentHour = new Date().getUTCHours();
-            const isHistoricalWindow = currentHour >= 22;
-            
-            if (isHistoricalWindow) {
-              await new Promise(r => setTimeout(r, 3000));
-              
-              try {
-                const endDate = new Date().toISOString().split("T")[0];
-                const startDate30 = new Date();
-                startDate30.setDate(startDate30.getDate() - 30);
-                const startDateStr = startDate30.toISOString().split("T")[0];
-                const dailyData = await apsystems.collectDailyEnergy(session, plant.external_id, startDateStr, endDate);
-                energyData = [...energyData, ...dailyData];
-              } catch (histErr) {
-                console.log(`syncIntegration: erro ao coletar histórico diário APsystems: ${histErr}`);
-              }
-
-              await new Promise(r => setTimeout(r, 3000));
-
-              try {
-                const now = new Date();
-                const endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-                const start12 = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-                const startMonth = `${start12.getFullYear()}-${String(start12.getMonth() + 1).padStart(2, "0")}`;
-                const monthlyData = await apsystems.collectMonthlyEnergy(session, plant.external_id, startMonth, endMonth);
-                energyData = [...energyData, ...monthlyData];
-              } catch (histErr) {
-                console.log(`syncIntegration: erro ao coletar histórico mensal APsystems: ${histErr}`);
-              }
-            } else {
-              console.log("apsystems: pulando coleta histórica (só roda entre 22-23h UTC)");
-            }
-          }
-          break;
         case "hoymiles":
-          if (session) {
-            energyData = await hoymiles.collectEnergy(session, plant.external_id);
-          }
+          if (session) energyData = await hoymiles.collectEnergy(session, plant.external_id);
           break;
       }
 
@@ -401,6 +343,144 @@ async function syncIntegration(
   }
 
   return { synced: plants.length, energyPoints };
+}
+
+// ─── APsystems optimized sync: skip listPlants API, use DB plants directly ───
+async function syncAPsystemsOptimized(
+  supabase: any,
+  tenantId: string,
+  credentials: any,
+  integrationId: string
+): Promise<{ synced: number; energyPoints: number }> {
+  const session = await apsystems.authenticate(credentials);
+
+  // Get existing APsystems plants from DB (ECU names start with "ECU ")
+  const { data: dbPlants } = await supabase
+    .from("plants")
+    .select("id, name")
+    .eq("tenant_id", tenantId)
+    .like("name", "ECU %");
+
+  if (!dbPlants || dbPlants.length === 0) {
+    // First time: need to discover plants via API
+    console.log("apsystems: nenhuma planta no DB, fazendo discovery via API");
+    const plants = await apsystems.listPlants(session);
+    if (plants.length === 0) return { synced: 0, energyPoints: 0 };
+
+    // Insert plants and then collect energy
+    let energyPoints = 0;
+    for (let i = 0; i < plants.length; i++) {
+      const plant = plants[i];
+      const { data: newPlant } = await supabase
+        .from("plants")
+        .insert({
+          tenant_id: tenantId,
+          name: plant.name,
+          location: plant.location || null,
+          capacity_kwp: plant.capacity_kwp || 0,
+          status: plant.status || "offline",
+        })
+        .select("id")
+        .single();
+
+      if (newPlant) {
+        console.log(`apsystems: planta criada: ${plant.name}`);
+        if (i > 0) await new Promise(r => setTimeout(r, 5000));
+        try {
+          const energyData = await apsystems.collectEnergy(session, plant.external_id);
+          energyPoints += await persistEnergyEntries(supabase, newPlant.id, energyData);
+        } catch (e) {
+          console.error(`apsystems: erro energia ${plant.name}: ${e}`);
+        }
+      }
+    }
+    return { synced: plants.length, energyPoints };
+  }
+
+  // ─── Optimized path: plants already exist, only collect energy ───
+  console.log(`apsystems: ${dbPlants.length} plantas no DB, coletando apenas energia`);
+
+  const sid = credentials.system_id || "";
+  let energyPoints = 0;
+
+  for (let i = 0; i < dbPlants.length; i++) {
+    const plant = dbPlants[i];
+    // Extract ECU ID from plant name "ECU 216000037518" → "216000037518"
+    const ecuId = plant.name.replace("ECU ", "").trim();
+    const externalId = `${sid}_ECU_${ecuId}`;
+
+    // Delay between ECUs (5s to be safe with rate limits)
+    if (i > 0) {
+      console.log(`apsystems: aguardando 5s antes de ECU ${ecuId}...`);
+      await new Promise(r => setTimeout(r, 5000));
+    }
+
+    try {
+      console.log(`apsystems: coletando energia ECU ${ecuId} (plant ${plant.id})`);
+      const energyData = await apsystems.collectEnergy(session, externalId);
+      console.log(`apsystems: ECU ${ecuId} retornou ${energyData.length} pontos`);
+      energyPoints += await persistEnergyEntries(supabase, plant.id, energyData);
+
+      // Update plant status to online
+      await supabase.from("plants").update({
+        status: "online",
+        updated_at: new Date().toISOString(),
+      }).eq("id", plant.id);
+    } catch (e) {
+      console.error(`apsystems: erro ao coletar ECU ${ecuId}: ${e}`);
+      // Don't throw — continue with next ECU
+    }
+  }
+
+  // Historical data: only at 22-23h UTC window
+  const currentHour = new Date().getUTCHours();
+  if (currentHour >= 22) {
+    console.log("apsystems: janela de coleta histórica ativa");
+    for (let i = 0; i < dbPlants.length; i++) {
+      const plant = dbPlants[i];
+      const ecuId = plant.name.replace("ECU ", "").trim();
+      const externalId = `${sid}_ECU_${ecuId}`;
+
+      await new Promise(r => setTimeout(r, 5000));
+      try {
+        const endDate = new Date().toISOString().split("T")[0];
+        const startDate30 = new Date();
+        startDate30.setDate(startDate30.getDate() - 30);
+        const dailyData = await apsystems.collectDailyEnergy(session, externalId, startDate30.toISOString().split("T")[0], endDate);
+        energyPoints += await persistEnergyEntries(supabase, plant.id, dailyData);
+      } catch (e) {
+        console.log(`apsystems: erro histórico diário ECU ${ecuId}: ${e}`);
+      }
+    }
+  }
+
+  return { synced: dbPlants.length, energyPoints };
+}
+
+// Helper: persist energy entries for a plant
+async function persistEnergyEntries(
+  supabase: any,
+  plantId: string,
+  entries: NormalizedEnergyData[]
+): Promise<number> {
+  let count = 0;
+  for (const entry of entries) {
+    const { error } = await supabase.from("energy_data").upsert({
+      plant_id: plantId,
+      device_id: null,
+      timestamp: entry.timestamp,
+      generation_power_kw: entry.generation_power_kw || 0,
+      consumption_power_kw: entry.consumption_power_kw || 0,
+      energy_generated_kwh: entry.energy_generated_kwh || 0,
+      energy_consumed_kwh: entry.energy_consumed_kwh || 0,
+      voltage: entry.voltage || null,
+      current: entry.current || null,
+      temperature: entry.temperature || null,
+      status: entry.status || "ok",
+    }, { onConflict: "plant_id,timestamp", ignoreDuplicates: true });
+    if (!error) count++;
+  }
+  return count;
 }
 
 // ─── Persist energy data from user-triggered collection ───
