@@ -353,7 +353,7 @@ export default function ConsumptionPage() {
       values.forEach((v, i) => {
         const col = cols[i];
         if (!col) return;
-        const text = typeof v === "number" ? fmtNum(v) : String(v);
+        const text = typeof v === "number" ? (i === 0 ? String(Math.round(v)) : fmtNum(v)) : String(v);
 
         if (i === 2) {
           // LOCAL column — wrap text
