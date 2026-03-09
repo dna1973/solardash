@@ -699,7 +699,7 @@ export default function ConsumptionPage() {
           {selectedProperty && (() => {
             const prop = properties.find((p) => p.id === selectedProperty);
             if (!prop) return null;
-            const propBills = bills.filter((b) => (b.property_name || b.account_number || "Sem identificação") === selectedProperty);
+            const propBills = bills.filter((b) => getLocal(b) === selectedProperty);
             const propDeductions = propBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
             const propNetValue = propBills.reduce((s, b) => s + (b.net_value || 0), 0);
             const propGrossValue = propNetValue + propDeductions;
