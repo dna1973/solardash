@@ -189,7 +189,7 @@ export default function Dashboard() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Tabs defaultValue="map" className="space-y-4 md:space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="map" className="gap-1.5 text-xs md:text-sm">
               <MapIcon className="h-4 w-4" /> Mapa
