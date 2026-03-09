@@ -743,7 +743,7 @@ export default function ConsumptionPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nº da Conta</TableHead>
+                     <TableHead>Código do Cliente</TableHead>
                     <TableHead>Local</TableHead>
                     <TableHead className="w-24 text-right">Ações</TableHead>
                   </TableRow>
