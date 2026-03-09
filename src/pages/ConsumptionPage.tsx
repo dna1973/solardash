@@ -54,7 +54,7 @@ export default function ConsumptionPage() {
     setBillsLoading(true);
     const { data, error } = await supabase
       .from("energy_bills")
-      .select("id, property_name, address, utility_company, account_number, reference_month, consumption_kwh, generation_kwh, amount_brl, tariff_type, due_date, created_at")
+      .select("id, property_name, address, utility_company, account_number, reference_month, consumption_kwh, generation_kwh, amount_brl, tariff_type, due_date, created_at, qd, invoice_number, invoice_value, gross_value, lighting_cost, deductions_value, net_value")
       .order("created_at", { ascending: false });
 
     if (error) {
