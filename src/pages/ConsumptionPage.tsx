@@ -83,11 +83,13 @@ export default function ConsumptionPage() {
   // Derive unique months and utilities from bills for filters
   const uniqueMonths = [...new Set(bills.map((b) => b.reference_month).filter(Boolean))] as string[];
   const uniqueUtilities = [...new Set(bills.map((b) => b.utility_company).filter(Boolean))] as string[];
+  const uniqueProperties = [...new Set(bills.map((b) => b.property_name || b.address).filter(Boolean))] as string[];
 
   const filteredBills = bills.filter((b) => {
     const matchMonth = billFilterMonth === "all" || b.reference_month === billFilterMonth;
     const matchUtility = billFilterUtility === "all" || b.utility_company === billFilterUtility;
-    return matchMonth && matchUtility;
+    const matchProperty = billFilterProperty === "all" || (b.property_name || b.address) === billFilterProperty;
+    return matchMonth && matchUtility && matchProperty;
   });
 
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
