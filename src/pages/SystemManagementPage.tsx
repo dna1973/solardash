@@ -27,13 +27,13 @@ export default function SystemManagementPage() {
             <Users className="h-4 w-4" />
             Usuários
           </TabsTrigger>
-          <TabsTrigger value="nomenclaturas" className="gap-2">
-            <MapPin className="h-4 w-4" />
-            Nomenclaturas
-          </TabsTrigger>
           <TabsTrigger value="integracoes" className="gap-2">
             <Settings className="h-4 w-4" />
             Integrações
+          </TabsTrigger>
+          <TabsTrigger value="nomenclaturas" className="gap-2">
+            <MapPin className="h-4 w-4" />
+            Nomenclaturas
           </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
             <Plug className="h-4 w-4" />
