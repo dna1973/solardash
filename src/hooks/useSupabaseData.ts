@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays } from "date-fns";
 
 export function usePlants() {
   return useQuery({
@@ -91,15 +92,42 @@ export function useAlertsByPlant(plantId: string) {
   });
 }
 
-export function useEnergyData(plantId?: string) {
+export type EnergyPeriod = "today" | "yesterday" | "week" | "month" | "year" | "custom";
+
+export function getDateRange(period: EnergyPeriod, customDate?: Date): { from: string; to: string } {
+  const now = customDate || new Date();
+  switch (period) {
+    case "today":
+      return { from: startOfDay(now).toISOString(), to: endOfDay(now).toISOString() };
+    case "yesterday": {
+      const yesterday = subDays(now, 1);
+      return { from: startOfDay(yesterday).toISOString(), to: endOfDay(yesterday).toISOString() };
+    }
+    case "week":
+      return { from: startOfWeek(now, { weekStartsOn: 1 }).toISOString(), to: endOfDay(now).toISOString() };
+    case "month":
+      return { from: startOfMonth(now).toISOString(), to: endOfDay(now).toISOString() };
+    case "year":
+      return { from: startOfYear(now).toISOString(), to: endOfDay(now).toISOString() };
+    case "custom":
+      return { from: startOfDay(now).toISOString(), to: endOfDay(now).toISOString() };
+    default:
+      return { from: startOfDay(now).toISOString(), to: endOfDay(now).toISOString() };
+  }
+}
+
+export function useEnergyData(plantId?: string, period: EnergyPeriod = "today", customDate?: Date) {
+  const { from, to } = getDateRange(period, customDate);
+
   return useQuery({
-    queryKey: ["energy_data", plantId],
+    queryKey: ["energy_data", plantId, period, from, to],
     queryFn: async () => {
       let query = supabase
         .from("energy_data")
         .select("*")
-        .order("timestamp", { ascending: true })
-        .limit(500);
+        .gte("timestamp", from)
+        .lte("timestamp", to)
+        .order("timestamp", { ascending: true });
 
       if (plantId) {
         query = query.eq("plant_id", plantId);
