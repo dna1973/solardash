@@ -237,7 +237,7 @@ export default function ConsumptionPage() {
     const cols = [
       { header: "Nº", width: 12, align: "left" as const },
       { header: "Nº DA CONTA", width: 28, align: "left" as const },
-      { header: "LOCAL", width: 72, align: "left" as const },
+      { header: "LOCAL", width: 78, align: "left" as const },
       { header: "CONSUMO\nKW/H", width: 28, align: "right" as const },
       { header: "Valor\nBruto", width: 28, align: "right" as const },
       { header: "Valor Ilum.\nPública", width: 28, align: "right" as const },
