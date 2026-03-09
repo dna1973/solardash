@@ -474,7 +474,7 @@ export default function ConsumptionPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.04 }}
                     >
-                      <Card className="shadow-card hover:shadow-card-hover transition-shadow border-border/50">
+                      <Card className="shadow-card hover:shadow-card-hover transition-shadow border-border/50 cursor-pointer" onClick={() => setSelectedProperty(prop.id)}>
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
