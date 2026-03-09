@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Sun,
-  Cpu,
   FileBarChart,
   Zap,
   Building2,
