@@ -125,7 +125,7 @@ export default function ConsumptionPage() {
     filteredBills.map((b) => ({
       "QD": b.qd || "—",
       "Nº da Conta": b.account_number || "—",
-      "Local": b.address || "—",
+      "Local": getLocal(b),
       "Consumo KW/H": b.consumption_kwh || 0,
       "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
       "Valor Iluminação Pública": b.lighting_cost || 0,
