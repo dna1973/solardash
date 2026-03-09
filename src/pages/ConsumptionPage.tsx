@@ -43,6 +43,7 @@ export default function ConsumptionPage() {
   const [search, setSearch] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [mainTab, setMainTab] = useState("properties");
+  const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
