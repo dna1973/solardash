@@ -7,7 +7,6 @@ import {
   Building2,
   LogOut,
   ShieldCheck,
-  Plug,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -33,7 +32,6 @@ const menuItems = [
   { title: "Consumo", url: "/dashboard/consumption", icon: Building2 },
   { title: "Relatórios", url: "/dashboard/reports", icon: FileBarChart },
   { title: "Gestão do Sistema", url: "/dashboard/management", icon: ShieldCheck },
-  { title: "API MCP", url: "/dashboard/mcp", icon: Plug },
 ];
 
 export function AppSidebar() {
