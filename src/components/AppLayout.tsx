@@ -31,7 +31,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <NotificationBell />
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-3 md:p-6">{children}</main>
         </div>
       </div>
     </SidebarProvider>
