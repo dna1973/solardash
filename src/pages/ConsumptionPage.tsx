@@ -122,8 +122,8 @@ export default function ConsumptionPage() {
   const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
   const getBillsExportData = () =>
-    filteredBills.map((b) => ({
-      "QD": b.qd || "—",
+    filteredBills.map((b, i) => ({
+      "Nº": i + 1,
       "Nº da Conta": b.account_number || "—",
       "Local": getLocal(b),
       "Consumo KW/H": b.consumption_kwh || 0,
@@ -235,9 +235,9 @@ export default function ConsumptionPage() {
 
     // ── COLUMN DEFINITIONS ──
     const cols = [
-      { header: "QD", width: 18, align: "left" as const },
+      { header: "Nº", width: 12, align: "left" as const },
       { header: "Nº DA CONTA", width: 28, align: "left" as const },
-      { header: "LOCAL", width: 72, align: "left" as const },
+      { header: "LOCAL", width: 78, align: "left" as const },
       { header: "CONSUMO\nKW/H", width: 28, align: "right" as const },
       { header: "Valor\nBruto", width: 28, align: "right" as const },
       { header: "Valor Ilum.\nPública", width: 28, align: "right" as const },
@@ -625,8 +625,8 @@ export default function ConsumptionPage() {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>QD</TableHead>
+                     <TableRow>
+                      <TableHead>Nº da Conta</TableHead>
                       <TableHead>Nº da Conta</TableHead>
                       <TableHead>Local</TableHead>
                       <TableHead className="text-right">Consumo KW/H</TableHead>
@@ -640,7 +640,6 @@ export default function ConsumptionPage() {
                   <TableBody>
                     {filteredBills.map((bill) => (
                       <TableRow key={bill.id}>
-                        <TableCell className="text-xs font-mono">{(bill as any).qd || "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
                           <div>
