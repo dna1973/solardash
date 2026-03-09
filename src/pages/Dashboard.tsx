@@ -177,7 +177,7 @@ export default function Dashboard() {
               <StatCard title="Injetado na Rede" value={`${(gridInjected / 1000).toFixed(1)} MWh`} icon={Leaf} variant="default" />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
               <EnergyChart data={chartHourly} title="Consumo por Hora — Hoje (kW)" dataKeys={["consumption"]} />
               <EnergyChart data={chartHourly} title="Geração vs Consumo — Hoje (kW)" dataKeys={["generation", "consumption"]} />
             </div>
