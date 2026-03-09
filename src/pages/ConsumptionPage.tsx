@@ -23,6 +23,7 @@ interface EnergyBill {
   address: string | null;
   utility_company: string | null;
   account_number: string | null;
+  client_code: string | null;
   reference_month: string | null;
   consumption_kwh: number | null;
   generation_kwh: number | null;
