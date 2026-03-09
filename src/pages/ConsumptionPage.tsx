@@ -30,6 +30,13 @@ interface EnergyBill {
   tariff_type: string | null;
   due_date: string | null;
   created_at: string;
+  qd: string | null;
+  invoice_number: string | null;
+  invoice_value: number | null;
+  gross_value: number | null;
+  lighting_cost: number | null;
+  deductions_value: number | null;
+  net_value: number | null;
 }
 
 export default function ConsumptionPage() {
