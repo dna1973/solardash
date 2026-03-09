@@ -122,8 +122,8 @@ export default function ConsumptionPage() {
   const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
   const getBillsExportData = () =>
-    filteredBills.map((b) => ({
-      "QD": b.qd || "—",
+    filteredBills.map((b, i) => ({
+      "Nº": i + 1,
       "Nº da Conta": b.account_number || "—",
       "Local": getLocal(b),
       "Consumo KW/H": b.consumption_kwh || 0,
