@@ -390,7 +390,7 @@ export default function ConsumptionPage() {
   // Aggregate bills by property for the "Imóveis" tab
   const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number }>();
   bills.forEach((b) => {
-    const key = b.property_name || b.account_number || "Sem identificação";
+    const key = getLocal(b);
     const existing = propertiesMap.get(key);
     if (existing) {
       existing.consumption += b.consumption_kwh || 0;
@@ -399,7 +399,7 @@ export default function ConsumptionPage() {
       existing.count++;
     } else {
       propertiesMap.set(key, {
-        name: b.property_name || "Sem nome",
+        name: getLocal(b),
         address: b.address || "—",
         utility: b.utility_company || "—",
         consumption: b.consumption_kwh || 0,
