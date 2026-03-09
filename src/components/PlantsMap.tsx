@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -49,18 +49,32 @@ interface PlantsMapProps {
   onPlantClick?: (id: string) => void;
 }
 
+function FitBounds({ plants }: { plants: Plant[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const coords = plants
+      .filter((p) => p.latitude != null && p.longitude != null)
+      .map((p) => [p.latitude!, p.longitude!] as [number, number]);
+
+    if (coords.length === 0) return;
+
+    if (coords.length === 1) {
+      map.setView(coords[0], 13);
+    } else {
+      const bounds = L.latLngBounds(coords);
+      map.fitBounds(bounds, { padding: [48, 48] });
+    }
+  }, [map, plants]);
+
+  return null;
+}
+
 export function PlantsMap({ plants, onPlantClick }: PlantsMapProps) {
   const plantsWithCoords = plants.filter((p) => p.latitude != null && p.longitude != null);
 
-  // Default: center of Pernambuco
-  const center = useMemo<[number, number]>(() => {
-    if (plantsWithCoords.length === 0) return [-8.05, -34.87]; // Recife, PE
-    const avgLat = plantsWithCoords.reduce((s, p) => s + p.latitude!, 0) / plantsWithCoords.length;
-    const avgLng = plantsWithCoords.reduce((s, p) => s + p.longitude!, 0) / plantsWithCoords.length;
-    return [avgLat, avgLng];
-  }, [plantsWithCoords]);
-
-  const zoom = plantsWithCoords.length === 0 ? 7 : plantsWithCoords.length === 1 ? 13 : 9;
+  // Default center (Recife, PE) used only as initial fallback before FitBounds runs
+  const center = useMemo<[number, number]>(() => [-8.05, -34.87], []);
 
   if (plantsWithCoords.length === 0) {
     return (
@@ -71,15 +85,25 @@ export function PlantsMap({ plants, onPlantClick }: PlantsMapProps) {
   }
 
   return (
-    <MapContainer center={center} zoom={zoom} style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }} scrollWheelZoom={true}>
+    <MapContainer
+      center={center}
+      zoom={7}
+      style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
+      scrollWheelZoom={true}
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> | CARTO'
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png"
         subdomains="abcd"
         maxZoom={19}
       />
+      <FitBounds plants={plantsWithCoords} />
       {plantsWithCoords.map((plant) => (
-        <Marker key={plant.id} position={[plant.latitude!, plant.longitude!]} icon={createColorIcon(plant.status)}>
+        <Marker
+          key={plant.id}
+          position={[plant.latitude!, plant.longitude!]}
+          icon={createColorIcon(plant.status)}
+        >
           <Popup>
             <div className="text-xs space-y-1 min-w-[140px]">
               <p className="font-bold text-sm">{plant.name}</p>
@@ -93,7 +117,9 @@ export function PlantsMap({ plants, onPlantClick }: PlantsMapProps) {
                   {plant.status}
                 </span>
               </p>
-              <p><span className="font-medium">Capacidade:</span> {plant.capacity_kwp} kWp</p>
+              <p>
+                <span className="font-medium">Capacidade:</span> {plant.capacity_kwp} kWp
+              </p>
               {onPlantClick && (
                 <button
                   onClick={() => onPlantClick(plant.id)}
