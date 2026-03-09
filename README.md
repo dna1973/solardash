@@ -1,6 +1,6 @@
 # solardash
 
-Um dashboard moderno para monitoramento de energia solar desenvolvido com React e tecnologias web de última geração.
+Um dashboard moderno e responsivo para o monitoramento de sistemas de energia solar, focado em visualização de dados em tempo real.
 
 ## 🚀 Demo
 
@@ -8,11 +8,11 @@ _Link não disponível._
 
 ## 🛠 Tecnologias
 
-`TypeScript` · `PLpgSQL` · `CSS` · `HTML` · `JavaScript` · `React` · `Vite` · `Tailwind CSS` · `shadcn/ui` · `Supabase` · `Leaflet` · `TanStack Query`
+`TypeScript` · `PLpgSQL` · `CSS` · `HTML` · `JavaScript` · `React` · `Vite Architecture` · `Tailwind CSS` · `Supabase` · `Leaflet` · `shadcn/ui` · `TanStack Query` · `Framer Motion`
 
 ## 📸 Screenshots
 
-![Screenshot 1](https://byqzqtvcugznxefvbipq.supabase.co/storage/v1/object/public/screenshots/5f1f1003-eb76-4de9-8f36-b9723e74ba77/2a9323b0-0c96-497a-89e6-453b759a1613.png)
+_No screenshots yet._
 
 ---
 
