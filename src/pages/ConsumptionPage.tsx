@@ -228,26 +228,11 @@ export default function ConsumptionPage() {
 
     // ── TABLE HEADER ──
     const drawTableHeader = () => {
-      const dedStart = cols.slice(0, 6).reduce((s, c) => s + c.width, 0) + mx;
-      const dedW = cols[6].width + cols[7].width;
-
-      // "DEDUÇÃO" label row above the main header
-      doc.setFillColor(220, 228, 236);
-      doc.rect(dedStart, y, dedW, 5, "F");
-      doc.setDrawColor(160, 175, 190);
-      doc.rect(dedStart, y, dedW, 5, "S");
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.setTextColor(40, 40, 40);
-      doc.text("DEDUÇÃO", dedStart + dedW / 2, y + 3.5, { align: "center" });
-
-      const headerY = y + 5; // main header starts right below
-
       // Column header row with blue background
       doc.setFillColor(200, 215, 230);
-      doc.rect(mx, headerY, tableW, 10, "F");
+      doc.rect(mx, y, tableW, 10, "F");
       doc.setDrawColor(160, 175, 190);
-      doc.rect(mx, headerY, tableW, 10, "S");
+      doc.rect(mx, y, tableW, 10, "S");
 
       let cx = mx;
       doc.setFont("helvetica", "bold");
@@ -255,18 +240,17 @@ export default function ConsumptionPage() {
       doc.setTextColor(30, 30, 30);
       cols.forEach((col) => {
         const lines = col.header.split("\n");
-        const textY = lines.length > 1 ? headerY + 3 : headerY + 5;
+        const textY = lines.length > 1 ? y + 3 : y + 5;
         lines.forEach((line, li) => {
           const tx = col.align === "right" ? cx + col.width - 2 : cx + 2;
           doc.text(line, tx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
         });
-        // Vertical separator
         doc.setDrawColor(180, 190, 200);
-        doc.line(cx, headerY, cx, headerY + 10);
+        doc.line(cx, y, cx, y + 10);
         cx += col.width;
       });
-      doc.line(mx + tableW, headerY, mx + tableW, headerY + 10);
-      y = headerY + 12;
+      doc.line(mx + tableW, y, mx + tableW, y + 10);
+      y += 12;
     };
 
     drawTableHeader();
