@@ -59,7 +59,7 @@ export default function PlantDetail() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
         <button
-          onClick={() => ndashboard/avigate("/plants")}
+          onClick={() => navigate("/dashboard/plants")}
           className="flex h-9 w-9 items-center justify-center rounded-lg bg-card shadow-card hover:bg-muted transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
