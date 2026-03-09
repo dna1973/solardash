@@ -56,9 +56,6 @@ export default function ConsumptionPage() {
   const [billFilterYear, setBillFilterYear] = useState("all");
   const [billFilterMonth, setBillFilterMonth] = useState("all");
 
-  // Property locations lookup (account_number → location_name)
-  const [locationMap, setLocationMap] = useState<Record<string, string>>({});
-
   const fetchLocations = async () => {
     const { data } = await supabase
       .from("property_locations")
@@ -68,39 +65,7 @@ export default function ConsumptionPage() {
       const map: Record<string, string> = {};
       data.forEach((r: any) => { map[r.account_number] = r.location_name; });
       setLocationMap(map);
-      setNomenclatures(data as any);
     }
-  };
-
-  const saveNomenclature = async (accountNumber: string, locationName: string, existingId?: string) => {
-    if (!accountNumber.trim() || !locationName.trim()) { toast.error("Preencha todos os campos"); return; }
-    const { data: profile } = await supabase.from("profiles").select("tenant_id").limit(1).single();
-    if (!profile) { toast.error("Erro ao obter tenant"); return; }
-
-    if (existingId) {
-      const { error } = await supabase.from("property_locations").update({ account_number: accountNumber.trim(), location_name: locationName.trim() }).eq("id", existingId);
-      if (error) { toast.error("Erro ao atualizar"); return; }
-      toast.success("Nomenclatura atualizada");
-    } else {
-      const { error } = await supabase.from("property_locations").insert({ tenant_id: profile.tenant_id, account_number: accountNumber.trim(), location_name: locationName.trim() } as any);
-      if (error) {
-        if (error.code === "23505") toast.error("Este nº de conta já está cadastrado");
-        else toast.error("Erro ao salvar");
-        return;
-      }
-      toast.success("Nomenclatura adicionada");
-    }
-    setEditingNom(null);
-    setNewNomAccount("");
-    setNewNomLocation("");
-    fetchLocations();
-  };
-
-  const deleteNomenclature = async (id: string) => {
-    const { error } = await supabase.from("property_locations").delete().eq("id", id);
-    if (error) { toast.error("Erro ao excluir"); return; }
-    toast.success("Nomenclatura excluída");
-    fetchLocations();
   };
 
   const fetchBills = async () => {
