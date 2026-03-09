@@ -45,6 +45,14 @@ export default function ConsumptionPage() {
   const [mainTab, setMainTab] = useState("properties");
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
+  // Nomenclature management state
+  const [nomenclatures, setNomenclatures] = useState<Array<{ id: string; account_number: string; location_name: string }>>([]);
+  const [editingNom, setEditingNom] = useState<string | null>(null);
+  const [editNomAccount, setEditNomAccount] = useState("");
+  const [editNomLocation, setEditNomLocation] = useState("");
+  const [newNomAccount, setNewNomAccount] = useState("");
+  const [newNomLocation, setNewNomLocation] = useState("");
+
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
   const [billsLoading, setBillsLoading] = useState(false);
