@@ -72,6 +72,7 @@ const AppRoutes = () => {
                 <Route path="/alerts" element={<Navigate to="/plants?tab=alertas" replace />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/management" element={<SystemManagementPage />} />
+                <Route path="/mcp" element={<McpDocPage />} />
                 <Route path="/map" element={<FullMap />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

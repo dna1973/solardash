@@ -33,6 +33,7 @@ const menuItems = [
   { title: "Consumo", url: "/consumption", icon: Building2 },
   { title: "Relatórios", url: "/reports", icon: FileBarChart },
   { title: "Gestão do Sistema", url: "/management", icon: ShieldCheck },
+  { title: "API MCP", url: "/mcp", icon: Plug },
 ];
 
 export function AppSidebar() {
