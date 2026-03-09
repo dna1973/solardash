@@ -47,9 +47,9 @@ export default function ConsumptionPage() {
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
   const [billsLoading, setBillsLoading] = useState(false);
-  const [billFilterMonth, setBillFilterMonth] = useState("all");
-  const [billFilterUtility, setBillFilterUtility] = useState("all");
   const [billFilterProperty, setBillFilterProperty] = useState("all");
+  const [billFilterYear, setBillFilterYear] = useState("all");
+  const [billFilterMonth, setBillFilterMonth] = useState("all");
 
   const fetchBills = async () => {
     setBillsLoading(true);
