@@ -87,54 +87,73 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
     "X-CA-Signature": signature.substring(0, 10) + "...",
   }));
 
-  const response = await fetch(url, { method, headers });
-  const text = await response.text();
-
-  console.log(`apsystems: HTTP ${response.status}, body: ${text.substring(0, 500)}`);
-
-  if (!response.ok) {
-    throw new Error(`APsystems API erro HTTP ${response.status}: ${text.substring(0, 200)}`);
-  }
-
-  let data: any;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(`APsystems retornou resposta não-JSON: ${text.substring(0, 100)}`);
-  }
-
-  // APsystems uses "code": 0 for success
-  if (data.code !== undefined && data.code !== 0 && data.code !== "0") {
-    const code = Number(data.code);
-    // Map error codes per APsystems manual Annex 4.1
-    const errorMessages: Record<number, string> = {
-      1000: "Exceção de dados",
-      1001: "Sem dados disponíveis",
-      2000: "Exceção na conta da aplicação",
-      2001: "Conta de aplicação inválida",
-      2002: "Conta de aplicação não autorizada",
-      2003: "Autorização da conta expirou",
-      2004: "Conta sem permissão para este recurso",
-      2005: "Limite de acessos da conta excedido (rate limit)",
-      3000: "Exceção no token de acesso",
-      4000: "Exceção nos parâmetros da requisição",
-      4001: "Parâmetro de requisição inválido",
-      5000: "Erro interno do servidor APsystems",
-      7001: "Limite de acesso ao servidor excedido",
-      7002: "Muitas requisições — tente novamente mais tarde",
-      7003: "Servidor ocupado — tente novamente mais tarde",
-    };
-    const friendlyMsg = errorMessages[code] || data.message || data.msg || `código ${code}`;
-    const isRateLimit = [2005, 7001, 7002, 7003].includes(code);
-    
-    if (isRateLimit) {
-      console.warn(`apsystems: RATE LIMIT atingido (code ${code}). Reduzir frequência de chamadas.`);
+  const MAX_RETRIES = 3;
+  const RATE_LIMIT_CODES = [2005, 7001, 7002, 7003];
+  
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      const delay = Math.min(5000 * Math.pow(2, attempt - 1), 30000); // 5s, 10s, 20s
+      console.log(`apsystems: retry ${attempt}/${MAX_RETRIES} após ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
     }
-    
-    throw new Error(`APsystems API erro (code ${code}): ${friendlyMsg}`);
+
+    const response = await fetch(url, { method, headers: attempt === 0 ? headers : {
+      ...headers,
+      "X-CA-Timestamp": String(Date.now()),
+      "X-CA-Nonce": generateNonce(),
+      "X-CA-Signature": await generateSignature(session.appSecret, 
+        `${Date.now()}/${generateNonce()}/${session.appId}/${requestPath}/${method}/${signatureMethod}`),
+    }});
+    const text = await response.text();
+
+    console.log(`apsystems: HTTP ${response.status}, body: ${text.substring(0, 500)}`);
+
+    if (!response.ok) {
+      throw new Error(`APsystems API erro HTTP ${response.status}: ${text.substring(0, 200)}`);
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`APsystems retornou resposta não-JSON: ${text.substring(0, 100)}`);
+    }
+
+    // APsystems uses "code": 0 for success
+    if (data.code !== undefined && data.code !== 0 && data.code !== "0") {
+      const code = Number(data.code);
+      const errorMessages: Record<number, string> = {
+        1000: "Exceção de dados",
+        1001: "Sem dados disponíveis",
+        2000: "Exceção na conta da aplicação",
+        2001: "Conta de aplicação inválida",
+        2002: "Conta de aplicação não autorizada",
+        2003: "Autorização da conta expirou",
+        2004: "Conta sem permissão para este recurso",
+        2005: "Limite de acessos da conta excedido (rate limit)",
+        3000: "Exceção no token de acesso",
+        4000: "Exceção nos parâmetros da requisição",
+        4001: "Parâmetro de requisição inválido",
+        5000: "Erro interno do servidor APsystems",
+        7001: "Limite de acesso ao servidor excedido",
+        7002: "Muitas requisições — tente novamente mais tarde",
+        7003: "Servidor ocupado — tente novamente mais tarde",
+      };
+      const friendlyMsg = errorMessages[code] || data.message || data.msg || `código ${code}`;
+      const isRateLimit = RATE_LIMIT_CODES.includes(code);
+      
+      if (isRateLimit) {
+        console.warn(`apsystems: RATE LIMIT atingido (code ${code}). Reduzir frequência de chamadas.`);
+        if (attempt < MAX_RETRIES) continue; // retry
+      }
+      
+      throw new Error(`APsystems API erro (code ${code}): ${friendlyMsg}`);
+    }
+
+    return data;
   }
 
-  return data;
+  throw new Error("APsystems: máximo de tentativas excedido");
 }
 
 // End User API: GET /user/api/v2/systems/details/{sid}
