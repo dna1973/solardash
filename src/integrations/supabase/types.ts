@@ -423,6 +423,7 @@ export type Database = {
           created_at: string
           id: string
           location_name: string
+          plant_id: string | null
           tenant_id: string
           updated_at: string
         }
@@ -431,6 +432,7 @@ export type Database = {
           created_at?: string
           id?: string
           location_name: string
+          plant_id?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -439,10 +441,18 @@ export type Database = {
           created_at?: string
           id?: string
           location_name?: string
+          plant_id?: string | null
           tenant_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "property_locations_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "property_locations_tenant_id_fkey"
             columns: ["tenant_id"]
