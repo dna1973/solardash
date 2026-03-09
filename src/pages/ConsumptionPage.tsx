@@ -95,9 +95,9 @@ export default function ConsumptionPage() {
   });
 
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
-  const billsTotalGross = filteredBills.reduce((s, b) => s + ((b as any).gross_value || 0), 0);
   const billsTotalDeductions = filteredBills.reduce((s, b) => s + ((b as any).deductions_value || 0), 0);
   const billsTotalNet = filteredBills.reduce((s, b) => s + ((b as any).net_value || 0), 0);
+  const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
   const getBillsExportData = () =>
     filteredBills.map((b) => ({
