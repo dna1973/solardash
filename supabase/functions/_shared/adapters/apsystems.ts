@@ -48,62 +48,53 @@ function generateNonce(): string {
 }
 
 async function apiRequest(session: APSystemsSession, endpoint: string, queryParams?: Record<string, string>, method = "GET"): Promise<any> {
-  const timestamp = String(Date.now());
-  const nonce = generateNonce();
   const signatureMethod = "HmacSHA256";
-
-  // APsystems docs Section 2.2.2:
-  // stringToSign = X-CA-Timestamp + "/" + X-CA-Nonce + "/" + X-CA-AppId + "/" + RequestPath + "/" + HTTPMethod + "/" + X-CA-Signature-Method
-  // "RequestPath" = "The last segment of the path" (NOT the full path)
   const pathParts = endpoint.split("/").filter(Boolean);
   const requestPath = pathParts[pathParts.length - 1] || endpoint;
-  const stringToSign = `${timestamp}/${nonce}/${session.appId}/${requestPath}/${method}/${signatureMethod}`;
-  console.log(`apsystems: stringToSign: ${stringToSign}`);
 
-  const signature = await generateSignature(session.appSecret, stringToSign);
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "X-CA-AppId": session.appId,
-    "X-CA-Timestamp": timestamp,
-    "X-CA-Nonce": nonce,
-    "X-CA-Signature-Method": signatureMethod,
-    "X-CA-Signature": signature,
-  };
-
-  // Build URL with query params for GET requests
   let url = `${session.baseUrl}${endpoint}`;
   if (queryParams && Object.keys(queryParams).length > 0) {
     const qs = new URLSearchParams(queryParams).toString();
     url += `?${qs}`;
   }
 
-  console.log(`apsystems: ${method} ${url}`);
-  console.log(`apsystems: headers:`, JSON.stringify({
-    "X-CA-AppId": session.appId.substring(0, 4) + "...",
-    "X-CA-Timestamp": timestamp,
-    "X-CA-Nonce": nonce,
-    "X-CA-Signature-Method": signatureMethod,
-    "X-CA-Signature": signature.substring(0, 10) + "...",
-  }));
-
   const MAX_RETRIES = 3;
   const RATE_LIMIT_CODES = [2005, 7001, 7002, 7003];
   
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 0) {
-      const delay = Math.min(5000 * Math.pow(2, attempt - 1), 30000); // 5s, 10s, 20s
+      const delay = Math.min(5000 * Math.pow(2, attempt - 1), 30000);
       console.log(`apsystems: retry ${attempt}/${MAX_RETRIES} após ${delay}ms`);
       await new Promise(r => setTimeout(r, delay));
     }
 
-    const response = await fetch(url, { method, headers: attempt === 0 ? headers : {
-      ...headers,
-      "X-CA-Timestamp": String(Date.now()),
-      "X-CA-Nonce": generateNonce(),
-      "X-CA-Signature": await generateSignature(session.appSecret, 
-        `${Date.now()}/${generateNonce()}/${session.appId}/${requestPath}/${method}/${signatureMethod}`),
-    }});
+    // Generate fresh auth headers for each attempt
+    const timestamp = String(Date.now());
+    const nonce = generateNonce();
+    const stringToSign = `${timestamp}/${nonce}/${session.appId}/${requestPath}/${method}/${signatureMethod}`;
+    const signature = await generateSignature(session.appSecret, stringToSign);
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-CA-AppId": session.appId,
+      "X-CA-Timestamp": timestamp,
+      "X-CA-Nonce": nonce,
+      "X-CA-Signature-Method": signatureMethod,
+      "X-CA-Signature": signature,
+    };
+
+    if (attempt === 0) {
+      console.log(`apsystems: ${method} ${url}`);
+      console.log(`apsystems: headers:`, JSON.stringify({
+        "X-CA-AppId": session.appId.substring(0, 4) + "...",
+        "X-CA-Timestamp": timestamp,
+        "X-CA-Nonce": nonce,
+        "X-CA-Signature-Method": signatureMethod,
+        "X-CA-Signature": signature.substring(0, 10) + "...",
+      }));
+    }
+
+    const response = await fetch(url, { method, headers });
     const text = await response.text();
 
     console.log(`apsystems: HTTP ${response.status}, body: ${text.substring(0, 500)}`);
@@ -119,7 +110,6 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
       throw new Error(`APsystems retornou resposta não-JSON: ${text.substring(0, 100)}`);
     }
 
-    // APsystems uses "code": 0 for success
     if (data.code !== undefined && data.code !== 0 && data.code !== "0") {
       const code = Number(data.code);
       const errorMessages: Record<number, string> = {
@@ -143,8 +133,8 @@ async function apiRequest(session: APSystemsSession, endpoint: string, queryPara
       const isRateLimit = RATE_LIMIT_CODES.includes(code);
       
       if (isRateLimit) {
-        console.warn(`apsystems: RATE LIMIT atingido (code ${code}). Reduzir frequência de chamadas.`);
-        if (attempt < MAX_RETRIES) continue; // retry
+        console.warn(`apsystems: RATE LIMIT atingido (code ${code}), attempt ${attempt}/${MAX_RETRIES}`);
+        if (attempt < MAX_RETRIES) continue;
       }
       
       throw new Error(`APsystems API erro (code ${code}): ${friendlyMsg}`);
