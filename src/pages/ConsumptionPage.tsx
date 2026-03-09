@@ -123,9 +123,9 @@ export default function ConsumptionPage() {
     setBillsLoading(false);
   };
 
-  // Helper: resolve "local" for a bill — prioritize property_locations, then property_name
+  // Helper: resolve "local" for a bill — prioritize property_locations (by client_code), then property_name
   const getLocal = (b: EnergyBill) => {
-    if (b.account_number && locationMap[b.account_number]) return locationMap[b.account_number];
+    if (b.client_code && locationMap[b.client_code]) return locationMap[b.client_code];
     return b.property_name || "Sem identificação";
   };
 
