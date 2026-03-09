@@ -29,21 +29,21 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, variant = 
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl p-5 transition-shadow hover:shadow-card-hover ${variantStyles[variant]}`}
+      className={`rounded-xl p-3 md:p-5 transition-shadow hover:shadow-card-hover ${variantStyles[variant]}`}
     >
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
-          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+        <div className="space-y-0.5 md:space-y-1 min-w-0">
+          <p className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{title}</p>
+          <p className="text-lg md:text-2xl font-bold tracking-tight truncate">{value}</p>
+          {subtitle && <p className="text-[10px] md:text-xs text-muted-foreground truncate">{subtitle}</p>}
           {trend && (
-            <p className={`text-xs font-medium ${trend.positive ? 'text-primary' : 'text-destructive'}`}>
+            <p className={`text-[10px] md:text-xs font-medium ${trend.positive ? 'text-primary' : 'text-destructive'}`}>
               {trend.positive ? '↑' : '↓'} {trend.value}
             </p>
           )}
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg[variant]}`}>
-          <Icon className="h-5 w-5" />
+        <div className={`flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg shrink-0 ${iconBg[variant]}`}>
+          <Icon className="h-4 w-4 md:h-5 md:w-5" />
         </div>
       </div>
     </motion.div>

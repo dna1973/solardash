@@ -35,8 +35,8 @@ export function EnergyChart({ data, title, height = 300, dataKeys = ["generation
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" />
-          <XAxis dataKey="time" tick={{ fontSize: 11, fill: 'hsl(220, 10%, 46%)' }} />
-          <YAxis tick={{ fontSize: 11, fill: 'hsl(220, 10%, 46%)' }} />
+          <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(220, 10%, 46%)' }} interval="preserveStartEnd" />
+          <YAxis tick={{ fontSize: 10, fill: 'hsl(220, 10%, 46%)' }} width={35} />
           <Tooltip
             contentStyle={{
               background: 'hsl(0, 0%, 100%)',
