@@ -63,10 +63,15 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("map");
   const [period, setPeriod] = useState<EnergyPeriod>("today");
   const [customDate, setCustomDate] = useState<Date>(new Date());
+  const [selectedPlantId, setSelectedPlantId] = useState<string>("all");
 
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
-  const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(undefined, period, customDate);
+  const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
+    selectedPlantId === "all" ? undefined : selectedPlantId,
+    period,
+    customDate
+  );
 
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
 
