@@ -199,7 +199,7 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="h-[300px] md:h-[500px] rounded-lg overflow-hidden border border-border">
-                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/plants/${id}`)} />
+                <PlantsMap plants={plants} onPlantClick={(id) => navigate(`/dashboard/plants/${id}`)} />
               </div>
               <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary inline-block" /> Online</span>
