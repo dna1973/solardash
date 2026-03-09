@@ -306,14 +306,7 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">QD</Label>
-                <Input
-                  value={extracted.qd || ""}
-                  onChange={(e) => updateField("qd", e.target.value)}
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Nº da Conta (UC)</Label>
                 <Input

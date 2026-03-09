@@ -640,7 +640,6 @@ export default function ConsumptionPage() {
                   <TableBody>
                     {filteredBills.map((bill) => (
                       <TableRow key={bill.id}>
-                        <TableCell className="text-xs font-mono">{(bill as any).qd || "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
                           <div>
