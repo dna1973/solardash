@@ -88,7 +88,7 @@ export default function Dashboard() {
 
           {/* GERAÇÃO */}
           <TabsContent value="generation" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
               <StatCard title="Potência Atual" value={`${currentPowerKw.toFixed(0)} kW`} icon={Zap} variant="primary" />
               <StatCard title="Energia Hoje" value={`${(todayEnergyKwh / 1000).toFixed(1)} MWh`} icon={Sun} variant="primary" />
               <StatCard title="Energia Mensal" value={`${(monthlyEnergyKwh / 1000).toFixed(0)} MWh`} icon={TrendingUp} variant="default" />
