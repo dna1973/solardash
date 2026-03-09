@@ -147,7 +147,14 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
         due_date: extracted.due_date || null,
         pdf_path: pdfPath,
         raw_ocr_data: extracted as any,
-      });
+        qd: extracted.qd || null,
+        invoice_number: extracted.invoice_number || null,
+        invoice_value: extracted.invoice_value || 0,
+        gross_value: extracted.gross_value || 0,
+        lighting_cost: extracted.lighting_cost || 0,
+        deductions_value: extracted.deductions_value || 0,
+        net_value: extracted.net_value || 0,
+      } as any);
 
       if (error) {
         if (error.code === "23505") {
