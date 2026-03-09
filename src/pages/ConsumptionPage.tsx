@@ -339,36 +339,36 @@ export default function ConsumptionPage() {
 
           {/* Bills Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Select value={billFilterMonth} onValueChange={setBillFilterMonth}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Mês de referência" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os meses</SelectItem>
-                {uniqueMonths.map((m) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={billFilterUtility} onValueChange={setBillFilterUtility}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Concessionária" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas concessionárias</SelectItem>
-                {uniqueUtilities.map((u) => (
-                  <SelectItem key={u} value={u}>{u}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={billFilterProperty} onValueChange={setBillFilterProperty}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder="Imóvel" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os imóveis</SelectItem>
                 {uniqueProperties.map((p) => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={billFilterYear} onValueChange={setBillFilterYear}>
+              <SelectTrigger className="w-full sm:w-36">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os anos</SelectItem>
+                {uniqueYears.map((y) => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={billFilterMonth} onValueChange={setBillFilterMonth}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os meses</SelectItem>
+                {uniqueMonths.map((m) => (
+                  <SelectItem key={m} value={m}>{monthNames[m] || m}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
