@@ -151,8 +151,23 @@ export default function Dashboard() {
   const chartTimeLabel = period === "today" || period === "yesterday" || period === "custom" ? "Hora" : period === "year" ? "Mês" : "Dia";
   const energyLabel = period === "today" || period === "yesterday" || period === "custom" ? "Hoje" : period === "week" ? "Semana" : period === "month" ? "Mês" : "Ano";
 
+  const PlantFilter = () => (
+    <Select value={selectedPlantId} onValueChange={setSelectedPlantId}>
+      <SelectTrigger className="w-[220px] h-9 text-xs">
+        <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+        <SelectValue placeholder="Todas as usinas" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">Todas as usinas</SelectItem>
+        {plants.map((p) => (
+          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   const PeriodFilter = () => (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
       <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
         {PERIOD_OPTIONS.map((opt) => (
           <button
@@ -180,6 +195,7 @@ export default function Dashboard() {
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+      <PlantFilter />
     </div>
   );
 
