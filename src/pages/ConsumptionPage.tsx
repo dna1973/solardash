@@ -147,6 +147,7 @@ export default function ConsumptionPage() {
   };
 
   const getWaterLocal = (b: WaterBill) => {
+    if (b.account_number && waterLocationMap[b.account_number]) return waterLocationMap[b.account_number];
     if (b.client_code && waterLocationMap[b.client_code]) return waterLocationMap[b.client_code];
     return b.property_name || "Sem identificação";
   };
