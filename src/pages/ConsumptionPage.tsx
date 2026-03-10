@@ -695,6 +695,9 @@ export default function ConsumptionPage() {
         <TabsList>
           <TabsTrigger value="properties" className="gap-2">
             <Building2 className="w-4 h-4" /> Imóveis
+            {filteredProperties.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{filteredProperties.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="bills" className="gap-2">
             <Receipt className="w-4 h-4" /> Contas de Energia
