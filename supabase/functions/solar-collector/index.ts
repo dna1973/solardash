@@ -46,12 +46,22 @@ serve(async (req) => {
       const errors: string[] = [];
 
       for (const integration of integrations) {
+        const startedAt = new Date().toISOString();
+        let logStatus = "success";
+        let logError: string | null = null;
+        let synced = 0;
+        let energyPoints = 0;
+
         try {
-          const { synced, energyPoints } = await syncIntegration(
+          const result = await syncIntegration(
             supabase, integration.tenant_id, integration.manufacturer, integration.credentials, integration.id
           );
+          synced = result.synced;
+          energyPoints = result.energyPoints;
           totalPlants += synced;
           totalEnergy += energyPoints;
+
+          if (energyPoints === 0 && synced > 0) logStatus = "partial";
 
           // Update last_sync_at
           await supabase
@@ -62,11 +72,26 @@ serve(async (req) => {
           const msg = e instanceof Error ? e.message : String(e);
           console.error(`sync_all: erro na integração ${integration.id}: ${msg}`);
           errors.push(`${integration.manufacturer}: ${msg}`);
+          logStatus = "error";
+          logError = msg;
           await supabase
             .from("integrations")
             .update({ last_error: msg })
             .eq("id", integration.id);
         }
+
+        // Write sync log
+        await supabase.from("sync_logs").insert({
+          integration_id: integration.id,
+          tenant_id: integration.tenant_id,
+          manufacturer: integration.manufacturer,
+          status: logStatus,
+          plants_synced: synced,
+          energy_points: energyPoints,
+          error_message: logError,
+          started_at: startedAt,
+          finished_at: new Date().toISOString(),
+        });
       }
 
       console.log(`sync_all: concluído — ${totalPlants} plantas, ${totalEnergy} pontos de energia, ${errors.length} erros`);
