@@ -800,11 +800,11 @@ export default function ConsumptionPage() {
                           )}
                           {prop.waterCount > 0 && (
                             <div className={`grid grid-cols-2 gap-3 ${prop.count > 0 ? "border-t pt-3" : ""}`}>
-                              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 p-2.5">
+                              <div className="rounded-lg bg-accent/50 p-2.5">
                                 <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Droplets className="w-3 h-3" /> Consumo Água</p>
                                 <p className="text-sm font-semibold font-mono">{prop.waterConsumption.toFixed(1)} m³</p>
                               </div>
-                              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 p-2.5">
+                              <div className="rounded-lg bg-accent/50 p-2.5">
                                 <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Droplets className="w-3 h-3" /> Custo Água</p>
                                 <p className="text-sm font-semibold font-mono">R$ {prop.waterCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                               </div>
