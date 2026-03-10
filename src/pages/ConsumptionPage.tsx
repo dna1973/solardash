@@ -952,6 +952,9 @@ export default function ConsumptionPage() {
               <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={exportWaterExcel}>
                 <Download className="w-4 h-4" /> Excel
               </Button>
+              <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={exportWaterPDF}>
+                <Download className="w-4 h-4" /> PDF
+              </Button>
               <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={() => setWaterImportOpen(true)}>
                 <Droplets className="w-4 h-4" /> Importar
               </Button>
