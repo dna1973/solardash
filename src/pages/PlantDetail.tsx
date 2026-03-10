@@ -15,21 +15,56 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
+const PERIOD_OPTIONS: { value: EnergyPeriod; label: string }[] = [
+  { value: "today", label: "Hoje" },
+  { value: "yesterday", label: "Ontem" },
+  { value: "week", label: "Semana" },
+  { value: "month", label: "Mês" },
+  { value: "year", label: "Ano" },
+  { value: "custom", label: "Personalizado" },
+];
+
+function getPeriodLabel(period: EnergyPeriod, date: Date): string {
+  switch (period) {
+    case "today": return format(date, "dd/MM/yyyy");
+    case "yesterday": return format(subDays(date, 0), "dd/MM/yyyy");
+    case "week": return `Semana de ${format(date, "dd/MM/yyyy")}`;
+    case "month": return format(date, "MMMM yyyy", { locale: ptBR });
+    case "year": return format(date, "yyyy");
+    case "custom": return format(date, "dd/MM/yyyy");
+    default: return "";
+  }
+}
+
+function navigateDate(period: EnergyPeriod, date: Date, direction: "prev" | "next"): Date {
+  const fn = direction === "prev"
+    ? { today: subDays, yesterday: subDays, week: subWeeks, month: subMonths, year: subYears, custom: subDays }
+    : { today: addDays, yesterday: addDays, week: addWeeks, month: addMonths, year: addYears, custom: addDays };
+  return fn[period](date, 1);
+}
+
 export default function PlantDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: plant, isLoading: loadingPlant } = usePlantById(id!);
   const { data: devices, isLoading: loadingDevices } = useDevicesByPlant(id!);
   const { data: alerts } = useAlertsByPlant(id!);
-  const { data: energyData } = useEnergyData(id);
   const { isGestor } = useUserRole();
   const updatePlant = useUpdatePlant();
   const [editOpen, setEditOpen] = useState(false);
+  const [period, setPeriod] = useState<EnergyPeriod>("today");
+  const [customDate, setCustomDate] = useState(new Date());
+
+  const { data: energyData } = useEnergyData(id, period, customDate);
 
   const activeAlerts = (alerts || []).filter((a) => !a.resolved);
 
   const chartData = (energyData || []).map((d) => ({
-    time: format(new Date(d.timestamp), "dd/MM HH:mm"),
+    time: period === "year"
+      ? format(new Date(d.timestamp), "MMM", { locale: ptBR })
+      : period === "month"
+        ? format(new Date(d.timestamp), "dd/MM")
+        : format(new Date(d.timestamp), "HH:mm"),
     generation: d.energy_generated_kwh || 0,
     consumption: d.energy_consumed_kwh || 0,
   }));
