@@ -1,0 +1,1 @@
+ALTER TABLE public.property_locations ADD COLUMN water_account_number TEXT;

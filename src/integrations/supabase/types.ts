@@ -426,6 +426,7 @@ export type Database = {
           plant_id: string | null
           tenant_id: string
           updated_at: string
+          water_account_number: string | null
         }
         Insert: {
           account_number: string
@@ -435,6 +436,7 @@ export type Database = {
           plant_id?: string | null
           tenant_id: string
           updated_at?: string
+          water_account_number?: string | null
         }
         Update: {
           account_number?: string
@@ -444,6 +446,7 @@ export type Database = {
           plant_id?: string | null
           tenant_id?: string
           updated_at?: string
+          water_account_number?: string | null
         }
         Relationships: [
           {
