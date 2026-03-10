@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sun, BarChart3, Bell, FileText, Zap, Shield, ArrowRight } from "lucide-react";
+import { Sun, BarChart3, Bell, FileText, Zap, Shield, ArrowRight, Droplets, MapPin, ScanLine, Download } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
@@ -18,16 +18,34 @@ const features = [
       "Receba notificações automáticas de anomalias e quedas de desempenho antes que virem problemas.",
   },
   {
-    icon: FileText,
-    title: "Relatórios prontos",
+    icon: ScanLine,
+    title: "OCR de faturas",
     description:
-      "Indicadores diários e mensais exportáveis para decisões rápidas e auditorias.",
+      "Importe faturas de energia e água em PDF e extraia dados automaticamente via inteligência artificial.",
+  },
+  {
+    icon: Droplets,
+    title: "Gestão de água",
+    description:
+      "Controle contas de água com consumo em m³, rateio de esgoto e histórico por localidade.",
+  },
+  {
+    icon: MapPin,
+    title: "Cadastro de localidades",
+    description:
+      "Associe códigos de cliente e matrículas de água a localidades e usinas em uma única tabela.",
   },
   {
     icon: Zap,
     title: "Integração com inversores",
     description:
       "Conecte Fronius, Growatt, Hoymiles, APSystems e SolarEdge em minutos.",
+  },
+  {
+    icon: Download,
+    title: "Exportação PDF e Excel",
+    description:
+      "Exporte relatórios de energia e água em PDF ou Excel com filtros por período e localidade.",
   },
   {
     icon: Shield,
@@ -47,6 +65,7 @@ const stats = [
   { value: "99.9%", label: "Disponibilidade" },
   { value: "< 5min", label: "Intervalo de coleta" },
   { value: "5+", label: "Fabricantes suportados" },
+  { value: "2", label: "Tipos de fatura (OCR)" },
 ];
 
 const fadeUp = {
@@ -100,7 +119,7 @@ const Index = () => {
               className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary"
             >
               <Zap className="w-3.5 h-3.5" />
-              Plataforma de gestão solar
+              Plataforma de gestão solar e utilidades
             </motion.div>
 
             <motion.h1
@@ -109,7 +128,7 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl font-extrabold tracking-tight md:text-6xl lg:text-7xl leading-[1.08]"
             >
-              Suas usinas solares{" "}
+              Energia e água{" "}
               <span className="text-primary">sob controle total</span>
             </motion.h1>
 
@@ -119,9 +138,9 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed"
             >
-              Centralize plantas, dispositivos e consumo energético com
-              monitoramento em tempo real, alertas automáticos e relatórios
-              prontos para decisão.
+              Centralize usinas solares, contas de energia e água com
+              monitoramento em tempo real, importação de faturas por OCR,
+              alertas automáticos e relatórios prontos para decisão.
             </motion.p>
 
             <motion.div
@@ -144,7 +163,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
-            className="mt-20 grid grid-cols-3 max-w-lg gap-8"
+            className="mt-20 grid grid-cols-2 sm:grid-cols-4 max-w-xl gap-8"
           >
             {stats.map((s) => (
               <div key={s.label}>
@@ -220,10 +239,10 @@ const Index = () => {
             className="max-w-2xl mx-auto space-y-6"
           >
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Pronto para otimizar sua operação solar?
+              Pronto para otimizar sua operação?
             </h2>
             <p className="text-muted-foreground text-lg">
-              Comece a monitorar suas usinas em minutos. Sem instalação complexa.
+              Comece a monitorar usinas e faturas em minutos. Sem instalação complexa.
             </p>
             <Button asChild size="lg" className="gap-2 text-base px-8">
               <Link to="/login">
