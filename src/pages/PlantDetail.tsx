@@ -162,8 +162,48 @@ export default function PlantDetail() {
         />
       </motion.div>
 
-      {/* Chart */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      {/* Period filter + Chart */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {PERIOD_OPTIONS.map((opt) => (
+            <Button
+              key={opt.value}
+              size="sm"
+              variant={period === opt.value ? "default" : "outline"}
+              onClick={() => { setPeriod(opt.value); setCustomDate(new Date()); }}
+              className="text-xs h-8"
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setCustomDate(navigateDate(period, customDate, "prev"))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium capitalize">{getPeriodLabel(period, customDate)}</span>
+          {period === "custom" ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="icon" variant="outline" className="h-8 w-8">
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={customDate}
+                  onSelect={(d) => d && setCustomDate(d)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          ) : null}
+          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setCustomDate(navigateDate(period, customDate, "next"))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
         <EnergyChart data={chartData} title="Geração e Consumo" height={320} />
       </motion.div>
 
