@@ -610,7 +610,7 @@ export default function ConsumptionPage() {
   };
 
   // Aggregate bills by property for the "Imóveis" tab
-  const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number }>();
+  const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number; waterConsumption: number; waterCost: number; waterCount: number }>();
   bills.forEach((b) => {
     const key = getLocal(b);
     const existing = propertiesMap.get(key);
@@ -628,6 +628,33 @@ export default function ConsumptionPage() {
         generation: b.generation_kwh || 0,
         cost: b.amount_brl || 0,
         count: 1,
+        waterConsumption: 0,
+        waterCost: 0,
+        waterCount: 0,
+      });
+    }
+  });
+
+  // Aggregate water bills into properties by matching location name
+  waterBills.forEach((wb) => {
+    const key = getWaterLocal(wb);
+    const existing = propertiesMap.get(key);
+    if (existing) {
+      existing.waterConsumption += wb.consumption_m3 || 0;
+      existing.waterCost += wb.total_value || 0;
+      existing.waterCount++;
+    } else {
+      propertiesMap.set(key, {
+        name: key,
+        address: wb.address || "—",
+        utility: wb.utility_company || "—",
+        consumption: 0,
+        generation: 0,
+        cost: 0,
+        count: 0,
+        waterConsumption: wb.consumption_m3 || 0,
+        waterCost: wb.total_value || 0,
+        waterCount: 1,
       });
     }
   });
