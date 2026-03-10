@@ -667,6 +667,8 @@ export default function ConsumptionPage() {
   const totalConsumption = properties.reduce((s, p) => s + p.consumption, 0);
   const totalGeneration = properties.reduce((s, p) => s + p.generation, 0);
   const totalCost = properties.reduce((s, p) => s + p.cost, 0);
+  const totalWaterConsumption = properties.reduce((s, p) => s + p.waterConsumption, 0);
+  const totalWaterCost = properties.reduce((s, p) => s + p.waterCost, 0);
 
   return (
     <div className="space-y-6">
