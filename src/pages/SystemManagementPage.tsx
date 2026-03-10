@@ -33,7 +33,7 @@ export default function SystemManagementPage() {
           </TabsTrigger>
           <TabsTrigger value="nomenclaturas" className="gap-2">
             <MapPin className="h-4 w-4" />
-            Nomenclaturas
+            Localidades
           </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
             <Plug className="h-4 w-4" />
