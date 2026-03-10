@@ -491,14 +491,22 @@ async function persistEnergyEntries(
 ): Promise<number> {
   let count = 0;
   for (const entry of entries) {
+    // Skip empty records (0 kWh generation AND 0 kWh consumption)
+    const gen = entry.energy_generated_kwh || 0;
+    const con = entry.energy_consumed_kwh || 0;
+    if (gen === 0 && con === 0) {
+      console.log(`persistEnergy: pulando registro vazio para plant ${plantId} em ${entry.timestamp}`);
+      continue;
+    }
+
     const { error } = await supabase.from("energy_data").upsert({
       plant_id: plantId,
       device_id: null,
       timestamp: entry.timestamp,
       generation_power_kw: entry.generation_power_kw || 0,
       consumption_power_kw: entry.consumption_power_kw || 0,
-      energy_generated_kwh: entry.energy_generated_kwh || 0,
-      energy_consumed_kwh: entry.energy_consumed_kwh || 0,
+      energy_generated_kwh: gen,
+      energy_consumed_kwh: con,
       voltage: entry.voltage || null,
       current: entry.current || null,
       temperature: entry.temperature || null,
