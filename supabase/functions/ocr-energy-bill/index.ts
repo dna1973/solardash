@@ -41,8 +41,11 @@ serve(async (req) => {
     const file = formData.get("file") as File;
     if (!file) throw new Error("No file uploaded");
 
-    // Upload PDF to storage
-    const filePath = `${tenantId}/${Date.now()}_${file.name}`;
+    // Upload PDF to storage - sanitize filename to avoid invalid key errors
+    const safeName = file.name
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+      .replace(/[^a-zA-Z0-9._-]/g, "_"); // replace special chars with underscore
+    const filePath = `${tenantId}/${Date.now()}_${safeName}`;
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { error: uploadError } = await adminClient.storage

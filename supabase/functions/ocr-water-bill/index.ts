@@ -39,8 +39,11 @@ serve(async (req) => {
     const file = formData.get("file") as File;
     if (!file) throw new Error("No file uploaded");
 
-    // Upload to storage
-    const filePath = `${tenantId}/${Date.now()}_${file.name}`;
+    // Upload to storage - sanitize filename
+    const safeName = file.name
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `${tenantId}/${Date.now()}_${safeName}`;
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { error: uploadError } = await adminClient.storage
