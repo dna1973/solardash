@@ -567,6 +567,118 @@ export type Database = {
         }
         Relationships: []
       }
+      water_bills: {
+        Row: {
+          account_number: string | null
+          address: string | null
+          client_code: string | null
+          consumption_history: Json | null
+          consumption_m3: number | null
+          created_at: string
+          due_date: string | null
+          id: string
+          invoice_number: string | null
+          pdf_path: string | null
+          property_name: string | null
+          raw_ocr_data: Json | null
+          reference_month: string | null
+          sewer_value: number | null
+          tariff_type: string | null
+          tenant_id: string
+          total_value: number | null
+          updated_at: string
+          utility_company: string | null
+          water_value: number | null
+        }
+        Insert: {
+          account_number?: string | null
+          address?: string | null
+          client_code?: string | null
+          consumption_history?: Json | null
+          consumption_m3?: number | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          pdf_path?: string | null
+          property_name?: string | null
+          raw_ocr_data?: Json | null
+          reference_month?: string | null
+          sewer_value?: number | null
+          tariff_type?: string | null
+          tenant_id: string
+          total_value?: number | null
+          updated_at?: string
+          utility_company?: string | null
+          water_value?: number | null
+        }
+        Update: {
+          account_number?: string | null
+          address?: string | null
+          client_code?: string | null
+          consumption_history?: Json | null
+          consumption_m3?: number | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          pdf_path?: string | null
+          property_name?: string | null
+          raw_ocr_data?: Json | null
+          reference_month?: string | null
+          sewer_value?: number | null
+          tariff_type?: string | null
+          tenant_id?: string
+          total_value?: number | null
+          updated_at?: string
+          utility_company?: string | null
+          water_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "water_bills_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      water_property_locations: {
+        Row: {
+          account_number: string
+          created_at: string
+          id: string
+          location_name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_number: string
+          created_at?: string
+          id?: string
+          location_name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string
+          created_at?: string
+          id?: string
+          location_name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "water_property_locations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
