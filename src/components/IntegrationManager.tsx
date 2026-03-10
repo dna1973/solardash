@@ -426,6 +426,9 @@ export function IntegrationManager() {
           );
         })}
       </div>
+
+      {/* Sync Logs */}
+      <SyncLogsPanel />
     </div>
   );
 }
