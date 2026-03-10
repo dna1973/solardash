@@ -698,14 +698,14 @@ export default function ConsumptionPage() {
           </TabsTrigger>
           <TabsTrigger value="bills" className="gap-2">
             <Receipt className="w-4 h-4" /> Contas de Energia
-            {bills.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{bills.length}</Badge>
+            {filteredBills.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{filteredBills.length}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="water" className="gap-2">
             <Droplets className="w-4 h-4" /> Contas de Água
-            {waterBills.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{waterBills.length}</Badge>
+            {filteredWaterBills.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{filteredWaterBills.length}</Badge>
             )}
           </TabsTrigger>
         </TabsList>
