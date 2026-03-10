@@ -1,0 +1,1 @@
+DELETE FROM public.energy_data WHERE energy_generated_kwh = 0 AND energy_consumed_kwh = 0;

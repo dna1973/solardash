@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2, RefreshCw, Zap, Settings2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { SyncLogsPanel } from "@/components/SyncLogsPanel";
 
 interface ManufacturerConfig {
   slug: string;
@@ -425,6 +426,9 @@ export function IntegrationManager() {
           );
         })}
       </div>
+
+      {/* Sync Logs */}
+      <SyncLogsPanel />
     </div>
   );
 }

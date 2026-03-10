@@ -462,6 +462,66 @@ export type Database = {
           },
         ]
       }
+      sync_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          energy_points: number | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          integration_id: string
+          manufacturer: string
+          plants_synced: number | null
+          started_at: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          energy_points?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          integration_id: string
+          manufacturer: string
+          plants_synced?: number | null
+          started_at?: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          energy_points?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          integration_id?: string
+          manufacturer?: string
+          plants_synced?: number | null
+          started_at?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           created_at: string

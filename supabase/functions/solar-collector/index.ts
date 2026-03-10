@@ -46,12 +46,22 @@ serve(async (req) => {
       const errors: string[] = [];
 
       for (const integration of integrations) {
+        const startedAt = new Date().toISOString();
+        let logStatus = "success";
+        let logError: string | null = null;
+        let synced = 0;
+        let energyPoints = 0;
+
         try {
-          const { synced, energyPoints } = await syncIntegration(
+          const result = await syncIntegration(
             supabase, integration.tenant_id, integration.manufacturer, integration.credentials, integration.id
           );
+          synced = result.synced;
+          energyPoints = result.energyPoints;
           totalPlants += synced;
           totalEnergy += energyPoints;
+
+          if (energyPoints === 0 && synced > 0) logStatus = "partial";
 
           // Update last_sync_at
           await supabase
@@ -62,11 +72,26 @@ serve(async (req) => {
           const msg = e instanceof Error ? e.message : String(e);
           console.error(`sync_all: erro na integração ${integration.id}: ${msg}`);
           errors.push(`${integration.manufacturer}: ${msg}`);
+          logStatus = "error";
+          logError = msg;
           await supabase
             .from("integrations")
             .update({ last_error: msg })
             .eq("id", integration.id);
         }
+
+        // Write sync log
+        await supabase.from("sync_logs").insert({
+          integration_id: integration.id,
+          tenant_id: integration.tenant_id,
+          manufacturer: integration.manufacturer,
+          status: logStatus,
+          plants_synced: synced,
+          energy_points: energyPoints,
+          error_message: logError,
+          started_at: startedAt,
+          finished_at: new Date().toISOString(),
+        });
       }
 
       console.log(`sync_all: concluído — ${totalPlants} plantas, ${totalEnergy} pontos de energia, ${errors.length} erros`);
@@ -466,14 +491,22 @@ async function persistEnergyEntries(
 ): Promise<number> {
   let count = 0;
   for (const entry of entries) {
+    // Skip empty records (0 kWh generation AND 0 kWh consumption)
+    const gen = entry.energy_generated_kwh || 0;
+    const con = entry.energy_consumed_kwh || 0;
+    if (gen === 0 && con === 0) {
+      console.log(`persistEnergy: pulando registro vazio para plant ${plantId} em ${entry.timestamp}`);
+      continue;
+    }
+
     const { error } = await supabase.from("energy_data").upsert({
       plant_id: plantId,
       device_id: null,
       timestamp: entry.timestamp,
       generation_power_kw: entry.generation_power_kw || 0,
       consumption_power_kw: entry.consumption_power_kw || 0,
-      energy_generated_kwh: entry.energy_generated_kwh || 0,
-      energy_consumed_kwh: entry.energy_consumed_kwh || 0,
+      energy_generated_kwh: gen,
+      energy_consumed_kwh: con,
       voltage: entry.voltage || null,
       current: entry.current || null,
       temperature: entry.temperature || null,
