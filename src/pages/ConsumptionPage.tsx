@@ -768,29 +768,48 @@ export default function ConsumptionPage() {
                                 </p>
                               </div>
                             </div>
-                            <Badge variant="outline" className="text-[10px]">{prop.count} conta{prop.count > 1 ? "s" : ""}</Badge>
+                            <div className="flex gap-1">
+                              {prop.count > 0 && <Badge variant="outline" className="text-[10px]"><Zap className="w-3 h-3 mr-0.5" />{prop.count}</Badge>}
+                              {prop.waterCount > 0 && <Badge variant="outline" className="text-[10px]"><Droplets className="w-3 h-3 mr-0.5" />{prop.waterCount}</Badge>}
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-lg bg-muted/50 p-2.5">
-                              <p className="text-[10px] text-muted-foreground">Consumo</p>
-                              <p className="text-sm font-semibold font-mono">{(prop.consumption / 1000).toFixed(1)} MWh</p>
+                          {prop.count > 0 && (
+                            <>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-lg bg-muted/50 p-2.5">
+                                  <p className="text-[10px] text-muted-foreground">Consumo Energia</p>
+                                  <p className="text-sm font-semibold font-mono">{(prop.consumption / 1000).toFixed(1)} MWh</p>
+                                </div>
+                                <div className="rounded-lg bg-muted/50 p-2.5">
+                                  <p className="text-[10px] text-muted-foreground">Geração</p>
+                                  <p className="text-sm font-semibold font-mono text-primary">{(prop.generation / 1000).toFixed(1)} MWh</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="text-muted-foreground">Custo Energia: </span>
+                                  <span className="font-semibold">R$ {prop.cost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <span className={`font-semibold ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
+                                  {balance >= 0 ? "Excedente" : "Déficit"} ({balance > 0 ? "+" : ""}{(balance / 1000).toFixed(1)} MWh)
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          {prop.waterCount > 0 && (
+                            <div className={`grid grid-cols-2 gap-3 ${prop.count > 0 ? "border-t pt-3" : ""}`}>
+                              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 p-2.5">
+                                <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Droplets className="w-3 h-3" /> Consumo Água</p>
+                                <p className="text-sm font-semibold font-mono">{prop.waterConsumption.toFixed(1)} m³</p>
+                              </div>
+                              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 p-2.5">
+                                <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Droplets className="w-3 h-3" /> Custo Água</p>
+                                <p className="text-sm font-semibold font-mono">R$ {prop.waterCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                              </div>
                             </div>
-                            <div className="rounded-lg bg-muted/50 p-2.5">
-                              <p className="text-[10px] text-muted-foreground">Geração</p>
-                              <p className="text-sm font-semibold font-mono text-primary">{(prop.generation / 1000).toFixed(1)} MWh</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <div>
-                              <span className="text-muted-foreground">Custo: </span>
-                              <span className="font-semibold">R$ {prop.cost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <span className={`font-semibold ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
-                              {balance >= 0 ? "Excedente" : "Déficit"} ({balance > 0 ? "+" : ""}{(balance / 1000).toFixed(1)} MWh)
-                            </span>
-                          </div>
+                          )}
                           <div className="flex items-center text-[10px] text-muted-foreground border-t pt-2">
                             <span className="flex items-center gap-1"><Plug className="w-3 h-3" /> {prop.utility}</span>
                           </div>
