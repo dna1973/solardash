@@ -724,10 +724,12 @@ export default function ConsumptionPage() {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard title="Consumo Total" value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <StatCard title="Consumo Energia" value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
                 <StatCard title="Geração Total" value={`${(totalGeneration / 1000).toFixed(1)} MWh`} icon={TrendingUp} variant="primary" />
-                <StatCard title="Custo Total" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+                <StatCard title="Custo Energia" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+                <StatCard title="Consumo Água" value={`${totalWaterConsumption.toFixed(1)} m³`} icon={Droplets} variant="default" />
+                <StatCard title="Custo Água" value={`R$ ${totalWaterCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={Droplets} variant="default" />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
