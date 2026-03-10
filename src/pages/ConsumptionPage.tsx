@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Building2, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download } from "lucide-react";
+import { Building2, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download, Droplets } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/StatCard";
 import { BillImportDialog } from "@/components/BillImportDialog";
+import { WaterBillImportDialog } from "@/components/WaterBillImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -40,14 +41,35 @@ interface EnergyBill {
   net_value: number | null;
 }
 
+interface WaterBill {
+  id: string;
+  property_name: string | null;
+  address: string | null;
+  utility_company: string | null;
+  account_number: string | null;
+  client_code: string | null;
+  reference_month: string | null;
+  consumption_m3: number | null;
+  water_value: number | null;
+  sewer_value: number | null;
+  total_value: number | null;
+  tariff_type: string | null;
+  due_date: string | null;
+  invoice_number: string | null;
+  consumption_history: Array<{ month: string; consumption_m3: number }> | null;
+  created_at: string;
+}
+
 export default function ConsumptionPage() {
   const [search, setSearch] = useState("");
   const [importOpen, setImportOpen] = useState(false);
+  const [waterImportOpen, setWaterImportOpen] = useState(false);
   const [mainTab, setMainTab] = useState("properties");
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
   // Property locations lookup (client_code → location_name)
   const [locationMap, setLocationMap] = useState<Record<string, string>>({});
+  const [waterLocationMap, setWaterLocationMap] = useState<Record<string, string>>({});
 
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
@@ -55,6 +77,13 @@ export default function ConsumptionPage() {
   const [billFilterProperty, setBillFilterProperty] = useState("all");
   const [billFilterYear, setBillFilterYear] = useState("all");
   const [billFilterMonth, setBillFilterMonth] = useState("all");
+
+  // Water bills state
+  const [waterBills, setWaterBills] = useState<WaterBill[]>([]);
+  const [waterBillsLoading, setWaterBillsLoading] = useState(false);
+  const [waterFilterProperty, setWaterFilterProperty] = useState("all");
+  const [waterFilterYear, setWaterFilterYear] = useState("all");
+  const [waterFilterMonth, setWaterFilterMonth] = useState("all");
 
   const fetchLocations = async () => {
     const { data } = await supabase
@@ -65,6 +94,18 @@ export default function ConsumptionPage() {
       const map: Record<string, string> = {};
       data.forEach((r: any) => { map[r.account_number] = r.location_name; });
       setLocationMap(map);
+    }
+  };
+
+  const fetchWaterLocations = async () => {
+    const { data } = await supabase
+      .from("water_property_locations" as any)
+      .select("id, account_number, location_name")
+      .order("location_name");
+    if (data) {
+      const map: Record<string, string> = {};
+      (data as any[]).forEach((r: any) => { map[r.account_number] = r.location_name; });
+      setWaterLocationMap(map);
     }
   };
 
@@ -83,15 +124,37 @@ export default function ConsumptionPage() {
     setBillsLoading(false);
   };
 
-  // Helper: resolve "local" for a bill — prioritize property_locations (by client_code), then property_name
+  const fetchWaterBills = async () => {
+    setWaterBillsLoading(true);
+    const { data, error } = await supabase
+      .from("water_bills" as any)
+      .select("id, property_name, address, utility_company, account_number, client_code, reference_month, consumption_m3, water_value, sewer_value, total_value, tariff_type, due_date, invoice_number, consumption_history, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching water bills:", error);
+    } else {
+      setWaterBills((data as any[]) || []);
+    }
+    setWaterBillsLoading(false);
+  };
+
+  // Helper: resolve "local" for a bill
   const getLocal = (b: EnergyBill) => {
     if (b.client_code && locationMap[b.client_code]) return locationMap[b.client_code];
     return b.property_name || "Sem identificação";
   };
 
+  const getWaterLocal = (b: WaterBill) => {
+    if (b.client_code && waterLocationMap[b.client_code]) return waterLocationMap[b.client_code];
+    return b.property_name || "Sem identificação";
+  };
+
   useEffect(() => {
     fetchLocations();
+    fetchWaterLocations();
     fetchBills();
+    fetchWaterBills();
   }, []);
 
   const deleteBill = async (id: string) => {
@@ -101,6 +164,16 @@ export default function ConsumptionPage() {
     } else {
       toast.success("Conta excluída");
       setBills((prev) => prev.filter((b) => b.id !== id));
+    }
+  };
+
+  const deleteWaterBill = async (id: string) => {
+    const { error } = await supabase.from("water_bills" as any).delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao excluir conta de água");
+    } else {
+      toast.success("Conta de água excluída");
+      setWaterBills((prev) => prev.filter((b) => b.id !== id));
     }
   };
 
@@ -117,6 +190,24 @@ export default function ConsumptionPage() {
     const matchMonth = billFilterMonth === "all" || mm === billFilterMonth;
     return matchProperty && matchYear && matchMonth;
   });
+
+  // Water bill filters
+  const uniqueWaterProperties = [...new Set(waterBills.map((b) => getWaterLocal(b)).filter(Boolean))] as string[];
+  const uniqueWaterYears = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
+  const uniqueWaterMonths = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
+
+  const filteredWaterBills = waterBills.filter((b) => {
+    const [mm, yyyy] = (b.reference_month || "").split("/");
+    const matchProperty = waterFilterProperty === "all" || getWaterLocal(b) === waterFilterProperty;
+    const matchYear = waterFilterYear === "all" || yyyy === waterFilterYear;
+    const matchMonth = waterFilterMonth === "all" || mm === waterFilterMonth;
+    return matchProperty && matchYear && matchMonth;
+  });
+
+  const waterTotalConsumption = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
+  const waterTotalWater = filteredWaterBills.reduce((s, b) => s + (b.water_value || 0), 0);
+  const waterTotalSewer = filteredWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0);
+  const waterTotalValue = filteredWaterBills.reduce((s, b) => s + (b.total_value || 0), 0);
 
   const billsTotalConsumption = filteredBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
   const billsTotalDeductions = filteredBills.reduce((s, b) => s + ((b as any).deductions_value || 0), 0);
@@ -145,16 +236,33 @@ export default function ConsumptionPage() {
     toast.success("Excel exportado!");
   };
 
+  const exportWaterExcel = () => {
+    const data = filteredWaterBills.map((b, i) => ({
+      "Nº": i + 1,
+      "Matrícula": b.account_number || "—",
+      "Local": getWaterLocal(b),
+      "Consumo (m³)": b.consumption_m3 || 0,
+      "Valor Água (R$)": b.water_value || 0,
+      "Valor Esgoto (R$)": b.sewer_value || 0,
+      "Valor Total (R$)": b.total_value || 0,
+    }));
+    if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contas Água");
+    XLSX.writeFile(wb, "contas-agua.xlsx");
+    toast.success("Excel exportado!");
+  };
+
   const exportPDF = () => {
     const data = getBillsExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const pageW = 297;
     const pageH = 210;
-    const mx = 10; // margin x
+    const mx = 10;
     const tableW = pageW - mx * 2;
 
-    // Helper: wrap text into lines that fit a given width
     const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
       doc.setFontSize(fontSize);
       const words = text.split(" ");
@@ -176,25 +284,19 @@ export default function ConsumptionPage() {
     const fmtNum = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     const fmtMoney = (v: number) => `R$ ${fmtNum(v)}`;
 
-    // Determine active filter labels
     const monthLabel = billFilterMonth !== "all" ? (monthNames[billFilterMonth] || billFilterMonth) : "";
     const yearLabel = billFilterYear !== "all" ? billFilterYear : "";
     const refLabel = [monthLabel, yearLabel].filter(Boolean).join("/") || "Todos";
     const propLabel = billFilterProperty !== "all" ? billFilterProperty : "Todos os imóveis";
 
-    // ── HEADER SECTION ──
     let y = 14;
     const headerH = 28;
-    const headerLabelW = 45;
-    const headerCol1W = 90;
 
-    // Background
     doc.setFillColor(240, 244, 248);
     doc.rect(mx, y - 4, tableW, headerH, "F");
     doc.setDrawColor(180, 190, 200);
     doc.rect(mx, y - 4, tableW, headerH, "S");
 
-    // Left: Title block
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(30, 30, 30);
@@ -210,12 +312,12 @@ export default function ConsumptionPage() {
     doc.setFont("helvetica", "normal");
     doc.text("Imóvel:", mx + 3, y + 12);
     doc.setFont("helvetica", "bold");
+    const headerCol1W = 90;
     const propLines = wrapText(propLabel, headerCol1W, 7);
     propLines.forEach((line, i) => {
       doc.text(line, mx + 3 + doc.getTextWidth("Imóvel: "), y + 12 + i * 3.5);
     });
 
-    // Right: Totals summary
     const rightX = pageW - mx - 85;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
@@ -235,7 +337,6 @@ export default function ConsumptionPage() {
 
     y += headerH + 4;
 
-    // ── COLUMN DEFINITIONS ──
     const cols = [
       { header: "Nº", width: 12, align: "left" as const },
       { header: "Nº DA CONTA", width: 28, align: "left" as const },
@@ -246,13 +347,10 @@ export default function ConsumptionPage() {
       { header: "Valor\nDeduções", width: 28, align: "right" as const },
       { header: "Valor\nLíquido", width: 28, align: "right" as const },
     ];
-    // Adjust last col to fill remaining width
     const usedW = cols.reduce((s, c) => s + c.width, 0);
     if (usedW < tableW) cols[cols.length - 1].width += tableW - usedW;
 
-    // ── TABLE HEADER ──
     const drawTableHeader = () => {
-      // Column header row with blue background
       doc.setFillColor(200, 215, 230);
       doc.rect(mx, y, tableW, 10, "F");
       doc.setDrawColor(160, 175, 190);
@@ -279,7 +377,6 @@ export default function ConsumptionPage() {
 
     drawTableHeader();
 
-    // ── DATA ROWS ──
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
     doc.setTextColor(30, 30, 30);
@@ -288,25 +385,21 @@ export default function ConsumptionPage() {
 
     data.forEach((row, rowIdx) => {
       const values = Object.values(row);
-      // Calculate row height by wrapping LOCAL column
       const localText = String(values[2] || "");
       const localLines = wrapText(localText, cols[2].width, rowFontSize);
       const rowH = Math.max(localLines.length * lineH, 5);
 
-      // Page break check
       if (y + rowH > pageH - 20) {
         doc.addPage();
         y = 14;
         drawTableHeader();
       }
 
-      // Alternate row background
       if (rowIdx % 2 === 0) {
         doc.setFillColor(248, 250, 252);
         doc.rect(mx, y - 2.5, tableW, rowH, "F");
       }
 
-      // Row border
       doc.setDrawColor(220, 225, 230);
       doc.line(mx, y - 2.5 + rowH, mx + tableW, y - 2.5 + rowH);
 
@@ -317,7 +410,6 @@ export default function ConsumptionPage() {
         const text = typeof v === "number" ? (i === 0 ? String(Math.round(v)) : fmtNum(v)) : String(v);
 
         if (i === 2) {
-          // LOCAL column — wrap text
           localLines.forEach((line, li) => {
             doc.text(line, cx + 2, y + li * lineH);
           });
@@ -326,7 +418,6 @@ export default function ConsumptionPage() {
           doc.text(text.substring(0, 30), tx, y, { align: col.align === "right" ? "right" : "left" });
         }
 
-        // Vertical lines
         doc.setDrawColor(220, 225, 230);
         doc.line(cx, y - 2.5, cx, y - 2.5 + rowH);
         cx += col.width;
@@ -336,7 +427,6 @@ export default function ConsumptionPage() {
       y += rowH;
     });
 
-    // ── TOTALS ROW ──
     y += 1;
     doc.setDrawColor(160, 175, 190);
     doc.setFillColor(230, 238, 245);
@@ -344,13 +434,11 @@ export default function ConsumptionPage() {
     doc.line(mx, y - 3, mx + tableW, y - 3);
     doc.line(mx, y + 4, mx + tableW, y + 4);
 
-    // "TOTAL:" label in LOCAL column
     const totalLabelX = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX, y + 0.5, { align: "right" });
 
-    // Total values
     const totalValues = [
       fmtNum(billsTotalConsumption),
       fmtMoney(billsTotalGross),
@@ -367,7 +455,6 @@ export default function ConsumptionPage() {
       tx += col.width;
     });
 
-    // ── SUMMARY FOOTER ──
     y += 10;
     const footerItems = [
       { label: "Valor Bruto", value: fmtMoney(billsTotalGross) },
@@ -427,26 +514,35 @@ export default function ConsumptionPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Consumo por Imóvel</h1>
           <p className="text-sm text-muted-foreground">
-            Gestão de consumo e geração de energia por unidade consumidora
+            Gestão de consumo de energia e água por unidade consumidora
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
-            <FileUp className="w-4 h-4" /> Importar Conta (OCR)
+            <FileUp className="w-4 h-4" /> Importar Energia
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setWaterImportOpen(true)}>
+            <Droplets className="w-4 h-4" /> Importar Água
           </Button>
         </div>
       </div>
 
-      {/* Main Tabs: Imóveis vs Contas Importadas */}
+      {/* Main Tabs */}
       <Tabs value={mainTab} onValueChange={setMainTab}>
         <TabsList>
           <TabsTrigger value="properties" className="gap-2">
             <Building2 className="w-4 h-4" /> Imóveis
           </TabsTrigger>
           <TabsTrigger value="bills" className="gap-2">
-            <Receipt className="w-4 h-4" /> Contas Importadas
+            <Receipt className="w-4 h-4" /> Contas de Energia
             {bills.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{bills.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="water" className="gap-2">
+            <Droplets className="w-4 h-4" /> Contas de Água
+            {waterBills.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{waterBills.length}</Badge>
             )}
           </TabsTrigger>
         </TabsList>
@@ -466,14 +562,12 @@ export default function ConsumptionPage() {
             </Card>
           ) : (
             <>
-              {/* Summary Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <StatCard title="Consumo Total" value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
                 <StatCard title="Geração Total" value={`${(totalGeneration / 1000).toFixed(1)} MWh`} icon={TrendingUp} variant="primary" />
                 <StatCard title="Custo Total" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
               </div>
 
-              {/* Filters */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -486,7 +580,6 @@ export default function ConsumptionPage() {
                 </div>
               </div>
 
-              {/* Properties Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredProperties.map((prop, i) => {
                   const balance = prop.generation - prop.consumption;
@@ -547,9 +640,8 @@ export default function ConsumptionPage() {
           )}
         </TabsContent>
 
-        {/* TAB: CONTAS IMPORTADAS */}
+        {/* TAB: CONTAS DE ENERGIA */}
         <TabsContent value="bills" className="space-y-6 mt-4">
-          {/* Bills Summary */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <StatCard title="Consumo Total" value={`${(billsTotalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
             <StatCard title="Valor Bruto" value={`R$ ${billsTotalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
@@ -557,7 +649,6 @@ export default function ConsumptionPage() {
             <StatCard title="Valor Líquido" value={`R$ ${billsTotalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
           </div>
 
-          {/* Bills Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Select value={billFilterProperty} onValueChange={setBillFilterProperty}>
               <SelectTrigger className="w-full sm:w-52">
@@ -606,7 +697,6 @@ export default function ConsumptionPage() {
             </div>
           </div>
 
-          {/* Bills Table */}
           {billsLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -616,7 +706,7 @@ export default function ConsumptionPage() {
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
                 <p className="text-sm font-medium text-muted-foreground">Nenhuma conta importada</p>
-                <p className="text-xs text-muted-foreground mt-1">Clique em "Importar Conta (OCR)" para começar</p>
+                <p className="text-xs text-muted-foreground mt-1">Clique em "Importar Energia" para começar</p>
                 <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => setImportOpen(true)}>
                   <FileUp className="w-4 h-4" /> Importar Conta
                 </Button>
@@ -682,15 +772,150 @@ export default function ConsumptionPage() {
           )}
         </TabsContent>
 
+        {/* TAB: CONTAS DE ÁGUA */}
+        <TabsContent value="water" className="space-y-6 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <StatCard title="Consumo Total" value={`${waterTotalConsumption.toLocaleString("pt-BR")} m³`} icon={Droplets} variant="default" />
+            <StatCard title="Valor Água" value={`R$ ${waterTotalWater.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+            <StatCard title="Valor Esgoto" value={`R$ ${waterTotalSewer.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={TrendingUp} variant="primary" />
+            <StatCard title="Valor Total" value={`R$ ${waterTotalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={waterFilterProperty} onValueChange={setWaterFilterProperty}>
+              <SelectTrigger className="w-full sm:w-52">
+                <SelectValue placeholder="Imóvel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os imóveis</SelectItem>
+                {uniqueWaterProperties.map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={waterFilterYear} onValueChange={setWaterFilterYear}>
+              <SelectTrigger className="w-full sm:w-36">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os anos</SelectItem>
+                {uniqueWaterYears.map((y) => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={waterFilterMonth} onValueChange={setWaterFilterMonth}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os meses</SelectItem>
+                {uniqueWaterMonths.map((m) => (
+                  <SelectItem key={m} value={m}>{monthNames[m] || m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="hidden sm:flex flex-1" />
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={exportWaterExcel}>
+                <Download className="w-4 h-4" /> Excel
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none" onClick={() => setWaterImportOpen(true)}>
+                <Droplets className="w-4 h-4" /> Importar
+              </Button>
+            </div>
+          </div>
+
+          {waterBillsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : filteredWaterBills.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <Droplets className="w-12 h-12 text-muted-foreground/50 mb-4" />
+                <p className="text-sm font-medium text-muted-foreground">Nenhuma conta de água importada</p>
+                <p className="text-xs text-muted-foreground mt-1">Clique em "Importar Água" para começar</p>
+                <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => setWaterImportOpen(true)}>
+                  <Droplets className="w-4 h-4" /> Importar Conta de Água
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Referência</TableHead>
+                      <TableHead>Matrícula</TableHead>
+                      <TableHead>Local</TableHead>
+                      <TableHead className="text-right">Consumo (m³)</TableHead>
+                      <TableHead className="text-right">Valor Água</TableHead>
+                      <TableHead className="text-right">Valor Esgoto</TableHead>
+                      <TableHead className="text-right">Valor Total</TableHead>
+                      <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredWaterBills.map((bill) => (
+                      <TableRow key={bill.id}>
+                        <TableCell className="text-xs">{bill.reference_month || "—"}</TableCell>
+                        <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[200px]">{getWaterLocal(bill)}</p>
+                            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.address || ""}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.consumption_m3 || 0).toLocaleString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.water_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.sewer_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono font-semibold">
+                          {(bill.total_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteWaterBill(bill.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
       </Tabs>
 
-      {/* Bill Import Dialog */}
+      {/* Bill Import Dialogs */}
       <BillImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
         onImported={() => {
           toast.success("Conta importada!");
           fetchBills();
+        }}
+      />
+
+      <WaterBillImportDialog
+        open={waterImportOpen}
+        onOpenChange={setWaterImportOpen}
+        onImported={() => {
+          fetchWaterBills();
         }}
       />
 
@@ -716,7 +941,6 @@ export default function ConsumptionPage() {
                   </DialogDescription>
                 </DialogHeader>
 
-                {/* Consolidated Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
                   <div className="rounded-lg bg-muted/50 p-3 text-center">
                     <p className="text-[10px] text-muted-foreground">Consumo</p>
@@ -738,7 +962,6 @@ export default function ConsumptionPage() {
                   </div>
                 </div>
 
-                {/* Financial Summary */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-lg border p-3 text-center">
                     <p className="text-[10px] text-muted-foreground">Valor Bruto</p>
@@ -754,7 +977,6 @@ export default function ConsumptionPage() {
                   </div>
                 </div>
 
-                {/* Bills Table */}
                 <div className="mt-2">
                   <h4 className="text-xs font-semibold text-muted-foreground mb-2">Histórico de Faturas</h4>
                   <div className="rounded-md border overflow-x-auto">

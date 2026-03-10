@@ -104,8 +104,8 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
           .eq("account_number", extractedData.client_code)
           .maybeSingle();
 
-        if (locData?.location_name) {
-          extractedData.property_name = locData.location_name;
+        if ((locData as any)?.location_name) {
+          extractedData.property_name = (locData as any).location_name;
         }
       }
 
