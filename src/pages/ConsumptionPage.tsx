@@ -99,12 +99,13 @@ export default function ConsumptionPage() {
 
   const fetchWaterLocations = async () => {
     const { data } = await supabase
-      .from("water_property_locations" as any)
-      .select("id, account_number, location_name")
+      .from("property_locations")
+      .select("id, water_account_number, location_name")
+      .not("water_account_number", "is", null)
       .order("location_name");
     if (data) {
       const map: Record<string, string> = {};
-      (data as any[]).forEach((r: any) => { map[r.account_number] = r.location_name; });
+      (data as any[]).forEach((r: any) => { if (r.water_account_number) map[r.water_account_number] = r.location_name; });
       setWaterLocationMap(map);
     }
   };

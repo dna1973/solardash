@@ -99,13 +99,13 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
       // Lookup water property location by client_code
       if (extractedData.client_code) {
         const { data: locData } = await supabase
-          .from("water_property_locations" as any)
+          .from("property_locations")
           .select("location_name")
-          .eq("account_number", extractedData.client_code)
+          .eq("water_account_number", extractedData.client_code)
           .maybeSingle();
 
-        if ((locData as any)?.location_name) {
-          extractedData.property_name = (locData as any).location_name;
+        if (locData?.location_name) {
+          extractedData.property_name = locData.location_name;
         }
       }
 
