@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { usePlantById, useDevicesByPlant, useAlertsByPlant, useEnergyData, useUpdatePlant } from "@/hooks/useSupabaseData";
+import { usePlantById, useDevicesByPlant, useAlertsByPlant, useEnergyData, useUpdatePlant, EnergyPeriod } from "@/hooks/useSupabaseData";
 import { useUserRole } from "@/hooks/useUserRole";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
 import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { EnergyChart } from "@/components/EnergyChart";
-import { ArrowLeft, Sun, MapPin, Zap, Calendar, Loader2, Cpu, AlertTriangle, CheckCircle2, Pencil } from "lucide-react";
+import { ArrowLeft, Sun, MapPin, Zap, Calendar as CalendarIcon, Loader2, Cpu, AlertTriangle, CheckCircle2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, addYears, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export default function PlantDetail() {
   const { id } = useParams<{ id: string }>();
