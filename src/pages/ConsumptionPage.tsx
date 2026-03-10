@@ -610,7 +610,7 @@ export default function ConsumptionPage() {
   };
 
   // Aggregate bills by property for the "Imóveis" tab
-  const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number }>();
+  const propertiesMap = new Map<string, { name: string; address: string; utility: string; consumption: number; generation: number; cost: number; count: number; waterConsumption: number; waterCost: number; waterCount: number }>();
   bills.forEach((b) => {
     const key = getLocal(b);
     const existing = propertiesMap.get(key);
@@ -628,6 +628,33 @@ export default function ConsumptionPage() {
         generation: b.generation_kwh || 0,
         cost: b.amount_brl || 0,
         count: 1,
+        waterConsumption: 0,
+        waterCost: 0,
+        waterCount: 0,
+      });
+    }
+  });
+
+  // Aggregate water bills into properties by matching location name
+  waterBills.forEach((wb) => {
+    const key = getWaterLocal(wb);
+    const existing = propertiesMap.get(key);
+    if (existing) {
+      existing.waterConsumption += wb.consumption_m3 || 0;
+      existing.waterCost += wb.total_value || 0;
+      existing.waterCount++;
+    } else {
+      propertiesMap.set(key, {
+        name: key,
+        address: wb.address || "—",
+        utility: wb.utility_company || "—",
+        consumption: 0,
+        generation: 0,
+        cost: 0,
+        count: 0,
+        waterConsumption: wb.consumption_m3 || 0,
+        waterCost: wb.total_value || 0,
+        waterCount: 1,
       });
     }
   });
@@ -640,6 +667,8 @@ export default function ConsumptionPage() {
   const totalConsumption = properties.reduce((s, p) => s + p.consumption, 0);
   const totalGeneration = properties.reduce((s, p) => s + p.generation, 0);
   const totalCost = properties.reduce((s, p) => s + p.cost, 0);
+  const totalWaterConsumption = properties.reduce((s, p) => s + p.waterConsumption, 0);
+  const totalWaterCost = properties.reduce((s, p) => s + p.waterCost, 0);
 
   return (
     <div className="space-y-6">
@@ -695,10 +724,12 @@ export default function ConsumptionPage() {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard title="Consumo Total" value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <StatCard title="Consumo Energia" value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
                 <StatCard title="Geração Total" value={`${(totalGeneration / 1000).toFixed(1)} MWh`} icon={TrendingUp} variant="primary" />
-                <StatCard title="Custo Total" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+                <StatCard title="Custo Energia" value={`R$ ${totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+                <StatCard title="Consumo Água" value={`${totalWaterConsumption.toFixed(1)} m³`} icon={Droplets} variant="default" />
+                <StatCard title="Custo Água" value={`R$ ${totalWaterCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={Droplets} variant="default" />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -737,29 +768,48 @@ export default function ConsumptionPage() {
                                 </p>
                               </div>
                             </div>
-                            <Badge variant="outline" className="text-[10px]">{prop.count} conta{prop.count > 1 ? "s" : ""}</Badge>
+                            <div className="flex gap-1">
+                              {prop.count > 0 && <Badge variant="outline" className="text-[10px]"><Zap className="w-3 h-3 mr-0.5" />{prop.count}</Badge>}
+                              {prop.waterCount > 0 && <Badge variant="outline" className="text-[10px]"><Droplets className="w-3 h-3 mr-0.5" />{prop.waterCount}</Badge>}
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-lg bg-muted/50 p-2.5">
-                              <p className="text-[10px] text-muted-foreground">Consumo</p>
-                              <p className="text-sm font-semibold font-mono">{(prop.consumption / 1000).toFixed(1)} MWh</p>
+                          {prop.count > 0 && (
+                            <>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-lg bg-muted/50 p-2.5">
+                                  <p className="text-[10px] text-muted-foreground">Consumo Energia</p>
+                                  <p className="text-sm font-semibold font-mono">{(prop.consumption / 1000).toFixed(1)} MWh</p>
+                                </div>
+                                <div className="rounded-lg bg-muted/50 p-2.5">
+                                  <p className="text-[10px] text-muted-foreground">Geração</p>
+                                  <p className="text-sm font-semibold font-mono text-primary">{(prop.generation / 1000).toFixed(1)} MWh</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="text-muted-foreground">Custo Energia: </span>
+                                  <span className="font-semibold">R$ {prop.cost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <span className={`font-semibold ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
+                                  {balance >= 0 ? "Excedente" : "Déficit"} ({balance > 0 ? "+" : ""}{(balance / 1000).toFixed(1)} MWh)
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          {prop.waterCount > 0 && (
+                            <div className={`grid grid-cols-2 gap-3 ${prop.count > 0 ? "border-t pt-3" : ""}`}>
+                              <div className="rounded-lg bg-accent/50 p-2.5">
+                                <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Droplets className="w-3 h-3" /> Consumo Água</p>
+                                <p className="text-sm font-semibold font-mono">{prop.waterConsumption.toFixed(1)} m³</p>
+                              </div>
+                              <div className="rounded-lg bg-accent/50 p-2.5">
+                                <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Droplets className="w-3 h-3" /> Custo Água</p>
+                                <p className="text-sm font-semibold font-mono">R$ {prop.waterCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                              </div>
                             </div>
-                            <div className="rounded-lg bg-muted/50 p-2.5">
-                              <p className="text-[10px] text-muted-foreground">Geração</p>
-                              <p className="text-sm font-semibold font-mono text-primary">{(prop.generation / 1000).toFixed(1)} MWh</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <div>
-                              <span className="text-muted-foreground">Custo: </span>
-                              <span className="font-semibold">R$ {prop.cost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <span className={`font-semibold ${balance >= 0 ? "text-primary" : "text-destructive"}`}>
-                              {balance >= 0 ? "Excedente" : "Déficit"} ({balance > 0 ? "+" : ""}{(balance / 1000).toFixed(1)} MWh)
-                            </span>
-                          </div>
+                          )}
                           <div className="flex items-center text-[10px] text-muted-foreground border-t pt-2">
                             <span className="flex items-center gap-1"><Plug className="w-3 h-3" /> {prop.utility}</span>
                           </div>
