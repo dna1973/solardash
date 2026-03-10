@@ -254,6 +254,138 @@ export default function ConsumptionPage() {
     toast.success("Excel exportado!");
   };
 
+  const exportWaterPDF = () => {
+    const data = filteredWaterBills.map((b, i) => ({
+      "Nº": i + 1,
+      "Matrícula": b.account_number || "—",
+      "Local": getWaterLocal(b),
+      "Consumo (m³)": b.consumption_m3 || 0,
+      "Valor Água (R$)": b.water_value || 0,
+      "Valor Esgoto (R$)": b.sewer_value || 0,
+      "Valor Total (R$)": b.total_value || 0,
+    }));
+    if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
+
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pageW = 297; const pageH = 210; const mx = 10; const tableW = pageW - mx * 2;
+
+    const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
+      doc.setFontSize(fontSize);
+      const words = text.split(" "); const lines: string[] = []; let current = "";
+      for (const word of words) {
+        const test = current ? `${current} ${word}` : word;
+        if (doc.getTextWidth(test) > maxWidth - 2) { if (current) lines.push(current); current = word; }
+        else { current = test; }
+      }
+      if (current) lines.push(current);
+      return lines.length ? lines : [""];
+    };
+
+    const fmtNum2 = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+    const fmtMoney2 = (v: number) => `R$ ${fmtNum2(v)}`;
+
+    const wml = waterFilterMonth !== "all" ? (monthNames[waterFilterMonth] || waterFilterMonth) : "";
+    const wyl = waterFilterYear !== "all" ? waterFilterYear : "";
+    const refLabel = [wml, wyl].filter(Boolean).join("/") || "Todos";
+    const propLabel = waterFilterProperty !== "all" ? waterFilterProperty : "Todos os imóveis";
+
+    let y = 14; const headerH = 28;
+    doc.setFillColor(230, 244, 255); doc.rect(mx, y - 4, tableW, headerH, "F");
+    doc.setDrawColor(160, 200, 230); doc.rect(mx, y - 4, tableW, headerH, "S");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(30, 30, 30);
+    doc.text("EXTRATO DE CONTAS DE ÁGUA", mx + 3, y + 1);
+    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(80, 80, 80);
+    doc.text("Mês de Referência:", mx + 3, y + 7);
+    doc.setFont("helvetica", "bold"); doc.text(refLabel, mx + 3 + doc.getTextWidth("Mês de Referência: "), y + 7);
+    doc.setFont("helvetica", "normal"); doc.text("Imóvel:", mx + 3, y + 12);
+    doc.setFont("helvetica", "bold");
+    const propLines = wrapText(propLabel, 90, 7);
+    propLines.forEach((line, i) => { doc.text(line, mx + 3 + doc.getTextWidth("Imóvel: "), y + 12 + i * 3.5); });
+
+    const rightX = pageW - mx - 85;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(80, 80, 80);
+    [{ label: "Valor Água:", value: fmtMoney2(waterTotalWater) },
+     { label: "Valor Esgoto:", value: fmtMoney2(waterTotalSewer) },
+     { label: "Valor Total:", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
+      doc.setFont("helvetica", "normal"); doc.text(item.label, rightX, y + 1 + i * 5);
+      doc.setFont("helvetica", "bold"); doc.text(item.value, rightX + 80, y + 1 + i * 5, { align: "right" });
+    });
+
+    y += headerH + 4;
+    const cols = [
+      { header: "Nº", width: 12, align: "left" as const },
+      { header: "MATRÍCULA", width: 30, align: "left" as const },
+      { header: "LOCAL", width: 90, align: "left" as const },
+      { header: "CONSUMO\n(m³)", width: 30, align: "right" as const },
+      { header: "Valor\nÁgua", width: 35, align: "right" as const },
+      { header: "Valor\nEsgoto", width: 35, align: "right" as const },
+      { header: "Valor\nTotal", width: 35, align: "right" as const },
+    ];
+    const usedW2 = cols.reduce((s, c) => s + c.width, 0);
+    if (usedW2 < tableW) cols[cols.length - 1].width += tableW - usedW2;
+
+    const drawWaterHeader = () => {
+      doc.setFillColor(200, 225, 245); doc.rect(mx, y, tableW, 10, "F");
+      doc.setDrawColor(160, 185, 210); doc.rect(mx, y, tableW, 10, "S");
+      let cx = mx; doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); doc.setTextColor(30, 30, 30);
+      cols.forEach((col) => {
+        const colLines = col.header.split("\n"); const textY = colLines.length > 1 ? y + 3 : y + 5;
+        colLines.forEach((line, li) => {
+          const colTx = col.align === "right" ? cx + col.width - 2 : cx + 2;
+          doc.text(line, colTx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
+        });
+        doc.setDrawColor(180, 200, 220); doc.line(cx, y, cx, y + 10); cx += col.width;
+      });
+      doc.line(mx + tableW, y, mx + tableW, y + 10); y += 12;
+    };
+
+    drawWaterHeader();
+    doc.setFont("helvetica", "normal"); doc.setFontSize(6.5); doc.setTextColor(30, 30, 30);
+    const lineH = 3.5;
+
+    data.forEach((row, rowIdx) => {
+      const values = Object.values(row);
+      const localText = String(values[2] || "");
+      const localLines = wrapText(localText, cols[2].width, 6.5);
+      const rowH = Math.max(localLines.length * lineH, 5);
+      if (y + rowH > pageH - 20) { doc.addPage(); y = 14; drawWaterHeader(); }
+      if (rowIdx % 2 === 0) { doc.setFillColor(245, 250, 255); doc.rect(mx, y - 2.5, tableW, rowH, "F"); }
+      doc.setDrawColor(220, 230, 240); doc.line(mx, y - 2.5 + rowH, mx + tableW, y - 2.5 + rowH);
+      let cx = mx;
+      values.forEach((v, i) => {
+        const col = cols[i]; if (!col) return;
+        const text = typeof v === "number" ? (i === 0 ? String(Math.round(v)) : fmtNum2(v)) : String(v);
+        if (i === 2) { localLines.forEach((line, li) => { doc.text(line, cx + 2, y + li * lineH); }); }
+        else { const colTx = col.align === "right" ? cx + col.width - 2 : cx + 2; doc.text(text.substring(0, 30), colTx, y, { align: col.align === "right" ? "right" : "left" }); }
+        doc.setDrawColor(220, 230, 240); doc.line(cx, y - 2.5, cx, y - 2.5 + rowH); cx += col.width;
+      });
+      doc.line(mx + tableW, y - 2.5, mx + tableW, y - 2.5 + rowH); y += rowH;
+    });
+
+    y += 1;
+    doc.setDrawColor(160, 185, 210); doc.setFillColor(220, 238, 255);
+    doc.rect(mx, y - 3, tableW, 7, "F"); doc.line(mx, y - 3, mx + tableW, y - 3); doc.line(mx, y + 4, mx + tableW, y + 4);
+    const totalLabelX2 = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7);
+    doc.text("TOTAL:", totalLabelX2, y + 0.5, { align: "right" });
+    const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalValue)];
+    let ttx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
+    totalVals.forEach((val, i) => { const col = cols[i + 3]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
+
+    y += 10;
+    const footerX = pageW - mx - 80;
+    [{ label: "Valor Água", value: fmtMoney2(waterTotalWater) },
+     { label: "Valor Esgoto", value: fmtMoney2(waterTotalSewer) },
+     { label: "Valor Total", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
+      doc.setDrawColor(200, 220, 240); doc.line(footerX, y + i * 6 + 2, footerX + 80, y + i * 6 + 2);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.text(item.label, footerX + 2, y + i * 6);
+      doc.setFont("helvetica", "bold"); doc.text(item.value, footerX + 78, y + i * 6, { align: "right" });
+    });
+
+    doc.save("extrato-contas-agua.pdf");
+    toast.success("PDF exportado!");
+  };
+
   const exportPDF = () => {
     const data = getBillsExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
