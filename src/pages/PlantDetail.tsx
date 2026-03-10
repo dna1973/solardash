@@ -1,15 +1,47 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { usePlantById, useDevicesByPlant, useAlertsByPlant, useEnergyData, useUpdatePlant } from "@/hooks/useSupabaseData";
+import { usePlantById, useDevicesByPlant, useAlertsByPlant, useEnergyData, useUpdatePlant, EnergyPeriod } from "@/hooks/useSupabaseData";
 import { useUserRole } from "@/hooks/useUserRole";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
 import { PlantEditDialog } from "@/components/PlantEditDialog";
 import { EnergyChart } from "@/components/EnergyChart";
-import { ArrowLeft, Sun, MapPin, Zap, Calendar, Loader2, Cpu, AlertTriangle, CheckCircle2, Pencil } from "lucide-react";
+import { ArrowLeft, Sun, MapPin, Zap, Calendar as CalendarIcon, Loader2, Cpu, AlertTriangle, CheckCircle2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, addYears, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
+const PERIOD_OPTIONS: { value: EnergyPeriod; label: string }[] = [
+  { value: "today", label: "Hoje" },
+  { value: "yesterday", label: "Ontem" },
+  { value: "week", label: "Semana" },
+  { value: "month", label: "Mês" },
+  { value: "year", label: "Ano" },
+  { value: "custom", label: "Personalizado" },
+];
+
+function getPeriodLabel(period: EnergyPeriod, date: Date): string {
+  switch (period) {
+    case "today": return format(date, "dd/MM/yyyy");
+    case "yesterday": return format(subDays(date, 0), "dd/MM/yyyy");
+    case "week": return `Semana de ${format(date, "dd/MM/yyyy")}`;
+    case "month": return format(date, "MMMM yyyy", { locale: ptBR });
+    case "year": return format(date, "yyyy");
+    case "custom": return format(date, "dd/MM/yyyy");
+    default: return "";
+  }
+}
+
+function navigateDate(period: EnergyPeriod, date: Date, direction: "prev" | "next"): Date {
+  const fn = direction === "prev"
+    ? { today: subDays, yesterday: subDays, week: subWeeks, month: subMonths, year: subYears, custom: subDays }
+    : { today: addDays, yesterday: addDays, week: addWeeks, month: addMonths, year: addYears, custom: addDays };
+  return fn[period](date, 1);
+}
 
 export default function PlantDetail() {
   const { id } = useParams<{ id: string }>();
@@ -17,15 +49,22 @@ export default function PlantDetail() {
   const { data: plant, isLoading: loadingPlant } = usePlantById(id!);
   const { data: devices, isLoading: loadingDevices } = useDevicesByPlant(id!);
   const { data: alerts } = useAlertsByPlant(id!);
-  const { data: energyData } = useEnergyData(id);
   const { isGestor } = useUserRole();
   const updatePlant = useUpdatePlant();
   const [editOpen, setEditOpen] = useState(false);
+  const [period, setPeriod] = useState<EnergyPeriod>("today");
+  const [customDate, setCustomDate] = useState(new Date());
+
+  const { data: energyData } = useEnergyData(id, period, customDate);
 
   const activeAlerts = (alerts || []).filter((a) => !a.resolved);
 
   const chartData = (energyData || []).map((d) => ({
-    time: format(new Date(d.timestamp), "dd/MM HH:mm"),
+    time: period === "year"
+      ? format(new Date(d.timestamp), "MMM", { locale: ptBR })
+      : period === "month"
+        ? format(new Date(d.timestamp), "dd/MM")
+        : format(new Date(d.timestamp), "HH:mm"),
     generation: d.energy_generated_kwh || 0,
     consumption: d.energy_consumed_kwh || 0,
   }));
@@ -123,8 +162,48 @@ export default function PlantDetail() {
         />
       </motion.div>
 
-      {/* Chart */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      {/* Period filter + Chart */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {PERIOD_OPTIONS.map((opt) => (
+            <Button
+              key={opt.value}
+              size="sm"
+              variant={period === opt.value ? "default" : "outline"}
+              onClick={() => { setPeriod(opt.value); setCustomDate(new Date()); }}
+              className="text-xs h-8"
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setCustomDate(navigateDate(period, customDate, "prev"))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium capitalize">{getPeriodLabel(period, customDate)}</span>
+          {period === "custom" ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="icon" variant="outline" className="h-8 w-8">
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={customDate}
+                  onSelect={(d) => d && setCustomDate(d)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          ) : null}
+          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => setCustomDate(navigateDate(period, customDate, "next"))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
         <EnergyChart data={chartData} title="Geração e Consumo" height={320} />
       </motion.div>
 

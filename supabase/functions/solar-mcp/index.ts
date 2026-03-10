@@ -16,8 +16,7 @@ const mcpServer = new McpServer({
 });
 
 // ── Tool: list_plants ─────────────────────────────────────────────────────────
-mcpServer.tool({
-  name: "list_plants",
+mcpServer.tool("list_plants", {
   description:
     "Lista todas as usinas solares cadastradas com status, capacidade instalada e localização",
   inputSchema: {
@@ -49,8 +48,7 @@ mcpServer.tool({
 });
 
 // ── Tool: get_energy_data ─────────────────────────────────────────────────────
-mcpServer.tool({
-  name: "get_energy_data",
+mcpServer.tool("get_energy_data", {
   description:
     "Consulta dados de geração e consumo de energia por usina e período. Retorna registros de potência (kW) e energia (kWh) com timestamps.",
   inputSchema: {
@@ -111,8 +109,7 @@ mcpServer.tool({
 });
 
 // ── Tool: get_plant_summary ───────────────────────────────────────────────────
-mcpServer.tool({
-  name: "get_plant_summary",
+mcpServer.tool("get_plant_summary", {
   description:
     "Retorna um resumo estatístico agregado de geração e consumo por usina: total kWh gerado/consumido, pico de potência e contagem de registros",
   inputSchema: {
@@ -211,8 +208,7 @@ mcpServer.tool({
 });
 
 // ── Tool: get_alerts ──────────────────────────────────────────────────────────
-mcpServer.tool({
-  name: "get_alerts",
+mcpServer.tool("get_alerts", {
   description:
     "Busca alertas do sistema de monitoramento solar (geração baixa, offline, anomalias)",
   inputSchema: {
@@ -279,7 +275,7 @@ app.all("/*", async (c) => {
     }
   }
 
-  return await transport.handleRequest(c.req.raw, mcpServer);
+  return await (transport as any).handleRequest(c.req.raw, mcpServer);
 });
 
 Deno.serve(app.fetch);
