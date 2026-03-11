@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Sun, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Gauge, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
