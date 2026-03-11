@@ -237,6 +237,16 @@ export default function NomenclaturesPage() {
     return plants.filter((p) => plantIds.includes(p.id));
   };
 
+  // All plant IDs already used across all locations
+  const allUsedPlantIds = nomenclatures.flatMap((n) => n.plant_ids);
+
+  // For editing: exclude plant IDs used by OTHER rows (not the one being edited)
+  const getUsedPlantIdsExcluding = (excludeId?: string) => {
+    return nomenclatures
+      .filter((n) => n.id !== excludeId)
+      .flatMap((n) => n.plant_ids);
+  };
+
   return (
     <Card>
       <CardHeader>
