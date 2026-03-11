@@ -312,6 +312,64 @@ export default function Dashboard() {
     return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.m3, totalValue: d.value }));
   }, [filteredWaterBills]);
 
+  // Energy bill computations
+  const getEnergyDisplayName = (bill: EnergyBillDashboard) => {
+    return (bill.client_code && energyLocationMap[bill.client_code]) || bill.property_name || "Sem imóvel";
+  };
+
+  const energyBillYears = useMemo(() => {
+    const years = new Set<string>();
+    energyBills.forEach((b) => {
+      if (b.reference_month) {
+        const match = b.reference_month.match(/(\d{4})/);
+        if (match) years.add(match[1]);
+      }
+    });
+    return Array.from(years).sort().reverse();
+  }, [energyBills]);
+
+  const energyBillProperties = useMemo(() => {
+    const props = new Set<string>();
+    energyBills.forEach((b) => {
+      props.add(getEnergyDisplayName(b));
+    });
+    return Array.from(props).sort();
+  }, [energyBills, energyLocationMap]);
+
+  const filteredEnergyBills = useMemo(() => {
+    return energyBills.filter((b) => {
+      if (energyBillYear !== "all" && b.reference_month && !b.reference_month.includes(energyBillYear)) return false;
+      if (energyBillMonth !== "all" && b.reference_month) {
+        const monthMatch = b.reference_month.match(/(\d{2})\/\d{4}/);
+        if (monthMatch && monthMatch[1] !== energyBillMonth) return false;
+      }
+      if (energyBillProperty !== "all" && getEnergyDisplayName(b) !== energyBillProperty) return false;
+      return true;
+    });
+  }, [energyBills, energyBillYear, energyBillMonth, energyBillProperty, energyLocationMap]);
+
+  const energyBillStats = useMemo(() => {
+    const totalKwh = filteredEnergyBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
+    const totalGenKwh = filteredEnergyBills.reduce((s, b) => s + (b.generation_kwh || 0), 0);
+    const totalGross = filteredEnergyBills.reduce((s, b) => s + (b.gross_value || 0), 0);
+    const totalNet = filteredEnergyBills.reduce((s, b) => s + (b.net_value || 0), 0);
+    const totalDeductions = filteredEnergyBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
+    const totalLighting = filteredEnergyBills.reduce((s, b) => s + (b.lighting_cost || 0), 0);
+    const avgKwh = filteredEnergyBills.length > 0 ? totalKwh / filteredEnergyBills.length : 0;
+    return { totalKwh, totalGenKwh, totalGross, totalNet, totalDeductions, totalLighting, avgKwh, count: filteredEnergyBills.length };
+  }, [filteredEnergyBills]);
+
+  const energyBillByLocation = useMemo(() => {
+    const byLoc: Record<string, { kwh: number; value: number }> = {};
+    filteredEnergyBills.forEach((b) => {
+      const loc = getEnergyDisplayName(b);
+      if (!byLoc[loc]) byLoc[loc] = { kwh: 0, value: 0 };
+      byLoc[loc].kwh += b.consumption_kwh || 0;
+      byLoc[loc].value += b.gross_value || 0;
+    });
+    return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.kwh, totalValue: d.value }));
+  }, [filteredEnergyBills]);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   const handlePeriodChange = (newPeriod: EnergyPeriod) => {
