@@ -87,11 +87,20 @@ const exampleConfig = `{
   }
 }`;
 
-const exampleCall = `curl -X POST ${MCP_URL} \\
-  -H "Content-Type: application/json" \\
-  -H "Accept: application/json, text/event-stream" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -d '{
+const exampleCall = `curl -X POST "${MCP_URL}" ^
+  -H "Content-Type: application/json" ^
+  -H "Accept: application/json, text/event-stream" ^
+  -H "Authorization: Bearer YOUR_API_KEY" ^
+  -d "{\\"jsonrpc\\": \\"2.0\\", \\"method\\": \\"tools/call\\", \\"params\\": {\\"name\\": \\"list_plants\\", \\"arguments\\": {}}, \\"id\\": 1}"`;
+
+const exampleCallPowerShell = `Invoke-RestMethod -Uri "${MCP_URL}" \`
+  -Method POST \`
+  -Headers @{
+    "Content-Type" = "application/json"
+    "Accept" = "application/json, text/event-stream"
+    "Authorization" = "Bearer YOUR_API_KEY"
+  } \`
+  -Body '{
     "jsonrpc": "2.0",
     "method": "tools/call",
     "params": {
