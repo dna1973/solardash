@@ -476,6 +476,9 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="consumption" className="gap-1.5 text-xs md:text-sm">
               <Plug className="h-4 w-4" /> Energia
+              {energyBillStats.count > 0 && (
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{energyBillStats.count}</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="water" className="gap-1.5 text-xs md:text-sm">
               <Droplets className="h-4 w-4" /> Água
