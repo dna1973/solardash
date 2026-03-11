@@ -133,14 +133,144 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
   );
 }
 
+function exportApiPdf() {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginL = 14;
+  const marginR = 14;
+  const maxW = pageW - marginL - marginR;
+  let y = 18;
+
+  const checkPage = (need: number) => {
+    if (y + need > doc.internal.pageSize.getHeight() - 14) {
+      doc.addPage();
+      y = 18;
+    }
+  };
+
+  // Title
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("Servidor MCP — Documentação da API", marginL, y);
+  y += 10;
+
+  // Endpoint
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Endpoint do Servidor", marginL, y);
+  y += 6;
+  doc.setFontSize(9);
+  doc.setFont("courier", "normal");
+  doc.text(MCP_URL, marginL, y);
+  y += 4;
+  doc.setFont("helvetica", "normal");
+  doc.text("Transporte: HTTP Streamable | JSON-RPC 2.0", marginL, y);
+  y += 10;
+
+  // Auth
+  checkPage(20);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Autenticação", marginL, y);
+  y += 6;
+  doc.setFontSize(9);
+  doc.setFont("courier", "normal");
+  doc.text("Authorization: Bearer YOUR_API_KEY", marginL, y);
+  y += 10;
+
+  // Tools
+  checkPage(10);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Ferramentas Disponíveis", marginL, y);
+  y += 8;
+
+  tools.forEach((tool) => {
+    checkPage(20);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(tool.name, marginL, y);
+    y += 5;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    const descLines = doc.splitTextToSize(tool.description, maxW);
+    doc.text(descLines, marginL, y);
+    y += descLines.length * 4 + 2;
+
+    tool.params.forEach((p) => {
+      checkPage(8);
+      const line = `• ${p.name} (${p.type}${p.optional ? ", opcional" : ""}) — ${p.description}`;
+      const paramLines = doc.splitTextToSize(line, maxW - 4);
+      doc.text(paramLines, marginL + 3, y);
+      y += paramLines.length * 4;
+    });
+    y += 5;
+  });
+
+  // Config example
+  checkPage(30);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Configuração para Clientes MCP", marginL, y);
+  y += 7;
+  doc.setFontSize(7);
+  doc.setFont("courier", "normal");
+  const cfgLines = exampleConfig.split("\n");
+  cfgLines.forEach((line) => {
+    checkPage(5);
+    doc.text(line, marginL, y);
+    y += 3.5;
+  });
+  y += 5;
+
+  // CMD example
+  checkPage(20);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Exemplo — CMD (Windows)", marginL, y);
+  y += 6;
+  doc.setFontSize(7);
+  doc.setFont("courier", "normal");
+  const cmdLines = doc.splitTextToSize(exampleCall, maxW);
+  cmdLines.forEach((line: string) => {
+    checkPage(5);
+    doc.text(line, marginL, y);
+    y += 3.5;
+  });
+  y += 5;
+
+  // PowerShell example
+  checkPage(20);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Exemplo — PowerShell", marginL, y);
+  y += 6;
+  doc.setFontSize(7);
+  doc.setFont("courier", "normal");
+  const psLines = exampleCallPowerShell.split("\n");
+  psLines.forEach((line) => {
+    checkPage(5);
+    doc.text(line, marginL, y);
+    y += 3.5;
+  });
+
+  doc.save("documentacao-api-mcp.pdf");
+}
+
 export default function McpDocPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Servidor MCP</h1>
-        <p className="text-muted-foreground mt-1">
-          Documentação e configuração do servidor Model Context Protocol (MCP) para integração com clientes externos.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Servidor MCP</h1>
+          <p className="text-muted-foreground mt-1">
+            Documentação e configuração do servidor Model Context Protocol (MCP) para integração com clientes externos.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={exportApiPdf}>
+          <FileDown className="h-4 w-4" />
+          Exportar PDF
+        </Button>
       </div>
 
       {/* URL do Servidor */}
