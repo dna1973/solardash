@@ -1049,19 +1049,35 @@ export default function ConsumptionPage() {
                 <Table>
                   <TableHeader>
                      <TableRow>
-                      <TableHead>Nº da Conta</TableHead>
-                      <TableHead>Local</TableHead>
-                      <TableHead className="text-right">Consumo KW/H</TableHead>
-                      <TableHead className="text-right">Valor Bruto</TableHead>
-                      <TableHead className="text-right">Valor Ilum. Pública</TableHead>
-                      <TableHead className="text-right">Valor Deduções</TableHead>
-                       <TableHead className="text-right">Valor Líquido</TableHead>
-                       <TableHead>Importado em</TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("account_number", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Nº da Conta<SortIcon col="account_number" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_kwh", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Consumo KW/H<SortIcon col="consumption_kwh" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("gross_value", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Bruto<SortIcon col="gross_value" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("lighting_cost", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Ilum. Pública<SortIcon col="lighting_cost" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("deductions_value", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Deduções<SortIcon col="deductions_value" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("net_value", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Líquido<SortIcon col="net_value" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                       </TableHead>
+                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Importado em<SortIcon col="created_at" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                       </TableHead>
                        <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredBills.map((bill) => (
+                    {sortedEnergyBills.map((bill) => (
                       <TableRow key={bill.id}>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
