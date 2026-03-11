@@ -916,8 +916,9 @@ export default function ConsumptionPage() {
                       <TableHead className="text-right">Valor Bruto</TableHead>
                       <TableHead className="text-right">Valor Ilum. Pública</TableHead>
                       <TableHead className="text-right">Valor Deduções</TableHead>
-                      <TableHead className="text-right">Valor Líquido</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                       <TableHead className="text-right">Valor Líquido</TableHead>
+                       <TableHead>Importado em</TableHead>
+                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -944,6 +945,9 @@ export default function ConsumptionPage() {
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono font-semibold">
                           {((bill as any).net_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(bill.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -1048,8 +1052,9 @@ export default function ConsumptionPage() {
                       <TableHead className="text-right">Consumo (m³)</TableHead>
                       <TableHead className="text-right">Valor Água</TableHead>
                       <TableHead className="text-right">Valor Esgoto</TableHead>
-                      <TableHead className="text-right">Valor Total</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                       <TableHead className="text-right">Valor Total</TableHead>
+                       <TableHead>Importado em</TableHead>
+                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1074,6 +1079,9 @@ export default function ConsumptionPage() {
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono font-semibold">
                           {(bill.total_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(bill.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell>
                           <Button
