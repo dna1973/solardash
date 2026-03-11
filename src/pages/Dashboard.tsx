@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter, Droplets, DollarSign } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { WaterPieChart } from "@/components/WaterPieChart";
+import { WaterBarChart } from "@/components/WaterBarChart";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
@@ -497,7 +497,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
                     <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
                     {waterByLocation.length > 0 && (
-                      <WaterPieChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
+                      <WaterBarChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
                     )}
                   </div>
                 )}
