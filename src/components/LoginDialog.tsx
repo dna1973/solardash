@@ -74,7 +74,7 @@ const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md border-border/30 bg-background/60 backdrop-blur-xl shadow-2xl shadow-primary/10">
         <DialogHeader className="text-center items-center pb-2">
-          <DialogTitle className="text-2xl font-bold text-primary">
+          <DialogTitle className="text-2xl font-bold text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.4)]">
             {isSignUp ? 'Crie sua conta!' : 'Acesse a plataforma!'}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -137,7 +137,7 @@ const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                 <Link
                   to="/forgot-password"
                   onClick={() => onOpenChange(false)}
-                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                  className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors drop-shadow-[0_0_4px_hsl(var(--primary)/0.3)]"
                 >
                   Esqueci minha senha
                 </Link>
