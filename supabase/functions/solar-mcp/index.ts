@@ -258,6 +258,215 @@ mcpServer.tool("get_alerts", {
   },
 });
 
+// ── Helper: OCR via Lovable AI ────────────────────────────────────────────────
+async function ocrExtract(base64: string, fileType: string, systemPrompt: string): Promise<any> {
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+  const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: `data:${fileType};base64,${base64}` } },
+            { type: "text", text: "Extraia todos os dados deste documento." },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errText = await aiResponse.text();
+    throw new Error(`AI error ${aiResponse.status}: ${errText}`);
+  }
+
+  const aiData = await aiResponse.json();
+  const content = aiData.choices?.[0]?.message?.content || "";
+  const jsonStr = content.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+  return JSON.parse(jsonStr);
+}
+
+const ENERGY_PROMPT = `Você é um especialista em extração de dados de contas de energia elétrica brasileiras (Neoenergia, CEMIG, CPFL, Enel, etc).
+Analise a imagem da conta de energia e extraia os seguintes dados em formato JSON.
+Retorne APENAS o JSON, sem markdown ou texto adicional.
+
+Campos: utility_company, account_number, client_code, invoice_number, property_name, address, reference_month (MM/YYYY), consumption_kwh, generation_kwh, gross_value, lighting_cost, deductions_value, net_value, invoice_value, amount_brl, tariff_type, due_date (YYYY-MM-DD), peak_demand_kw, off_peak_demand_kw, qd.
+
+IMPORTANTE sobre lighting_cost: O valor correto da iluminação pública é o PRIMEIRO valor numérico que aparece LOGO APÓS o texto "Ilum. Púb. Municipal" — não confunda com ICMS ou outros tributos.
+IMPORTANTE sobre consumption_kwh: Em faturas horossazonais, some kWh Ponta + kWh Fora Ponta (não duplique TUSD+TE do mesmo posto).
+Se algum campo não for encontrado, use null. Para valores numéricos não encontrados, use 0.`;
+
+const WATER_PROMPT = `Você é um especialista em extração de dados de contas de água brasileiras (COMPESA, Sabesp, etc).
+Analise a imagem da conta de água e extraia os seguintes dados em formato JSON.
+Retorne APENAS o JSON, sem markdown ou texto adicional.
+
+Campos: utility_company, account_number, client_code, invoice_number, property_name, address, reference_month (MM/YYYY), consumption_m3, water_value, sewer_value, total_value, tariff_type, due_date (YYYY-MM-DD), consumption_history (array de {month: "MM/YYYY", consumption_m3: number}).
+Se algum campo não for encontrado, use null. Para valores numéricos não encontrados, use 0.`;
+
+// ── Tool: import_energy_bill ──────────────────────────────────────────────────
+mcpServer.tool("import_energy_bill", {
+  description:
+    "Importa uma conta de energia elétrica via arquivo em base64. Processa OCR, extrai dados e salva no banco de dados.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      file_base64: { type: "string", description: "Conteúdo do arquivo codificado em base64" },
+      file_name: { type: "string", description: "Nome do arquivo (ex: conta_energia.pdf)" },
+      file_type: { type: "string", description: "MIME type (ex: application/pdf, image/jpeg)" },
+      tenant_id: { type: "string", description: "UUID do tenant (opcional — usa default se omitido)" },
+    },
+    required: ["file_base64", "file_name", "file_type"],
+  },
+  handler: async ({ file_base64, file_name, file_type, tenant_id }: {
+    file_base64: string; file_name: string; file_type: string; tenant_id?: string;
+  }) => {
+    try {
+      // Resolve tenant
+      const tid = tenant_id || (await supabase.from("tenants").select("id").eq("slug", "default").single()).data?.id;
+      if (!tid) return { content: [{ type: "text", text: "Erro: tenant não encontrado" }] };
+
+      // Upload to storage
+      const safeName = file_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `${tid}/${Date.now()}_${safeName}`;
+      const fileBuffer = Uint8Array.from(atob(file_base64), c => c.charCodeAt(0));
+
+      const { error: uploadErr } = await supabase.storage
+        .from("energy-bills")
+        .upload(filePath, fileBuffer, { contentType: file_type });
+      if (uploadErr) return { content: [{ type: "text", text: `Erro upload: ${uploadErr.message}` }] };
+
+      // OCR
+      const extracted = await ocrExtract(file_base64, file_type, ENERGY_PROMPT);
+
+      // Check duplicate
+      if (extracted.account_number && extracted.reference_month) {
+        const { data: existing } = await supabase.from("energy_bills")
+          .select("id")
+          .eq("tenant_id", tid)
+          .eq("account_number", extracted.account_number)
+          .eq("reference_month", extracted.reference_month)
+          .maybeSingle();
+        if (existing) {
+          return { content: [{ type: "text", text: JSON.stringify({ warning: "Conta duplicada", existing_id: existing.id, extracted }, null, 2) }] };
+        }
+      }
+
+      // Insert
+      const { data: inserted, error: insertErr } = await supabase.from("energy_bills").insert({
+        tenant_id: tid,
+        pdf_path: filePath,
+        utility_company: extracted.utility_company,
+        account_number: extracted.account_number,
+        client_code: extracted.client_code,
+        invoice_number: extracted.invoice_number,
+        property_name: extracted.property_name,
+        address: extracted.address,
+        reference_month: extracted.reference_month,
+        consumption_kwh: extracted.consumption_kwh ?? 0,
+        generation_kwh: extracted.generation_kwh ?? 0,
+        gross_value: extracted.gross_value ?? 0,
+        lighting_cost: extracted.lighting_cost ?? 0,
+        deductions_value: extracted.deductions_value ?? 0,
+        net_value: extracted.net_value ?? 0,
+        invoice_value: extracted.invoice_value ?? 0,
+        amount_brl: extracted.amount_brl ?? 0,
+        tariff_type: extracted.tariff_type,
+        due_date: extracted.due_date,
+        peak_demand_kw: extracted.peak_demand_kw,
+        off_peak_demand_kw: extracted.off_peak_demand_kw,
+        qd: extracted.qd,
+        raw_ocr_data: extracted,
+      }).select().single();
+
+      if (insertErr) return { content: [{ type: "text", text: `Erro ao salvar: ${insertErr.message}` }] };
+      return { content: [{ type: "text", text: JSON.stringify({ success: true, bill: inserted }, null, 2) }] };
+    } catch (e: any) {
+      return { content: [{ type: "text", text: `Erro: ${e.message}` }] };
+    }
+  },
+});
+
+// ── Tool: import_water_bill ───────────────────────────────────────────────────
+mcpServer.tool("import_water_bill", {
+  description:
+    "Importa uma conta de água via arquivo em base64. Processa OCR, extrai dados e salva no banco de dados.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      file_base64: { type: "string", description: "Conteúdo do arquivo codificado em base64" },
+      file_name: { type: "string", description: "Nome do arquivo (ex: conta_agua.pdf)" },
+      file_type: { type: "string", description: "MIME type (ex: application/pdf, image/jpeg)" },
+      tenant_id: { type: "string", description: "UUID do tenant (opcional — usa default se omitido)" },
+    },
+    required: ["file_base64", "file_name", "file_type"],
+  },
+  handler: async ({ file_base64, file_name, file_type, tenant_id }: {
+    file_base64: string; file_name: string; file_type: string; tenant_id?: string;
+  }) => {
+    try {
+      const tid = tenant_id || (await supabase.from("tenants").select("id").eq("slug", "default").single()).data?.id;
+      if (!tid) return { content: [{ type: "text", text: "Erro: tenant não encontrado" }] };
+
+      const safeName = file_name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `${tid}/${Date.now()}_${safeName}`;
+      const fileBuffer = Uint8Array.from(atob(file_base64), c => c.charCodeAt(0));
+
+      const { error: uploadErr } = await supabase.storage
+        .from("water-bills")
+        .upload(filePath, fileBuffer, { contentType: file_type });
+      if (uploadErr) return { content: [{ type: "text", text: `Erro upload: ${uploadErr.message}` }] };
+
+      const extracted = await ocrExtract(file_base64, file_type, WATER_PROMPT);
+
+      // Check duplicate
+      if (extracted.account_number && extracted.reference_month) {
+        const { data: existing } = await supabase.from("water_bills")
+          .select("id")
+          .eq("tenant_id", tid)
+          .eq("account_number", extracted.account_number)
+          .eq("reference_month", extracted.reference_month)
+          .maybeSingle();
+        if (existing) {
+          return { content: [{ type: "text", text: JSON.stringify({ warning: "Conta duplicada", existing_id: existing.id, extracted }, null, 2) }] };
+        }
+      }
+
+      const { data: inserted, error: insertErr } = await supabase.from("water_bills").insert({
+        tenant_id: tid,
+        pdf_path: filePath,
+        utility_company: extracted.utility_company,
+        account_number: extracted.account_number,
+        client_code: extracted.client_code,
+        invoice_number: extracted.invoice_number,
+        property_name: extracted.property_name,
+        address: extracted.address,
+        reference_month: extracted.reference_month,
+        consumption_m3: extracted.consumption_m3 ?? 0,
+        water_value: extracted.water_value ?? 0,
+        sewer_value: extracted.sewer_value ?? 0,
+        total_value: extracted.total_value ?? 0,
+        tariff_type: extracted.tariff_type,
+        due_date: extracted.due_date,
+        consumption_history: extracted.consumption_history ?? [],
+        raw_ocr_data: extracted,
+      }).select().single();
+
+      if (insertErr) return { content: [{ type: "text", text: `Erro ao salvar: ${insertErr.message}` }] };
+      return { content: [{ type: "text", text: JSON.stringify({ success: true, bill: inserted }, null, 2) }] };
+    } catch (e: any) {
+      return { content: [{ type: "text", text: `Erro: ${e.message}` }] };
+    }
+  },
+});
+
 // ── HTTP Transport ────────────────────────────────────────────────────────────
 const app = new Hono();
 const transport = new StreamableHttpTransport();

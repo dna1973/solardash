@@ -207,9 +207,9 @@ export default function McpDocPage() {
               <Wrench className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Ferramentas Disponíveis</CardTitle>
             </div>
-            <CardDescription>
-              Endpoints MCP para consulta de dados do sistema solar
-            </CardDescription>
+             <CardDescription>
+               Endpoints MCP para consulta de dados e importação de contas
+             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
