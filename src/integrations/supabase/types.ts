@@ -417,6 +417,42 @@ export type Database = {
           },
         ]
       }
+      property_location_plants: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          plant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          plant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          plant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_location_plants_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "property_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_location_plants_plant_id_fkey"
+            columns: ["plant_id"]
+            isOneToOne: false
+            referencedRelation: "plants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_locations: {
         Row: {
           account_number: string
