@@ -78,6 +78,13 @@ export default function Dashboard() {
   const [customDate, setCustomDate] = useState<Date>(new Date());
   const [selectedPlantId, setSelectedPlantId] = useState<string>("all");
 
+  // Water tab state
+  const [waterBills, setWaterBills] = useState<WaterBillDashboard[]>([]);
+  const [waterLoading, setWaterLoading] = useState(false);
+  const [waterYear, setWaterYear] = useState<string>(String(new Date().getFullYear()));
+  const [waterMonth, setWaterMonth] = useState<string>("all");
+  const [waterProperty, setWaterProperty] = useState<string>("all");
+
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
@@ -86,7 +93,22 @@ export default function Dashboard() {
     customDate
   );
 
+  // Fetch water bills
+  useEffect(() => {
+    const fetchWaterBills = async () => {
+      setWaterLoading(true);
+      const { data, error } = await supabase
+        .from("water_bills")
+        .select("id, property_name, account_number, reference_month, consumption_m3, water_value, sewer_value, total_value")
+        .order("reference_month", { ascending: false });
+      if (!error && data) setWaterBills(data as WaterBillDashboard[]);
+      setWaterLoading(false);
+    };
+    fetchWaterBills();
+  }, []);
+
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
+
 
   const plants = (dbPlants || []).map((p) => ({
     id: p.id,
