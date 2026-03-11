@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter, Droplets, DollarSign } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { WaterPieChart } from "@/components/WaterPieChart";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
@@ -223,6 +224,15 @@ export default function Dashboard() {
       .reverse();
   }, [filteredWaterBills]);
 
+  const waterByLocation = useMemo(() => {
+    const byLoc: Record<string, number> = {};
+    filteredWaterBills.forEach((b) => {
+      const loc = b.property_name || "Sem imóvel";
+      byLoc[loc] = (byLoc[loc] || 0) + (b.consumption_m3 || 0);
+    });
+    return Object.entries(byLoc).map(([name, value]) => ({ name, value }));
+  }, [filteredWaterBills]);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   const handlePeriodChange = (newPeriod: EnergyPeriod) => {
@@ -315,7 +325,7 @@ export default function Dashboard() {
               <Sun className="h-4 w-4" /> Geração
             </TabsTrigger>
             <TabsTrigger value="consumption" className="gap-1.5 text-xs md:text-sm">
-              <Plug className="h-4 w-4" /> Consumo
+              <Plug className="h-4 w-4" /> Energia
             </TabsTrigger>
             <TabsTrigger value="water" className="gap-1.5 text-xs md:text-sm">
               <Droplets className="h-4 w-4" /> Água
@@ -486,7 +496,9 @@ export default function Dashboard() {
                 {waterChartData.length > 0 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
                     <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
-                    <EnergyChart data={waterChartData} title="Valor Total por Mês (R$)" dataKeys={["consumption"]} />
+                    {waterByLocation.length > 0 && (
+                      <WaterPieChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
+                    )}
                   </div>
                 )}
 
