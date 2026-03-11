@@ -160,6 +160,7 @@ export default function AuditLogsPanel() {
                 <SelectItem value="create">Criação</SelectItem>
                 <SelectItem value="update">Edição</SelectItem>
                 <SelectItem value="delete">Exclusão</SelectItem>
+                <SelectItem value="import">Importação</SelectItem>
               </SelectContent>
             </Select>
           </div>
