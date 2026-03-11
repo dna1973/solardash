@@ -250,7 +250,7 @@ export default function Dashboard() {
   const waterByLocation = useMemo(() => {
     const byLoc: Record<string, number> = {};
     filteredWaterBills.forEach((b) => {
-      const loc = b.property_name || "Sem imóvel";
+      const loc = getWaterDisplayName(b);
       byLoc[loc] = (byLoc[loc] || 0) + (b.consumption_m3 || 0);
     });
     return Object.entries(byLoc).map(([name, value]) => ({ name, value }));
