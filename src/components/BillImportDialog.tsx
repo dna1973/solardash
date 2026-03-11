@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 import { FileUp, Upload, Check, Loader2, AlertCircle, X, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
