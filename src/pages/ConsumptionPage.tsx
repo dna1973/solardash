@@ -1052,8 +1052,9 @@ export default function ConsumptionPage() {
                       <TableHead className="text-right">Consumo (m³)</TableHead>
                       <TableHead className="text-right">Valor Água</TableHead>
                       <TableHead className="text-right">Valor Esgoto</TableHead>
-                      <TableHead className="text-right">Valor Total</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                       <TableHead className="text-right">Valor Total</TableHead>
+                       <TableHead>Importado em</TableHead>
+                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
