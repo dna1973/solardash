@@ -946,6 +946,9 @@ export default function ConsumptionPage() {
                         <TableCell className="text-right text-sm font-mono font-semibold">
                           {((bill as any).net_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(bill.created_at).toLocaleDateString("pt-BR")}
+                        </TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
