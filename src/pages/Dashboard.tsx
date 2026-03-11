@@ -86,6 +86,9 @@ export default function Dashboard() {
   const [waterMonth, setWaterMonth] = useState<string>("all");
   const [waterProperty, setWaterProperty] = useState<string>("all");
 
+  // Water location name mapping (account_number → location_name)
+  const [waterLocationMap, setWaterLocationMap] = useState<Record<string, string>>({});
+
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
@@ -94,10 +97,26 @@ export default function Dashboard() {
     customDate
   );
 
-  // Fetch water bills
+  // Fetch water bills + location mapping
   useEffect(() => {
-    const fetchWaterBills = async () => {
+    const fetchWaterData = async () => {
       setWaterLoading(true);
+
+      // Fetch water location mapping
+      const { data: locData } = await supabase
+        .from("property_locations")
+        .select("id, water_account_number, location_name")
+        .not("water_account_number", "is", null)
+        .order("location_name");
+      if (locData) {
+        const map: Record<string, string> = {};
+        (locData as any[]).forEach((r: any) => {
+          if (r.water_account_number) map[r.water_account_number] = r.location_name;
+        });
+        setWaterLocationMap(map);
+      }
+
+      // Fetch water bills
       const { data, error } = await supabase
         .from("water_bills")
         .select("id, property_name, account_number, reference_month, consumption_m3, water_value, sewer_value, total_value")
@@ -105,7 +124,7 @@ export default function Dashboard() {
       if (!error && data) setWaterBills(data as WaterBillDashboard[]);
       setWaterLoading(false);
     };
-    fetchWaterBills();
+    fetchWaterData();
   }, []);
 
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
@@ -176,13 +195,17 @@ export default function Dashboard() {
     return Array.from(years).sort().reverse();
   }, [waterBills]);
 
+  const getWaterDisplayName = (bill: WaterBillDashboard) => {
+    return (bill.account_number && waterLocationMap[bill.account_number]) || bill.property_name || "Sem imóvel";
+  };
+
   const waterProperties = useMemo(() => {
     const props = new Set<string>();
     waterBills.forEach((b) => {
-      if (b.property_name) props.add(b.property_name);
+      props.add(getWaterDisplayName(b));
     });
     return Array.from(props).sort();
-  }, [waterBills]);
+  }, [waterBills, waterLocationMap]);
 
   const MONTHS_MAP: Record<string, string> = {
     "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
@@ -197,10 +220,10 @@ export default function Dashboard() {
         const monthMatch = b.reference_month.match(/(\d{2})\/\d{4}/);
         if (monthMatch && monthMatch[1] !== waterMonth) return false;
       }
-      if (waterProperty !== "all" && b.property_name !== waterProperty) return false;
+      if (waterProperty !== "all" && getWaterDisplayName(b) !== waterProperty) return false;
       return true;
     });
-  }, [waterBills, waterYear, waterMonth, waterProperty]);
+  }, [waterBills, waterYear, waterMonth, waterProperty, waterLocationMap]);
 
   const waterStats = useMemo(() => {
     const totalM3 = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
@@ -227,7 +250,7 @@ export default function Dashboard() {
   const waterByLocation = useMemo(() => {
     const byLoc: Record<string, number> = {};
     filteredWaterBills.forEach((b) => {
-      const loc = b.property_name || "Sem imóvel";
+      const loc = getWaterDisplayName(b);
       byLoc[loc] = (byLoc[loc] || 0) + (b.consumption_m3 || 0);
     });
     return Object.entries(byLoc).map(([name, value]) => ({ name, value }));
@@ -522,7 +545,7 @@ export default function Dashboard() {
                         <tbody>
                           {filteredWaterBills.slice(0, 10).map((bill) => (
                             <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                              <td className="py-3 font-medium">{bill.property_name || "—"}</td>
+                              <td className="py-3 font-medium">{getWaterDisplayName(bill)}</td>
                               <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
                               <td className="py-3 text-right font-mono text-xs">{bill.consumption_m3?.toFixed(0) || "—"}</td>
                               <td className="py-3 text-right font-mono text-xs">R$ {bill.water_value?.toFixed(2) || "—"}</td>
