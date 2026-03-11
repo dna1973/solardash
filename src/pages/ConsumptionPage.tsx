@@ -67,6 +67,11 @@ export default function ConsumptionPage() {
   const [mainTab, setMainTab] = useState("properties");
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
+  // Edit state
+  const [editingBill, setEditingBill] = useState<EnergyBill | null>(null);
+  const [editingWaterBill, setEditingWaterBill] = useState<WaterBill | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+
   // Property locations lookup (client_code → location_name)
   const [locationMap, setLocationMap] = useState<Record<string, string>>({});
   const [waterLocationMap, setWaterLocationMap] = useState<Record<string, string>>({});
