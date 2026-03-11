@@ -122,8 +122,8 @@ const Index = () => {
               transition={{ duration: 0.5 }}
               className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary"
             >
-              <Zap className="w-3.5 h-3.5" />
-              Plataforma de gestão solar e utilidades
+              <Gauge className="w-3.5 h-3.5" />
+              Gestão inteligente de utilidades
             </motion.div>
 
             <motion.h1
