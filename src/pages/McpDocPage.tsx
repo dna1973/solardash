@@ -87,11 +87,20 @@ const exampleConfig = `{
   }
 }`;
 
-const exampleCall = `curl -X POST ${MCP_URL} \\
-  -H "Content-Type: application/json" \\
-  -H "Accept: application/json, text/event-stream" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -d '{
+const exampleCall = `curl -X POST "${MCP_URL}" ^
+  -H "Content-Type: application/json" ^
+  -H "Accept: application/json, text/event-stream" ^
+  -H "Authorization: Bearer YOUR_API_KEY" ^
+  -d "{\\"jsonrpc\\": \\"2.0\\", \\"method\\": \\"tools/call\\", \\"params\\": {\\"name\\": \\"list_plants\\", \\"arguments\\": {}}, \\"id\\": 1}"`;
+
+const exampleCallPowerShell = `Invoke-RestMethod -Uri "${MCP_URL}" \`
+  -Method POST \`
+  -Headers @{
+    "Content-Type" = "application/json"
+    "Accept" = "application/json, text/event-stream"
+    "Authorization" = "Bearer YOUR_API_KEY"
+  } \`
+  -Body '{
     "jsonrpc": "2.0",
     "method": "tools/call",
     "params": {
@@ -273,11 +282,21 @@ export default function McpDocPage() {
 
             <div className="border-t border-border pt-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-foreground">Exemplo de chamada (cURL)</p>
-                <CopyButton text={exampleCall} label="Copiar cURL" />
+                <p className="text-sm font-medium text-foreground">Exemplo de chamada — CMD (Windows)</p>
+                <CopyButton text={exampleCall} label="Copiar CMD" />
               </div>
               <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono text-foreground whitespace-pre-wrap">
                 {exampleCall}
+              </pre>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-foreground">Exemplo de chamada — PowerShell</p>
+                <CopyButton text={exampleCallPowerShell} label="Copiar PowerShell" />
+              </div>
+              <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono text-foreground whitespace-pre-wrap">
+                {exampleCallPowerShell}
               </pre>
             </div>
           </CardContent>
