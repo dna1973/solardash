@@ -425,6 +425,108 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* ÁGUA */}
+          <TabsContent value="water" className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={waterYear} onValueChange={setWaterYear}>
+                <SelectTrigger className="w-[130px] h-9 text-xs">
+                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os anos</SelectItem>
+                  {waterYears.map((y) => (
+                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={waterMonth} onValueChange={setWaterMonth}>
+                <SelectTrigger className="w-[150px] h-9 text-xs">
+                  <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {Object.entries(MONTHS_MAP).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={waterProperty} onValueChange={setWaterProperty}>
+                <SelectTrigger className="w-[200px] h-9 text-xs">
+                  <Droplets className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Imóvel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os imóveis</SelectItem>
+                  {waterProperties.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {waterLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
+                  <StatCard title="Faturas" value={String(waterStats.count)} icon={Droplets} variant="default" />
+                  <StatCard title="Consumo Total" value={`${waterStats.totalM3.toFixed(0)} m³`} icon={Droplets} variant="primary" />
+                  <StatCard title="Média/Fatura" value={`${waterStats.avgM3.toFixed(1)} m³`} icon={TrendingUp} variant="default" />
+                  <StatCard title="Valor Água" value={`R$ ${waterStats.totalWater.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Esgoto" value={`R$ ${waterStats.totalSewer.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toFixed(0)}`} icon={DollarSign} variant="warning" />
+                </div>
+
+                {waterChartData.length > 0 && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+                    <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
+                    <EnergyChart data={waterChartData} title="Valor Total por Mês (R$)" dataKeys={["consumption"]} />
+                  </div>
+                )}
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
+                  <h3 className="text-sm font-semibold mb-4">Faturas de Água</h3>
+                  {filteredWaterBills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">Nenhuma fatura de água encontrada para os filtros selecionados.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs text-muted-foreground">
+                            <th className="text-left py-2 font-medium">Imóvel</th>
+                            <th className="text-left py-2 font-medium">Referência</th>
+                            <th className="text-right py-2 font-medium">Consumo (m³)</th>
+                            <th className="text-right py-2 font-medium">Água</th>
+                            <th className="text-right py-2 font-medium">Esgoto</th>
+                            <th className="text-right py-2 font-medium">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredWaterBills.slice(0, 10).map((bill) => (
+                            <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                              <td className="py-3 font-medium">{bill.property_name || "—"}</td>
+                              <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_m3?.toFixed(0) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.water_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.sewer_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.total_value?.toFixed(2) || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+              </>
+            )}
+          </TabsContent>
+
           {/* MAPA */}
           <TabsContent value="map" className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
