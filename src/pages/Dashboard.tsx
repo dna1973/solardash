@@ -384,6 +384,44 @@ export default function Dashboard() {
     return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.kwh, totalValue: d.value }));
   }, [filteredEnergyBills]);
 
+  // Energy history chart data (grouped by reference_month)
+  const energyHistoryData = useMemo(() => {
+    const byMonth: Record<string, { consumption: number; generation: number; cost: number }> = {};
+    filteredEnergyBills.forEach((b) => {
+      const key = b.reference_month || "N/A";
+      if (!byMonth[key]) byMonth[key] = { consumption: 0, generation: 0, cost: 0 };
+      byMonth[key].consumption += b.consumption_kwh || 0;
+      byMonth[key].generation += b.generation_kwh || 0;
+      byMonth[key].cost += b.gross_value || 0;
+    });
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, vals]) => ({
+        month,
+        consumption: Math.round(vals.consumption),
+        generation: Math.round(vals.generation),
+        cost: Math.round(vals.cost * 100) / 100,
+      }));
+  }, [filteredEnergyBills]);
+
+  // Water history chart data (grouped by reference_month)
+  const waterHistoryData = useMemo(() => {
+    const byMonth: Record<string, { consumption: number; cost: number }> = {};
+    filteredWaterBills.forEach((b) => {
+      const key = b.reference_month || "N/A";
+      if (!byMonth[key]) byMonth[key] = { consumption: 0, cost: 0 };
+      byMonth[key].consumption += b.consumption_m3 || 0;
+      byMonth[key].cost += b.total_value || 0;
+    });
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, vals]) => ({
+        month,
+        consumption: Math.round(vals.consumption * 10) / 10,
+        cost: Math.round(vals.cost * 100) / 100,
+      }));
+  }, [filteredWaterBills]);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   const handlePeriodChange = (newPeriod: EnergyPeriod) => {
