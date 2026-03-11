@@ -163,6 +163,66 @@ export default function Dashboard() {
     : 0;
   const gridInjected = Math.max(0, totalEnergyKwh - totalConsumption);
 
+  // Water data computations
+  const waterYears = useMemo(() => {
+    const years = new Set<string>();
+    waterBills.forEach((b) => {
+      if (b.reference_month) {
+        const match = b.reference_month.match(/(\d{4})/);
+        if (match) years.add(match[1]);
+      }
+    });
+    return Array.from(years).sort().reverse();
+  }, [waterBills]);
+
+  const waterProperties = useMemo(() => {
+    const props = new Set<string>();
+    waterBills.forEach((b) => {
+      if (b.property_name) props.add(b.property_name);
+    });
+    return Array.from(props).sort();
+  }, [waterBills]);
+
+  const MONTHS_MAP: Record<string, string> = {
+    "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+    "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+    "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro",
+  };
+
+  const filteredWaterBills = useMemo(() => {
+    return waterBills.filter((b) => {
+      if (waterYear !== "all" && b.reference_month && !b.reference_month.includes(waterYear)) return false;
+      if (waterMonth !== "all" && b.reference_month) {
+        const monthMatch = b.reference_month.match(/(\d{2})\/\d{4}/);
+        if (monthMatch && monthMatch[1] !== waterMonth) return false;
+      }
+      if (waterProperty !== "all" && b.property_name !== waterProperty) return false;
+      return true;
+    });
+  }, [waterBills, waterYear, waterMonth, waterProperty]);
+
+  const waterStats = useMemo(() => {
+    const totalM3 = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
+    const totalValue = filteredWaterBills.reduce((s, b) => s + (b.total_value || 0), 0);
+    const totalWater = filteredWaterBills.reduce((s, b) => s + (b.water_value || 0), 0);
+    const totalSewer = filteredWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0);
+    const avgM3 = filteredWaterBills.length > 0 ? totalM3 / filteredWaterBills.length : 0;
+    return { totalM3, totalValue, totalWater, totalSewer, avgM3, count: filteredWaterBills.length };
+  }, [filteredWaterBills]);
+
+  const waterChartData = useMemo(() => {
+    const byMonth: Record<string, { consumption: number; value: number }> = {};
+    filteredWaterBills.forEach((b) => {
+      const key = b.reference_month || "N/A";
+      if (!byMonth[key]) byMonth[key] = { consumption: 0, value: 0 };
+      byMonth[key].consumption += b.consumption_m3 || 0;
+      byMonth[key].value += b.total_value || 0;
+    });
+    return Object.entries(byMonth)
+      .map(([time, vals]) => ({ time, generation: Math.round(vals.consumption), consumption: Math.round(vals.value) }))
+      .reverse();
+  }, [filteredWaterBills]);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   const handlePeriodChange = (newPeriod: EnergyPeriod) => {
