@@ -54,7 +54,7 @@ function PlantMultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2 max-h-60 overflow-auto" align="start">
-        {plants.map((p) => (
+        {availablePlants.map((p) => (
           <label
             key={p.id}
             className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer text-sm"
