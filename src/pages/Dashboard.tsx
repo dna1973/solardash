@@ -553,23 +553,103 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* CONSUMO */}
+          {/* ENERGIA (Faturas) */}
           <TabsContent value="consumption" className="space-y-6">
-            <PeriodFilter />
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={energyBillYear} onValueChange={setEnergyBillYear}>
+                <SelectTrigger className="w-[130px] h-9 text-xs">
+                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os anos</SelectItem>
+                  {energyBillYears.map((y) => (
+                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
-              <StatCard title="Consumo Atual" value={`${avgConsumption} kW`} icon={Plug} variant="default" />
-              <StatCard title={`Consumo ${energyLabel}`} value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
-              <StatCard title="Consumo Total" value={`${(totalConsumption / 1000).toFixed(0)} MWh`} icon={TrendingUp} variant="default" />
-              <StatCard title="Pico de Consumo" value={`${peakConsumption} kW`} icon={AlertTriangle} variant="warning" />
-              <StatCard title="Autoconsumo" value={`${selfConsumptionRatio}%`} icon={Sun} variant="primary" />
-              <StatCard title="Injetado na Rede" value={`${(gridInjected / 1000).toFixed(1)} MWh`} icon={Leaf} variant="default" />
+              <Select value={energyBillMonth} onValueChange={setEnergyBillMonth}>
+                <SelectTrigger className="w-[150px] h-9 text-xs">
+                  <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {Object.entries(MONTHS_MAP).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={energyBillProperty} onValueChange={setEnergyBillProperty}>
+                <SelectTrigger className="w-[200px] h-9 text-xs">
+                  <Plug className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Imóvel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os imóveis</SelectItem>
+                  {energyBillProperties.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
-              <EnergyChart data={chartData} title={`Consumo por ${chartTimeLabel} (kW)`} dataKeys={["consumption"]} />
-              <EnergyChart data={chartData} title={`Geração vs Consumo — ${energyLabel} (kW)`} dataKeys={["generation", "consumption"]} />
-            </div>
+            {energyBillsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
+                  <StatCard title="Faturas" value={String(energyBillStats.count)} icon={Plug} variant="default" />
+                  <StatCard title="Consumo Total" value={`${(energyBillStats.totalKwh / 1000).toFixed(1)} MWh`} icon={Zap} variant="primary" />
+                  <StatCard title="Média/Fatura" value={`${energyBillStats.avgKwh.toFixed(0)} kWh`} icon={TrendingUp} variant="default" />
+                  <StatCard title="Valor Bruto" value={`R$ ${energyBillStats.totalGross.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Deduções" value={`R$ ${energyBillStats.totalDeductions.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toFixed(0)}`} icon={DollarSign} variant="warning" />
+                </div>
+
+                {energyBillByLocation.length > 0 && (
+                  <WaterBarChart data={energyBillByLocation} title="Consumo por Imóvel" unit="kWh" />
+                )}
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
+                  <h3 className="text-sm font-semibold mb-4">Faturas de Energia</h3>
+                  {filteredEnergyBills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">Nenhuma fatura de energia encontrada para os filtros selecionados.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs text-muted-foreground">
+                            <th className="text-left py-2 font-medium">Imóvel</th>
+                            <th className="text-left py-2 font-medium">Referência</th>
+                            <th className="text-right py-2 font-medium">Consumo (kWh)</th>
+                            <th className="text-right py-2 font-medium">Valor Bruto</th>
+                            <th className="text-right py-2 font-medium">Deduções</th>
+                            <th className="text-right py-2 font-medium">Valor Líquido</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredEnergyBills.slice(0, 10).map((bill) => (
+                            <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                              <td className="py-3 font-medium">{getEnergyDisplayName(bill)}</td>
+                              <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_kwh?.toFixed(0) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.gross_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.deductions_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.net_value?.toFixed(2) || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+              </>
+            )}
           </TabsContent>
 
           {/* ÁGUA */}
