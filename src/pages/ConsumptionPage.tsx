@@ -74,16 +74,21 @@ export default function ConsumptionPage() {
   // Bills state
   const [bills, setBills] = useState<EnergyBill[]>([]);
   const [billsLoading, setBillsLoading] = useState(false);
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const defaultYear = String(prevMonth.getFullYear());
+  const defaultMonth = String(prevMonth.getMonth() + 1).padStart(2, "0");
+
   const [billFilterProperty, setBillFilterProperty] = useState("all");
-  const [billFilterYear, setBillFilterYear] = useState("all");
-  const [billFilterMonth, setBillFilterMonth] = useState("all");
+  const [billFilterYear, setBillFilterYear] = useState(defaultYear);
+  const [billFilterMonth, setBillFilterMonth] = useState(defaultMonth);
 
   // Water bills state
   const [waterBills, setWaterBills] = useState<WaterBill[]>([]);
   const [waterBillsLoading, setWaterBillsLoading] = useState(false);
   const [waterFilterProperty, setWaterFilterProperty] = useState("all");
-  const [waterFilterYear, setWaterFilterYear] = useState("all");
-  const [waterFilterMonth, setWaterFilterMonth] = useState("all");
+  const [waterFilterYear, setWaterFilterYear] = useState(defaultYear);
+  const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
 
   const fetchLocations = async () => {
     const { data } = await supabase
