@@ -1,6 +1,6 @@
-# solardash
+# UtiliHub
 
-Um dashboard moderno e responsivo para o monitoramento de sistemas de energia solar, focado em visualização de dados em tempo real.
+Um dashboard moderno e responsivo para gestão inteligente de utilidades (energia e água), focado em visualização de dados em tempo real.
 
 ## 🚀 Demo
 
