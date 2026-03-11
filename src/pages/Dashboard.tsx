@@ -224,6 +224,15 @@ export default function Dashboard() {
       .reverse();
   }, [filteredWaterBills]);
 
+  const waterByLocation = useMemo(() => {
+    const byLoc: Record<string, number> = {};
+    filteredWaterBills.forEach((b) => {
+      const loc = b.property_name || "Sem imóvel";
+      byLoc[loc] = (byLoc[loc] || 0) + (b.consumption_m3 || 0);
+    });
+    return Object.entries(byLoc).map(([name, value]) => ({ name, value }));
+  }, [filteredWaterBills]);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   const handlePeriodChange = (newPeriod: EnergyPeriod) => {
