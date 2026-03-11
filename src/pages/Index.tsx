@@ -80,6 +80,8 @@ const fadeUp = {
 };
 
 const Index = () => {
+  const [loginOpen, setLoginOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Background effects */}
