@@ -153,11 +153,9 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-wrap gap-4 pt-2"
             >
-              <Button asChild size="lg" className="gap-2 text-base px-8">
-                <Link to="/login">
+              <Button size="lg" className="gap-2 text-base px-8" onClick={() => setLoginOpen(true)}>
                   Acessar plataforma
                   <ArrowRight className="w-4 h-4" />
-                </Link>
               </Button>
             </motion.div>
           </div>
