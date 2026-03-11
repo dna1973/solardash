@@ -27,11 +27,17 @@ function PlantMultiSelect({
   plants,
   selectedIds,
   onChange,
+  usedPlantIds = [],
 }: {
   plants: Plant[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
+  usedPlantIds?: string[];
 }) {
+  // Show plants that are either selected by this row or not used by others
+  const availablePlants = plants.filter(
+    (p) => selectedIds.includes(p.id) || !usedPlantIds.includes(p.id)
+  );
   const selectedNames = plants
     .filter((p) => selectedIds.includes(p.id))
     .map((p) => p.name);
@@ -48,7 +54,7 @@ function PlantMultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2 max-h-60 overflow-auto" align="start">
-        {plants.map((p) => (
+        {availablePlants.map((p) => (
           <label
             key={p.id}
             className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer text-sm"
@@ -231,6 +237,16 @@ export default function NomenclaturesPage() {
     return plants.filter((p) => plantIds.includes(p.id));
   };
 
+  // All plant IDs already used across all locations
+  const allUsedPlantIds = nomenclatures.flatMap((n) => n.plant_ids);
+
+  // For editing: exclude plant IDs used by OTHER rows (not the one being edited)
+  const getUsedPlantIdsExcluding = (excludeId?: string) => {
+    return nomenclatures
+      .filter((n) => n.id !== excludeId)
+      .flatMap((n) => n.plant_ids);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -286,6 +302,7 @@ export default function NomenclaturesPage() {
                         plants={plants}
                         selectedIds={editNomPlants}
                         onChange={setEditNomPlants}
+                        usedPlantIds={getUsedPlantIdsExcluding(nom.id)}
                       />
                     </TableCell>
                     <TableCell className="text-right">
@@ -404,6 +421,7 @@ export default function NomenclaturesPage() {
                   plants={plants}
                   selectedIds={newNomPlants}
                   onChange={setNewNomPlants}
+                  usedPlantIds={allUsedPlantIds}
                 />
               </TableCell>
               <TableCell className="text-right">
