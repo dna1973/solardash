@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter, Droplets, DollarSign } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WaterBarChart } from "@/components/WaterBarChart";
+import { ConsumptionHistoryChart } from "@/components/ConsumptionHistoryChart";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
@@ -383,6 +384,44 @@ export default function Dashboard() {
     return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.kwh, totalValue: d.value }));
   }, [filteredEnergyBills]);
 
+  // Energy history chart data (grouped by reference_month)
+  const energyHistoryData = useMemo(() => {
+    const byMonth: Record<string, { consumption: number; generation: number; cost: number }> = {};
+    filteredEnergyBills.forEach((b) => {
+      const key = b.reference_month || "N/A";
+      if (!byMonth[key]) byMonth[key] = { consumption: 0, generation: 0, cost: 0 };
+      byMonth[key].consumption += b.consumption_kwh || 0;
+      byMonth[key].generation += b.generation_kwh || 0;
+      byMonth[key].cost += b.gross_value || 0;
+    });
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, vals]) => ({
+        month,
+        consumption: Math.round(vals.consumption),
+        generation: Math.round(vals.generation),
+        cost: Math.round(vals.cost * 100) / 100,
+      }));
+  }, [filteredEnergyBills]);
+
+  // Water history chart data (grouped by reference_month)
+  const waterHistoryData = useMemo(() => {
+    const byMonth: Record<string, { consumption: number; cost: number }> = {};
+    filteredWaterBills.forEach((b) => {
+      const key = b.reference_month || "N/A";
+      if (!byMonth[key]) byMonth[key] = { consumption: 0, cost: 0 };
+      byMonth[key].consumption += b.consumption_m3 || 0;
+      byMonth[key].cost += b.total_value || 0;
+    });
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, vals]) => ({
+        month,
+        consumption: Math.round(vals.consumption * 10) / 10,
+        cost: Math.round(vals.cost * 100) / 100,
+      }));
+  }, [filteredWaterBills]);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
   const handlePeriodChange = (newPeriod: EnergyPeriod) => {
@@ -627,6 +666,20 @@ export default function Dashboard() {
                   <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
 
+                {energyHistoryData.length > 1 && (
+                  <ConsumptionHistoryChart
+                    data={energyHistoryData}
+                    title="Histórico Mensal — Consumo, Geração e Custo"
+                    leftUnit="kWh"
+                    rightUnit="R$"
+                    series={[
+                      { dataKey: "consumption", name: "Consumo (kWh)", color: "hsl(210, 80%, 55%)", yAxisId: "left" },
+                      { dataKey: "generation", name: "Geração (kWh)", color: "hsl(152, 60%, 42%)", yAxisId: "left" },
+                      { dataKey: "cost", name: "Custo (R$)", color: "hsl(35, 90%, 55%)", yAxisId: "right" },
+                    ]}
+                  />
+                )}
+
                 {energyBillByLocation.length > 0 && (
                   <WaterBarChart data={energyBillByLocation} title="Consumo por Imóvel" unit="kWh" />
                 )}
@@ -725,6 +778,19 @@ export default function Dashboard() {
                   <StatCard title="Valor Esgoto" value={`R$ ${waterStats.totalSewer.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
                   <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
+
+                {waterHistoryData.length > 1 && (
+                  <ConsumptionHistoryChart
+                    data={waterHistoryData}
+                    title="Histórico Mensal — Consumo e Custo"
+                    leftUnit="m³"
+                    rightUnit="R$"
+                    series={[
+                      { dataKey: "consumption", name: "Consumo (m³)", color: "hsl(200, 75%, 50%)", yAxisId: "left" },
+                      { dataKey: "cost", name: "Custo (R$)", color: "hsl(35, 90%, 55%)", yAxisId: "right" },
+                    ]}
+                  />
+                )}
 
                 {waterByLocation.length > 0 && (
                   <WaterBarChart data={waterByLocation} title="Consumo por Imóvel" unit="m³" />
