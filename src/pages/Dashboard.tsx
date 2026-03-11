@@ -589,7 +589,7 @@ export default function Dashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os meses</SelectItem>
-                  {Object.entries(MONTHS_MAP).map(([k, v]) => (
+                  {Object.entries(MONTHS_MAP).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v}</SelectItem>
                   ))}
                 </SelectContent>
