@@ -48,6 +48,11 @@ export default function SystemManagementPage() {
           <TabsTrigger value="nomenclaturas" className="gap-2">
             <MapPin className="h-4 w-4" />
             Localidades
+            {locationCount > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] px-1.5 text-[10px]">
+                {locationCount}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
             <Plug className="h-4 w-4" />
