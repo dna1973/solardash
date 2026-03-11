@@ -28,6 +28,22 @@ interface WaterBillDashboard {
   total_value: number | null;
 }
 
+interface EnergyBillDashboard {
+  id: string;
+  property_name: string | null;
+  client_code: string | null;
+  account_number: string | null;
+  reference_month: string | null;
+  consumption_kwh: number | null;
+  generation_kwh: number | null;
+  invoice_value: number | null;
+  gross_value: number | null;
+  net_value: number | null;
+  lighting_cost: number | null;
+  deductions_value: number | null;
+  tariff_type: string | null;
+}
+
 const PERIOD_OPTIONS: { value: EnergyPeriod; label: string }[] = [
   { value: "today", label: "Hoje" },
   { value: "yesterday", label: "Ontem" },
