@@ -1,0 +1,2 @@
+ALTER TABLE public.energy_bills ADD CONSTRAINT energy_bills_account_reference_unique UNIQUE (account_number, reference_month);
+ALTER TABLE public.water_bills ADD CONSTRAINT water_bills_account_reference_unique UNIQUE (account_number, reference_month);
