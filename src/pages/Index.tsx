@@ -246,11 +246,9 @@ const Index = () => {
             <p className="text-muted-foreground text-lg">
               Comece a monitorar usinas e faturas em minutos. Sem instalação complexa.
             </p>
-            <Button asChild size="lg" className="gap-2 text-base px-8">
-              <Link to="/login">
+            <Button size="lg" className="gap-2 text-base px-8" onClick={() => setLoginOpen(true)}>
                 Começar agora
                 <ArrowRight className="w-4 h-4" />
-              </Link>
             </Button>
           </motion.div>
         </div>
