@@ -1,9 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, ExternalLink, Server, Key, Wrench, Code2 } from "lucide-react";
+import { Copy, Check, ExternalLink, Server, Key, Wrench, Code2, FileDown } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import jsPDF from "jspdf";
 
 const MCP_URL = "https://oonatblrieucuchhqzgq.supabase.co/functions/v1/solar-mcp";
 
