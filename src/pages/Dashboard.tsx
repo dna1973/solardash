@@ -666,6 +666,20 @@ export default function Dashboard() {
                   <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
 
+                {energyHistoryData.length > 1 && (
+                  <ConsumptionHistoryChart
+                    data={energyHistoryData}
+                    title="Histórico Mensal — Consumo, Geração e Custo"
+                    leftUnit="kWh"
+                    rightUnit="R$"
+                    series={[
+                      { dataKey: "consumption", name: "Consumo (kWh)", color: "hsl(210, 80%, 55%)", yAxisId: "left" },
+                      { dataKey: "generation", name: "Geração (kWh)", color: "hsl(152, 60%, 42%)", yAxisId: "left" },
+                      { dataKey: "cost", name: "Custo (R$)", color: "hsl(35, 90%, 55%)", yAxisId: "right" },
+                    ]}
+                  />
+                )}
+
                 {energyBillByLocation.length > 0 && (
                   <WaterBarChart data={energyBillByLocation} title="Consumo por Imóvel" unit="kWh" />
                 )}
