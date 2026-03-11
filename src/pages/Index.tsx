@@ -264,6 +264,8 @@ const Index = () => {
           <p>© {new Date().getFullYear()} SolarHub. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
     </main>
   );
 };
