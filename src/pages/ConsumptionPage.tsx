@@ -1301,6 +1301,158 @@ export default function ConsumptionPage() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Energy Bill Dialog */}
+      <Dialog open={!!editingBill} onOpenChange={(open) => !open && setEditingBill(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4" /> Editar Conta de Energia
+            </DialogTitle>
+            <DialogDescription>Altere os campos desejados e salve.</DialogDescription>
+          </DialogHeader>
+          {editingBill && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nº da Conta</Label>
+                <Input value={editingBill.account_number || ""} onChange={(e) => setEditingBill({ ...editingBill, account_number: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Cód. Cliente</Label>
+                <Input value={editingBill.client_code || ""} onChange={(e) => setEditingBill({ ...editingBill, client_code: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome do Imóvel</Label>
+                <Input value={editingBill.property_name || ""} onChange={(e) => setEditingBill({ ...editingBill, property_name: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Endereço</Label>
+                <Input value={editingBill.address || ""} onChange={(e) => setEditingBill({ ...editingBill, address: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Concessionária</Label>
+                <Input value={editingBill.utility_company || ""} onChange={(e) => setEditingBill({ ...editingBill, utility_company: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Mês Referência</Label>
+                <Input value={editingBill.reference_month || ""} onChange={(e) => setEditingBill({ ...editingBill, reference_month: e.target.value })} placeholder="MM/YYYY" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nº Nota Fiscal</Label>
+                <Input value={editingBill.invoice_number || ""} onChange={(e) => setEditingBill({ ...editingBill, invoice_number: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Vencimento</Label>
+                <Input value={editingBill.due_date || ""} onChange={(e) => setEditingBill({ ...editingBill, due_date: e.target.value })} placeholder="YYYY-MM-DD" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Consumo (kWh)</Label>
+                <Input type="number" value={editingBill.consumption_kwh ?? ""} onChange={(e) => setEditingBill({ ...editingBill, consumption_kwh: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Geração (kWh)</Label>
+                <Input type="number" value={editingBill.generation_kwh ?? ""} onChange={(e) => setEditingBill({ ...editingBill, generation_kwh: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Iluminação Pública (R$)</Label>
+                <Input type="number" step="0.01" value={editingBill.lighting_cost ?? ""} onChange={(e) => setEditingBill({ ...editingBill, lighting_cost: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Deduções (R$)</Label>
+                <Input type="number" step="0.01" value={editingBill.deductions_value ?? ""} onChange={(e) => setEditingBill({ ...editingBill, deductions_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Líquido (R$)</Label>
+                <Input type="number" step="0.01" value={editingBill.net_value ?? ""} onChange={(e) => setEditingBill({ ...editingBill, net_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tarifa</Label>
+                <Input value={editingBill.tariff_type || ""} onChange={(e) => setEditingBill({ ...editingBill, tariff_type: e.target.value })} />
+              </div>
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingBill(null)}>Cancelar</Button>
+                <Button onClick={saveEditBill} disabled={editSaving}>
+                  {editSaving ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Water Bill Dialog */}
+      <Dialog open={!!editingWaterBill} onOpenChange={(open) => !open && setEditingWaterBill(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-4 h-4" /> Editar Conta de Água
+            </DialogTitle>
+            <DialogDescription>Altere os campos desejados e salve.</DialogDescription>
+          </DialogHeader>
+          {editingWaterBill && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Matrícula</Label>
+                <Input value={editingWaterBill.account_number || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, account_number: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Cód. Cliente</Label>
+                <Input value={editingWaterBill.client_code || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, client_code: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome do Imóvel</Label>
+                <Input value={editingWaterBill.property_name || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, property_name: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Endereço</Label>
+                <Input value={editingWaterBill.address || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, address: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Concessionária</Label>
+                <Input value={editingWaterBill.utility_company || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, utility_company: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Mês Referência</Label>
+                <Input value={editingWaterBill.reference_month || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, reference_month: e.target.value })} placeholder="MM/YYYY" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nº Fatura</Label>
+                <Input value={editingWaterBill.invoice_number || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, invoice_number: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Vencimento</Label>
+                <Input value={editingWaterBill.due_date || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, due_date: e.target.value })} placeholder="YYYY-MM-DD" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Consumo (m³)</Label>
+                <Input type="number" value={editingWaterBill.consumption_m3 ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, consumption_m3: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Água (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.water_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, water_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Esgoto (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.sewer_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, sewer_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Total (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.total_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, total_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tarifa</Label>
+                <Input value={editingWaterBill.tariff_type || ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, tariff_type: e.target.value })} />
+              </div>
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingWaterBill(null)}>Cancelar</Button>
+                <Button onClick={saveEditWaterBill} disabled={editSaving}>
+                  {editSaving ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
