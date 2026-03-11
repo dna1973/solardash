@@ -102,11 +102,11 @@ const Index = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/login">Entrar</Link>
+            <Button variant="ghost" size="sm" onClick={() => setLoginOpen(true)}>
+              Entrar
             </Button>
-            <Button asChild size="sm">
-              <Link to="/login">Começar agora</Link>
+            <Button size="sm" onClick={() => setLoginOpen(true)}>
+              Começar agora
             </Button>
           </div>
         </div>
