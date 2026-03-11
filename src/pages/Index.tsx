@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sun, BarChart3, Bell, FileText, Zap, Shield, ArrowRight, Droplets, MapPin, ScanLine, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import LoginDialog from "@/components/LoginDialog";
 
 const features = [
   {
