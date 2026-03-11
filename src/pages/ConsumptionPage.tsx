@@ -124,7 +124,6 @@ export default function ConsumptionPage() {
     if (currentDir === "asc") return <ArrowUp className="w-3 h-3 ml-1 text-primary" />;
     return <ArrowDown className="w-3 h-3 ml-1 text-primary" />;
   };
-  const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
 
   const fetchLocations = async () => {
     const { data } = await supabase
