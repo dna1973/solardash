@@ -737,10 +737,10 @@ export default function Dashboard() {
                             <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                               <td className="py-3 font-medium">{getWaterDisplayName(bill)}</td>
                               <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_m3?.toFixed(0) || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs">R$ {bill.water_value?.toFixed(2) || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs">R$ {bill.sewer_value?.toFixed(2) || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.total_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_m3?.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.water_value?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.sewer_value?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.total_value?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
