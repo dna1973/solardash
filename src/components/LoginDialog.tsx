@@ -74,7 +74,7 @@ const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md border-border/30 bg-background/60 backdrop-blur-xl shadow-2xl shadow-primary/10">
         <DialogHeader className="text-center items-center pb-2">
-          <DialogTitle className="text-2xl font-bold text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.4)]">
+          <DialogTitle className="text-2xl font-bold" style={{ color: 'hsl(142, 71%, 35%)' }}>
             {isSignUp ? 'Crie sua conta!' : 'Acesse a plataforma!'}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
