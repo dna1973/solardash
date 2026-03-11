@@ -545,7 +545,7 @@ export default function Dashboard() {
                         <tbody>
                           {filteredWaterBills.slice(0, 10).map((bill) => (
                             <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                              <td className="py-3 font-medium">{bill.property_name || "—"}</td>
+                              <td className="py-3 font-medium">{getWaterDisplayName(bill)}</td>
                               <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
                               <td className="py-3 text-right font-mono text-xs">{bill.consumption_m3?.toFixed(0) || "—"}</td>
                               <td className="py-3 text-right font-mono text-xs">R$ {bill.water_value?.toFixed(2) || "—"}</td>
