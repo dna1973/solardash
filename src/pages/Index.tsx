@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sun, BarChart3, Bell, FileText, Zap, Shield, ArrowRight, Droplets, MapPin, ScanLine, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import LoginDialog from "@/components/LoginDialog";
 
 const features = [
   {
@@ -78,6 +80,8 @@ const fadeUp = {
 };
 
 const Index = () => {
+  const [loginOpen, setLoginOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Background effects */}
@@ -98,11 +102,11 @@ const Index = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/login">Entrar</Link>
+            <Button variant="ghost" size="sm" onClick={() => setLoginOpen(true)}>
+              Entrar
             </Button>
-            <Button asChild size="sm">
-              <Link to="/login">Começar agora</Link>
+            <Button size="sm" onClick={() => setLoginOpen(true)}>
+              Começar agora
             </Button>
           </div>
         </div>
@@ -149,11 +153,9 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-wrap gap-4 pt-2"
             >
-              <Button asChild size="lg" className="gap-2 text-base px-8">
-                <Link to="/login">
+              <Button size="lg" className="gap-2 text-base px-8" onClick={() => setLoginOpen(true)}>
                   Acessar plataforma
                   <ArrowRight className="w-4 h-4" />
-                </Link>
               </Button>
             </motion.div>
           </div>
@@ -244,11 +246,9 @@ const Index = () => {
             <p className="text-muted-foreground text-lg">
               Comece a monitorar usinas e faturas em minutos. Sem instalação complexa.
             </p>
-            <Button asChild size="lg" className="gap-2 text-base px-8">
-              <Link to="/login">
+            <Button size="lg" className="gap-2 text-base px-8" onClick={() => setLoginOpen(true)}>
                 Começar agora
                 <ArrowRight className="w-4 h-4" />
-              </Link>
             </Button>
           </motion.div>
         </div>
@@ -264,6 +264,8 @@ const Index = () => {
           <p>© {new Date().getFullYear()} SolarHub. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
     </main>
   );
 };
