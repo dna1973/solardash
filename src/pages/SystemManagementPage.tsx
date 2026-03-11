@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Users, Settings, Plug, MapPin } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import UsersPage from "./UsersPage";
 import SettingsPage from "./SettingsPage";
 import McpDocPage from "./McpDocPage";
@@ -9,6 +12,17 @@ import NomenclaturesPage from "./NomenclaturesPage";
 export default function SystemManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "usuarios";
+  const [locationCount, setLocationCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("property_locations")
+        .select("*", { count: "exact", head: true });
+      setLocationCount(count ?? 0);
+    };
+    fetchCount();
+  }, []);
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
@@ -34,6 +48,11 @@ export default function SystemManagementPage() {
           <TabsTrigger value="nomenclaturas" className="gap-2">
             <MapPin className="h-4 w-4" />
             Localidades
+            {locationCount > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] px-1.5 text-[10px]">
+                {locationCount}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
             <Plug className="h-4 w-4" />
