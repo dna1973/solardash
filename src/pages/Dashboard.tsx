@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter, Droplets, DollarSign } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
@@ -8,11 +8,24 @@ import { PlantsMap } from "@/components/PlantsMap";
 import { usePlants, useAlerts, useEnergyData, EnergyPeriod } from "@/hooks/useSupabaseData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, addDays, subWeeks, addWeeks, subMonths, addMonths, subYears, addYears, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+
+interface WaterBillDashboard {
+  id: string;
+  property_name: string | null;
+  account_number: string | null;
+  reference_month: string | null;
+  consumption_m3: number | null;
+  water_value: number | null;
+  sewer_value: number | null;
+  total_value: number | null;
+}
 
 const PERIOD_OPTIONS: { value: EnergyPeriod; label: string }[] = [
   { value: "today", label: "Hoje" },
@@ -65,6 +78,13 @@ export default function Dashboard() {
   const [customDate, setCustomDate] = useState<Date>(new Date());
   const [selectedPlantId, setSelectedPlantId] = useState<string>("all");
 
+  // Water tab state
+  const [waterBills, setWaterBills] = useState<WaterBillDashboard[]>([]);
+  const [waterLoading, setWaterLoading] = useState(false);
+  const [waterYear, setWaterYear] = useState<string>(String(new Date().getFullYear()));
+  const [waterMonth, setWaterMonth] = useState<string>("all");
+  const [waterProperty, setWaterProperty] = useState<string>("all");
+
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
@@ -73,7 +93,22 @@ export default function Dashboard() {
     customDate
   );
 
+  // Fetch water bills
+  useEffect(() => {
+    const fetchWaterBills = async () => {
+      setWaterLoading(true);
+      const { data, error } = await supabase
+        .from("water_bills")
+        .select("id, property_name, account_number, reference_month, consumption_m3, water_value, sewer_value, total_value")
+        .order("reference_month", { ascending: false });
+      if (!error && data) setWaterBills(data as WaterBillDashboard[]);
+      setWaterLoading(false);
+    };
+    fetchWaterBills();
+  }, []);
+
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
+
 
   const plants = (dbPlants || []).map((p) => ({
     id: p.id,
@@ -127,6 +162,66 @@ export default function Dashboard() {
     ? Math.round((Math.min(totalEnergyKwh, totalConsumption) / totalConsumption) * 100)
     : 0;
   const gridInjected = Math.max(0, totalEnergyKwh - totalConsumption);
+
+  // Water data computations
+  const waterYears = useMemo(() => {
+    const years = new Set<string>();
+    waterBills.forEach((b) => {
+      if (b.reference_month) {
+        const match = b.reference_month.match(/(\d{4})/);
+        if (match) years.add(match[1]);
+      }
+    });
+    return Array.from(years).sort().reverse();
+  }, [waterBills]);
+
+  const waterProperties = useMemo(() => {
+    const props = new Set<string>();
+    waterBills.forEach((b) => {
+      if (b.property_name) props.add(b.property_name);
+    });
+    return Array.from(props).sort();
+  }, [waterBills]);
+
+  const MONTHS_MAP: Record<string, string> = {
+    "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+    "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+    "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro",
+  };
+
+  const filteredWaterBills = useMemo(() => {
+    return waterBills.filter((b) => {
+      if (waterYear !== "all" && b.reference_month && !b.reference_month.includes(waterYear)) return false;
+      if (waterMonth !== "all" && b.reference_month) {
+        const monthMatch = b.reference_month.match(/(\d{2})\/\d{4}/);
+        if (monthMatch && monthMatch[1] !== waterMonth) return false;
+      }
+      if (waterProperty !== "all" && b.property_name !== waterProperty) return false;
+      return true;
+    });
+  }, [waterBills, waterYear, waterMonth, waterProperty]);
+
+  const waterStats = useMemo(() => {
+    const totalM3 = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
+    const totalValue = filteredWaterBills.reduce((s, b) => s + (b.total_value || 0), 0);
+    const totalWater = filteredWaterBills.reduce((s, b) => s + (b.water_value || 0), 0);
+    const totalSewer = filteredWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0);
+    const avgM3 = filteredWaterBills.length > 0 ? totalM3 / filteredWaterBills.length : 0;
+    return { totalM3, totalValue, totalWater, totalSewer, avgM3, count: filteredWaterBills.length };
+  }, [filteredWaterBills]);
+
+  const waterChartData = useMemo(() => {
+    const byMonth: Record<string, { consumption: number; value: number }> = {};
+    filteredWaterBills.forEach((b) => {
+      const key = b.reference_month || "N/A";
+      if (!byMonth[key]) byMonth[key] = { consumption: 0, value: 0 };
+      byMonth[key].consumption += b.consumption_m3 || 0;
+      byMonth[key].value += b.total_value || 0;
+    });
+    return Object.entries(byMonth)
+      .map(([time, vals]) => ({ time, generation: Math.round(vals.consumption), consumption: Math.round(vals.value) }))
+      .reverse();
+  }, [filteredWaterBills]);
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
@@ -221,6 +316,12 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="consumption" className="gap-1.5 text-xs md:text-sm">
               <Plug className="h-4 w-4" /> Consumo
+            </TabsTrigger>
+            <TabsTrigger value="water" className="gap-1.5 text-xs md:text-sm">
+              <Droplets className="h-4 w-4" /> Água
+              {waterStats.count > 0 && (
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{waterStats.count}</Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -322,6 +423,108 @@ export default function Dashboard() {
               <EnergyChart data={chartData} title={`Consumo por ${chartTimeLabel} (kW)`} dataKeys={["consumption"]} />
               <EnergyChart data={chartData} title={`Geração vs Consumo — ${energyLabel} (kW)`} dataKeys={["generation", "consumption"]} />
             </div>
+          </TabsContent>
+
+          {/* ÁGUA */}
+          <TabsContent value="water" className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={waterYear} onValueChange={setWaterYear}>
+                <SelectTrigger className="w-[130px] h-9 text-xs">
+                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os anos</SelectItem>
+                  {waterYears.map((y) => (
+                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={waterMonth} onValueChange={setWaterMonth}>
+                <SelectTrigger className="w-[150px] h-9 text-xs">
+                  <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {Object.entries(MONTHS_MAP).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={waterProperty} onValueChange={setWaterProperty}>
+                <SelectTrigger className="w-[200px] h-9 text-xs">
+                  <Droplets className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Imóvel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os imóveis</SelectItem>
+                  {waterProperties.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {waterLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
+                  <StatCard title="Faturas" value={String(waterStats.count)} icon={Droplets} variant="default" />
+                  <StatCard title="Consumo Total" value={`${waterStats.totalM3.toFixed(0)} m³`} icon={Droplets} variant="primary" />
+                  <StatCard title="Média/Fatura" value={`${waterStats.avgM3.toFixed(1)} m³`} icon={TrendingUp} variant="default" />
+                  <StatCard title="Valor Água" value={`R$ ${waterStats.totalWater.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Esgoto" value={`R$ ${waterStats.totalSewer.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toFixed(0)}`} icon={DollarSign} variant="warning" />
+                </div>
+
+                {waterChartData.length > 0 && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+                    <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
+                    <EnergyChart data={waterChartData} title="Valor Total por Mês (R$)" dataKeys={["consumption"]} />
+                  </div>
+                )}
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
+                  <h3 className="text-sm font-semibold mb-4">Faturas de Água</h3>
+                  {filteredWaterBills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">Nenhuma fatura de água encontrada para os filtros selecionados.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs text-muted-foreground">
+                            <th className="text-left py-2 font-medium">Imóvel</th>
+                            <th className="text-left py-2 font-medium">Referência</th>
+                            <th className="text-right py-2 font-medium">Consumo (m³)</th>
+                            <th className="text-right py-2 font-medium">Água</th>
+                            <th className="text-right py-2 font-medium">Esgoto</th>
+                            <th className="text-right py-2 font-medium">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredWaterBills.slice(0, 10).map((bill) => (
+                            <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                              <td className="py-3 font-medium">{bill.property_name || "—"}</td>
+                              <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_m3?.toFixed(0) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.water_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.sewer_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.total_value?.toFixed(2) || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+              </>
+            )}
           </TabsContent>
 
           {/* MAPA */}
