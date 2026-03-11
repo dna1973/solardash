@@ -248,12 +248,14 @@ export default function Dashboard() {
   }, [filteredWaterBills]);
 
   const waterByLocation = useMemo(() => {
-    const byLoc: Record<string, number> = {};
+    const byLoc: Record<string, { m3: number; value: number }> = {};
     filteredWaterBills.forEach((b) => {
       const loc = getWaterDisplayName(b);
-      byLoc[loc] = (byLoc[loc] || 0) + (b.consumption_m3 || 0);
+      if (!byLoc[loc]) byLoc[loc] = { m3: 0, value: 0 };
+      byLoc[loc].m3 += b.consumption_m3 || 0;
+      byLoc[loc].value += b.total_value || 0;
     });
-    return Object.entries(byLoc).map(([name, value]) => ({ name, value }));
+    return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.m3, totalValue: d.value }));
   }, [filteredWaterBills]);
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
@@ -516,13 +518,8 @@ export default function Dashboard() {
                   <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toFixed(0)}`} icon={DollarSign} variant="warning" />
                 </div>
 
-                {waterChartData.length > 0 && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
-                    <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
-                    {waterByLocation.length > 0 && (
-                      <WaterBarChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
-                    )}
-                  </div>
+                {waterByLocation.length > 0 && (
+                  <WaterBarChart data={waterByLocation} title="Consumo por Imóvel" unit="m³" />
                 )}
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
