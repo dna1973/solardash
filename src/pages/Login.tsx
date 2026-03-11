@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Sun, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Gauge, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -77,10 +77,10 @@ const Login = () => {
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-            <Sun className="w-6 h-6 text-primary-foreground" />
+            <Gauge className="w-6 h-6 text-primary-foreground" />
           </div>
           <span className="text-2xl font-bold text-foreground tracking-tight">
-            Solar<span className="text-primary">Hub</span>
+            Utili<span className="text-primary">Hub</span>
           </span>
         </div>
 
@@ -92,7 +92,7 @@ const Login = () => {
             <CardDescription>
               {isSignUp
                 ? 'Preencha os dados para criar sua conta'
-                : 'Monitore suas usinas solares em tempo real'}
+                : 'Gerencie suas utilidades em tempo real'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
