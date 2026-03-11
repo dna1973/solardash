@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Users, Settings, Plug, MapPin } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import UsersPage from "./UsersPage";
 import SettingsPage from "./SettingsPage";
 import McpDocPage from "./McpDocPage";
