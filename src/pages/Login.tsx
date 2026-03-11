@@ -92,7 +92,7 @@ const Login = () => {
             <CardDescription>
               {isSignUp
                 ? 'Preencha os dados para criar sua conta'
-                : 'Monitore suas usinas solares em tempo real'}
+                : 'Gerencie suas utilidades em tempo real'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
