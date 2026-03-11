@@ -28,6 +28,22 @@ interface WaterBillDashboard {
   total_value: number | null;
 }
 
+interface EnergyBillDashboard {
+  id: string;
+  property_name: string | null;
+  client_code: string | null;
+  account_number: string | null;
+  reference_month: string | null;
+  consumption_kwh: number | null;
+  generation_kwh: number | null;
+  invoice_value: number | null;
+  gross_value: number | null;
+  net_value: number | null;
+  lighting_cost: number | null;
+  deductions_value: number | null;
+  tariff_type: string | null;
+}
+
 const PERIOD_OPTIONS: { value: EnergyPeriod; label: string }[] = [
   { value: "today", label: "Hoje" },
   { value: "yesterday", label: "Ontem" },
@@ -89,6 +105,16 @@ export default function Dashboard() {
   // Water location name mapping (account_number → location_name)
   const [waterLocationMap, setWaterLocationMap] = useState<Record<string, string>>({});
 
+  // Energy bills tab state
+  const [energyBills, setEnergyBills] = useState<EnergyBillDashboard[]>([]);
+  const [energyBillsLoading, setEnergyBillsLoading] = useState(false);
+  const [energyBillYear, setEnergyBillYear] = useState<string>(String(new Date().getFullYear()));
+  const [energyBillMonth, setEnergyBillMonth] = useState<string>("all");
+  const [energyBillProperty, setEnergyBillProperty] = useState<string>("all");
+
+  // Energy location name mapping (client_code → location_name)
+  const [energyLocationMap, setEnergyLocationMap] = useState<Record<string, string>>({});
+
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
@@ -125,6 +151,34 @@ export default function Dashboard() {
       setWaterLoading(false);
     };
     fetchWaterData();
+  }, []);
+
+  // Fetch energy bills + location mapping
+  useEffect(() => {
+    const fetchEnergyBillData = async () => {
+      setEnergyBillsLoading(true);
+
+      // Fetch energy location mapping (client_code → location_name)
+      const { data: locData } = await supabase
+        .from("property_locations")
+        .select("id, account_number, location_name")
+        .order("location_name");
+      if (locData) {
+        const map: Record<string, string> = {};
+        (locData as any[]).forEach((r: any) => {
+          if (r.account_number) map[r.account_number] = r.location_name;
+        });
+        setEnergyLocationMap(map);
+      }
+
+      // Fetch energy bills
+      const { data, error } = await supabase
+        .from("energy_bills")
+        .select("id, property_name, client_code, account_number, reference_month, consumption_kwh, generation_kwh, invoice_value, gross_value, net_value, lighting_cost, deductions_value, tariff_type")
+        .order("reference_month", { ascending: false });
+      if (!error && data) setEnergyBills(data as EnergyBillDashboard[]);
+      setEnergyBillsLoading(false);
+    };
   }, []);
 
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
@@ -257,6 +311,64 @@ export default function Dashboard() {
     });
     return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.m3, totalValue: d.value }));
   }, [filteredWaterBills]);
+
+  // Energy bill computations
+  const getEnergyDisplayName = (bill: EnergyBillDashboard) => {
+    return (bill.client_code && energyLocationMap[bill.client_code]) || bill.property_name || "Sem imóvel";
+  };
+
+  const energyBillYears = useMemo(() => {
+    const years = new Set<string>();
+    energyBills.forEach((b) => {
+      if (b.reference_month) {
+        const match = b.reference_month.match(/(\d{4})/);
+        if (match) years.add(match[1]);
+      }
+    });
+    return Array.from(years).sort().reverse();
+  }, [energyBills]);
+
+  const energyBillProperties = useMemo(() => {
+    const props = new Set<string>();
+    energyBills.forEach((b) => {
+      props.add(getEnergyDisplayName(b));
+    });
+    return Array.from(props).sort();
+  }, [energyBills, energyLocationMap]);
+
+  const filteredEnergyBills = useMemo(() => {
+    return energyBills.filter((b) => {
+      if (energyBillYear !== "all" && b.reference_month && !b.reference_month.includes(energyBillYear)) return false;
+      if (energyBillMonth !== "all" && b.reference_month) {
+        const monthMatch = b.reference_month.match(/(\d{2})\/\d{4}/);
+        if (monthMatch && monthMatch[1] !== energyBillMonth) return false;
+      }
+      if (energyBillProperty !== "all" && getEnergyDisplayName(b) !== energyBillProperty) return false;
+      return true;
+    });
+  }, [energyBills, energyBillYear, energyBillMonth, energyBillProperty, energyLocationMap]);
+
+  const energyBillStats = useMemo(() => {
+    const totalKwh = filteredEnergyBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0);
+    const totalGenKwh = filteredEnergyBills.reduce((s, b) => s + (b.generation_kwh || 0), 0);
+    const totalGross = filteredEnergyBills.reduce((s, b) => s + (b.gross_value || 0), 0);
+    const totalNet = filteredEnergyBills.reduce((s, b) => s + (b.net_value || 0), 0);
+    const totalDeductions = filteredEnergyBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
+    const totalLighting = filteredEnergyBills.reduce((s, b) => s + (b.lighting_cost || 0), 0);
+    const avgKwh = filteredEnergyBills.length > 0 ? totalKwh / filteredEnergyBills.length : 0;
+    return { totalKwh, totalGenKwh, totalGross, totalNet, totalDeductions, totalLighting, avgKwh, count: filteredEnergyBills.length };
+  }, [filteredEnergyBills]);
+
+  const energyBillByLocation = useMemo(() => {
+    const byLoc: Record<string, { kwh: number; value: number }> = {};
+    filteredEnergyBills.forEach((b) => {
+      const loc = getEnergyDisplayName(b);
+      if (!byLoc[loc]) byLoc[loc] = { kwh: 0, value: 0 };
+      byLoc[loc].kwh += b.consumption_kwh || 0;
+      byLoc[loc].value += b.gross_value || 0;
+    });
+    return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.kwh, totalValue: d.value }));
+  }, [filteredEnergyBills]);
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
 
@@ -441,23 +553,103 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* CONSUMO */}
+          {/* ENERGIA (Faturas) */}
           <TabsContent value="consumption" className="space-y-6">
-            <PeriodFilter />
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={energyBillYear} onValueChange={setEnergyBillYear}>
+                <SelectTrigger className="w-[130px] h-9 text-xs">
+                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os anos</SelectItem>
+                  {energyBillYears.map((y) => (
+                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
-              <StatCard title="Consumo Atual" value={`${avgConsumption} kW`} icon={Plug} variant="default" />
-              <StatCard title={`Consumo ${energyLabel}`} value={`${(totalConsumption / 1000).toFixed(1)} MWh`} icon={Zap} variant="default" />
-              <StatCard title="Consumo Total" value={`${(totalConsumption / 1000).toFixed(0)} MWh`} icon={TrendingUp} variant="default" />
-              <StatCard title="Pico de Consumo" value={`${peakConsumption} kW`} icon={AlertTriangle} variant="warning" />
-              <StatCard title="Autoconsumo" value={`${selfConsumptionRatio}%`} icon={Sun} variant="primary" />
-              <StatCard title="Injetado na Rede" value={`${(gridInjected / 1000).toFixed(1)} MWh`} icon={Leaf} variant="default" />
+              <Select value={energyBillMonth} onValueChange={setEnergyBillMonth}>
+                <SelectTrigger className="w-[150px] h-9 text-xs">
+                  <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {Object.entries(MONTHS_MAP).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={energyBillProperty} onValueChange={setEnergyBillProperty}>
+                <SelectTrigger className="w-[200px] h-9 text-xs">
+                  <Plug className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Imóvel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os imóveis</SelectItem>
+                  {energyBillProperties.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
-              <EnergyChart data={chartData} title={`Consumo por ${chartTimeLabel} (kW)`} dataKeys={["consumption"]} />
-              <EnergyChart data={chartData} title={`Geração vs Consumo — ${energyLabel} (kW)`} dataKeys={["generation", "consumption"]} />
-            </div>
+            {energyBillsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
+                  <StatCard title="Faturas" value={String(energyBillStats.count)} icon={Plug} variant="default" />
+                  <StatCard title="Consumo Total" value={`${(energyBillStats.totalKwh / 1000).toFixed(1)} MWh`} icon={Zap} variant="primary" />
+                  <StatCard title="Média/Fatura" value={`${energyBillStats.avgKwh.toFixed(0)} kWh`} icon={TrendingUp} variant="default" />
+                  <StatCard title="Valor Bruto" value={`R$ ${energyBillStats.totalGross.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Deduções" value={`R$ ${energyBillStats.totalDeductions.toFixed(0)}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toFixed(0)}`} icon={DollarSign} variant="warning" />
+                </div>
+
+                {energyBillByLocation.length > 0 && (
+                  <WaterBarChart data={energyBillByLocation} title="Consumo por Imóvel" unit="kWh" />
+                )}
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
+                  <h3 className="text-sm font-semibold mb-4">Faturas de Energia</h3>
+                  {filteredEnergyBills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">Nenhuma fatura de energia encontrada para os filtros selecionados.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs text-muted-foreground">
+                            <th className="text-left py-2 font-medium">Imóvel</th>
+                            <th className="text-left py-2 font-medium">Referência</th>
+                            <th className="text-right py-2 font-medium">Consumo (kWh)</th>
+                            <th className="text-right py-2 font-medium">Valor Bruto</th>
+                            <th className="text-right py-2 font-medium">Deduções</th>
+                            <th className="text-right py-2 font-medium">Valor Líquido</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredEnergyBills.slice(0, 10).map((bill) => (
+                            <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                              <td className="py-3 font-medium">{getEnergyDisplayName(bill)}</td>
+                              <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_kwh?.toFixed(0) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.gross_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.deductions_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.net_value?.toFixed(2) || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+              </>
+            )}
           </TabsContent>
 
           {/* ÁGUA */}
