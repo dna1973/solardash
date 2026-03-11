@@ -153,6 +153,34 @@ export default function Dashboard() {
     fetchWaterData();
   }, []);
 
+  // Fetch energy bills + location mapping
+  useEffect(() => {
+    const fetchEnergyBillData = async () => {
+      setEnergyBillsLoading(true);
+
+      // Fetch energy location mapping (client_code → location_name)
+      const { data: locData } = await supabase
+        .from("property_locations")
+        .select("id, account_number, location_name")
+        .order("location_name");
+      if (locData) {
+        const map: Record<string, string> = {};
+        (locData as any[]).forEach((r: any) => {
+          if (r.account_number) map[r.account_number] = r.location_name;
+        });
+        setEnergyLocationMap(map);
+      }
+
+      // Fetch energy bills
+      const { data, error } = await supabase
+        .from("energy_bills")
+        .select("id, property_name, client_code, account_number, reference_month, consumption_kwh, generation_kwh, invoice_value, gross_value, net_value, lighting_cost, deductions_value, tariff_type")
+        .order("reference_month", { ascending: false });
+      if (!error && data) setEnergyBills(data as EnergyBillDashboard[]);
+      setEnergyBillsLoading(false);
+    };
+    fetchEnergyBillData();
+
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
 
 
