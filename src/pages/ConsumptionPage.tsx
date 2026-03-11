@@ -97,10 +97,10 @@ export default function ConsumptionPage() {
 
   // Sorting state
   type SortDir = "asc" | "desc" | null;
-  const [energySortCol, setEnergySortCol] = useState<string | null>(null);
-  const [energySortDir, setEnergySortDir] = useState<SortDir>(null);
-  const [waterSortCol, setWaterSortCol] = useState<string | null>(null);
-  const [waterSortDir, setWaterSortDir] = useState<SortDir>(null);
+  const [energySortCol, setEnergySortCol] = useState<string | null>("local");
+  const [energySortDir, setEnergySortDir] = useState<SortDir>("asc");
+  const [waterSortCol, setWaterSortCol] = useState<string | null>("local");
+  const [waterSortDir, setWaterSortDir] = useState<SortDir>("asc");
 
   const toggleSort = (
     col: string,
