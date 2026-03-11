@@ -105,6 +105,16 @@ export default function Dashboard() {
   // Water location name mapping (account_number → location_name)
   const [waterLocationMap, setWaterLocationMap] = useState<Record<string, string>>({});
 
+  // Energy bills tab state
+  const [energyBills, setEnergyBills] = useState<EnergyBillDashboard[]>([]);
+  const [energyBillsLoading, setEnergyBillsLoading] = useState(false);
+  const [energyBillYear, setEnergyBillYear] = useState<string>(String(new Date().getFullYear()));
+  const [energyBillMonth, setEnergyBillMonth] = useState<string>("all");
+  const [energyBillProperty, setEnergyBillProperty] = useState<string>("all");
+
+  // Energy location name mapping (client_code → location_name)
+  const [energyLocationMap, setEnergyLocationMap] = useState<Record<string, string>>({});
+
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
