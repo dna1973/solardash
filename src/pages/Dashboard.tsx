@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter, Droplets, DollarSign } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
@@ -8,11 +8,24 @@ import { PlantsMap } from "@/components/PlantsMap";
 import { usePlants, useAlerts, useEnergyData, EnergyPeriod } from "@/hooks/useSupabaseData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, addDays, subWeeks, addWeeks, subMonths, addMonths, subYears, addYears, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+
+interface WaterBillDashboard {
+  id: string;
+  property_name: string | null;
+  account_number: string | null;
+  reference_month: string | null;
+  consumption_m3: number | null;
+  water_value: number | null;
+  sewer_value: number | null;
+  total_value: number | null;
+}
 
 const PERIOD_OPTIONS: { value: EnergyPeriod; label: string }[] = [
   { value: "today", label: "Hoje" },
