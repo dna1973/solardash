@@ -469,7 +469,6 @@ mcpServer.tool("import_water_bill", {
 
 // ── HTTP Transport ────────────────────────────────────────────────────────────
 const app = new Hono();
-const transport = new StreamableHttpTransport();
 
 app.all("/*", async (c) => {
   // Optional API key guard
@@ -484,7 +483,9 @@ app.all("/*", async (c) => {
     }
   }
 
-  return await (transport as any).handleRequest(c.req.raw, mcpServer);
+  // Create a fresh transport per request and bind it to the server
+  const transport = new StreamableHttpTransport();
+  return await transport.handleRequest(c.req.raw, mcpServer);
 });
 
 Deno.serve(app.fetch);
