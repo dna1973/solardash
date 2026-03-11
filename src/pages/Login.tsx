@@ -198,7 +198,7 @@ const Login = () => {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © {new Date().getFullYear()} SolarHub. Monitoramento inteligente de energia solar.
+          © {new Date().getFullYear()} UtiliHub. Gestão inteligente de utilidades.
         </p>
       </motion.div>
     </div>

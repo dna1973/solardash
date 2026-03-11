@@ -58,7 +58,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-accent-foreground tracking-tight">
-                SolarHub
+                UtiliHub
               </span>
               <span className="text-[10px] text-sidebar-foreground/60 uppercase tracking-widest">
                 Monitoring
