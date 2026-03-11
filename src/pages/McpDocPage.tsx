@@ -50,6 +50,26 @@ const tools = [
       { name: "resolved", type: "boolean", optional: true, description: "Filtrar por status de resolução" },
       { name: "limit", type: "number", optional: true, description: "Limite de registros (padrão: 50)" }
     ]
+  },
+  {
+    name: "import_energy_bill",
+    description: "Importa uma conta de energia elétrica via arquivo em base64. Processa OCR, extrai dados e salva no banco de dados.",
+    params: [
+      { name: "file_base64", type: "string", optional: false, description: "Conteúdo do arquivo codificado em base64" },
+      { name: "file_name", type: "string", optional: false, description: "Nome do arquivo (ex: conta_energia.pdf)" },
+      { name: "file_type", type: "string", optional: false, description: "MIME type (ex: application/pdf, image/jpeg)" },
+      { name: "tenant_id", type: "string", optional: true, description: "UUID do tenant (usa default se omitido)" }
+    ]
+  },
+  {
+    name: "import_water_bill",
+    description: "Importa uma conta de água via arquivo em base64. Processa OCR, extrai dados e salva no banco de dados.",
+    params: [
+      { name: "file_base64", type: "string", optional: false, description: "Conteúdo do arquivo codificado em base64" },
+      { name: "file_name", type: "string", optional: false, description: "Nome do arquivo (ex: conta_agua.pdf)" },
+      { name: "file_type", type: "string", optional: false, description: "MIME type (ex: application/pdf, image/jpeg)" },
+      { name: "tenant_id", type: "string", optional: true, description: "UUID do tenant (usa default se omitido)" }
+    ]
   }
 ];
 
