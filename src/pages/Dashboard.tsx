@@ -179,7 +179,6 @@ export default function Dashboard() {
       if (!error && data) setEnergyBills(data as EnergyBillDashboard[]);
       setEnergyBillsLoading(false);
     };
-    };
     fetchEnergyBillData();
   }, []);
 
