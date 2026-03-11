@@ -605,11 +605,11 @@ export default function Dashboard() {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
                   <StatCard title="Faturas" value={String(energyBillStats.count)} icon={Plug} variant="default" />
-                  <StatCard title="Consumo Total" value={`${(energyBillStats.totalKwh / 1000).toFixed(1)} MWh`} icon={Zap} variant="primary" />
-                  <StatCard title="Média/Fatura" value={`${energyBillStats.avgKwh.toFixed(0)} kWh`} icon={TrendingUp} variant="default" />
-                  <StatCard title="Valor Bruto" value={`R$ ${energyBillStats.totalGross.toFixed(0)}`} icon={DollarSign} variant="default" />
-                  <StatCard title="Deduções" value={`R$ ${energyBillStats.totalDeductions.toFixed(0)}`} icon={DollarSign} variant="default" />
-                  <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toFixed(0)}`} icon={DollarSign} variant="warning" />
+                  <StatCard title="Consumo Total" value={`${(energyBillStats.totalKwh / 1000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MWh`} icon={Zap} variant="primary" />
+                  <StatCard title="Média/Fatura" value={`${energyBillStats.avgKwh.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} kWh`} icon={TrendingUp} variant="default" />
+                  <StatCard title="Valor Bruto" value={`R$ ${energyBillStats.totalGross.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Deduções" value={`R$ ${energyBillStats.totalDeductions.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="default" />
+                  <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
 
                 {energyBillByLocation.length > 0 && (
