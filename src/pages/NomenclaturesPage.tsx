@@ -41,8 +41,6 @@ function PlantMultiSelect({
   const selectedNames = plants
     .filter((p) => selectedIds.includes(p.id))
     .map((p) => p.name);
-    .filter((p) => selectedIds.includes(p.id))
-    .map((p) => p.name);
 
   return (
     <Popover>
