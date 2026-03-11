@@ -220,10 +220,10 @@ export default function Dashboard() {
         const monthMatch = b.reference_month.match(/(\d{2})\/\d{4}/);
         if (monthMatch && monthMatch[1] !== waterMonth) return false;
       }
-      if (waterProperty !== "all" && b.property_name !== waterProperty) return false;
+      if (waterProperty !== "all" && getWaterDisplayName(b) !== waterProperty) return false;
       return true;
     });
-  }, [waterBills, waterYear, waterMonth, waterProperty]);
+  }, [waterBills, waterYear, waterMonth, waterProperty, waterLocationMap]);
 
   const waterStats = useMemo(() => {
     const totalM3 = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
