@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings2, Pencil, Trash2, Save, X, Plus } from "lucide-react";
+import { Settings2, Pencil, Trash2, Save, X, Plus, FileDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
 
 interface Nomenclature {
   id: string;
@@ -247,17 +250,94 @@ export default function NomenclaturesPage() {
       .flatMap((n) => n.plant_ids);
   };
 
+  const getExportData = () => {
+    return nomenclatures.map((nom) => {
+      const plantNames = plants
+        .filter((p) => nom.plant_ids.includes(p.id))
+        .map((p) => p.name)
+        .join(", ");
+      return {
+        "Cód. Cliente (Energia)": nom.account_number,
+        "Matrícula (Água)": nom.water_account_number || "—",
+        "Local": nom.location_name,
+        "Usina(s)": plantNames || "—",
+      };
+    });
+  };
+
+  const handleExportExcel = () => {
+    const data = getExportData();
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Localidades");
+    XLSX.writeFile(wb, "localidades.xlsx");
+    toast.success("Excel exportado");
+  };
+
+  const handleExportPDF = () => {
+    const data = getExportData();
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text("Localidades", 14, 18);
+    doc.setFontSize(9);
+
+    const headers = ["Cód. Cliente (Energia)", "Matrícula (Água)", "Local", "Usina(s)"];
+    const colWidths = [55, 45, 80, 90];
+    let y = 28;
+
+    // Header row
+    doc.setFont("helvetica", "bold");
+    let x = 14;
+    headers.forEach((h, i) => {
+      doc.text(h, x, y);
+      x += colWidths[i];
+    });
+    y += 6;
+    doc.setFont("helvetica", "normal");
+
+    data.forEach((row) => {
+      if (y > 190) {
+        doc.addPage();
+        y = 18;
+      }
+      x = 14;
+      Object.values(row).forEach((val, i) => {
+        doc.text(String(val).substring(0, 45), x, y);
+        x += colWidths[i];
+      });
+      y += 6;
+    });
+
+    doc.save("localidades.pdf");
+    toast.success("PDF exportado");
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Settings2 className="w-4 h-4" /> Localidades
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Associe cada localidade ao código do cliente (energia), matrícula
-          (água), nome do local e usina(s). O sistema usará esta tabela ao
-          importar faturas.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Settings2 className="w-4 h-4" /> Localidades
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Associe cada localidade ao código do cliente (energia), matrícula
+              (água), nome do local e usina(s). O sistema usará esta tabela ao
+              importar faturas.
+            </p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <FileDown className="w-4 h-4" /> Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportExcel}>Exportar Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF}>Exportar PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
