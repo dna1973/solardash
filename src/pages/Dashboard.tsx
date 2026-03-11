@@ -86,6 +86,9 @@ export default function Dashboard() {
   const [waterMonth, setWaterMonth] = useState<string>("all");
   const [waterProperty, setWaterProperty] = useState<string>("all");
 
+  // Water location name mapping (account_number → location_name)
+  const [waterLocationMap, setWaterLocationMap] = useState<Record<string, string>>({});
+
   const { data: dbPlants, isLoading: loadingPlants } = usePlants();
   const { data: dbAlerts, isLoading: loadingAlerts } = useAlerts();
   const { data: dbEnergy, isLoading: loadingEnergy } = useEnergyData(
@@ -94,10 +97,26 @@ export default function Dashboard() {
     customDate
   );
 
-  // Fetch water bills
+  // Fetch water bills + location mapping
   useEffect(() => {
-    const fetchWaterBills = async () => {
+    const fetchWaterData = async () => {
       setWaterLoading(true);
+
+      // Fetch water location mapping
+      const { data: locData } = await supabase
+        .from("property_locations")
+        .select("id, water_account_number, location_name")
+        .not("water_account_number", "is", null)
+        .order("location_name");
+      if (locData) {
+        const map: Record<string, string> = {};
+        (locData as any[]).forEach((r: any) => {
+          if (r.water_account_number) map[r.water_account_number] = r.location_name;
+        });
+        setWaterLocationMap(map);
+      }
+
+      // Fetch water bills
       const { data, error } = await supabase
         .from("water_bills")
         .select("id, property_name, account_number, reference_month, consumption_m3, water_value, sewer_value, total_value")
@@ -105,7 +124,7 @@ export default function Dashboard() {
       if (!error && data) setWaterBills(data as WaterBillDashboard[]);
       setWaterLoading(false);
     };
-    fetchWaterBills();
+    fetchWaterData();
   }, []);
 
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
