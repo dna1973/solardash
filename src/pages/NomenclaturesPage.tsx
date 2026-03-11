@@ -411,6 +411,7 @@ export default function NomenclaturesPage() {
                   plants={plants}
                   selectedIds={newNomPlants}
                   onChange={setNewNomPlants}
+                  usedPlantIds={allUsedPlantIds}
                 />
               </TableCell>
               <TableCell className="text-right">
