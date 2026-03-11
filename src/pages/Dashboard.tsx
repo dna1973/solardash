@@ -646,7 +646,7 @@ export default function Dashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredEnergyBills.slice(0, 10).map((bill) => (
+                          {[...filteredEnergyBills].sort((a, b) => getEnergyDisplayName(a).localeCompare(getEnergyDisplayName(b), "pt-BR")).slice(0, 10).map((bill) => (
                             <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                               <td className="py-3 font-medium">{getEnergyDisplayName(bill)}</td>
                               <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
