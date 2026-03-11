@@ -30,6 +30,7 @@ const EVENT_ICONS: Record<string, React.ReactNode> = {
   create: <Plus className="h-4 w-4 text-blue-500" />,
   update: <Pencil className="h-4 w-4 text-yellow-500" />,
   delete: <Trash2 className="h-4 w-4 text-destructive" />,
+  import: <Plus className="h-4 w-4 text-purple-500" />,
 };
 
 const EVENT_LABELS: Record<string, string> = {
@@ -38,6 +39,7 @@ const EVENT_LABELS: Record<string, string> = {
   create: "Criação",
   update: "Edição",
   delete: "Exclusão",
+  import: "Importação",
 };
 
 const EVENT_COLORS: Record<string, string> = {
@@ -46,6 +48,7 @@ const EVENT_COLORS: Record<string, string> = {
   create: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   update: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   delete: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  import: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 };
 
 export default function AuditLogsPanel() {
