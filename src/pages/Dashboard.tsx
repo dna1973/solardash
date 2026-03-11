@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Zap, Sun, TrendingUp, AlertTriangle, Leaf, Battery, Plug, Loader2, MapIcon, Calendar, ChevronLeft, ChevronRight, Filter, Droplets, DollarSign } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WaterBarChart } from "@/components/WaterBarChart";
+import { ConsumptionHistoryChart } from "@/components/ConsumptionHistoryChart";
 import { StatCard } from "@/components/StatCard";
 import { EnergyChart } from "@/components/EnergyChart";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
