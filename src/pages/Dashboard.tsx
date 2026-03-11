@@ -99,7 +99,7 @@ export default function Dashboard() {
   const [waterBills, setWaterBills] = useState<WaterBillDashboard[]>([]);
   const [waterLoading, setWaterLoading] = useState(false);
   const [waterYear, setWaterYear] = useState<string>(String(new Date().getFullYear()));
-  const [waterMonth, setWaterMonth] = useState<string>("all");
+  const [waterMonth, setWaterMonth] = useState<string>(String(new Date().getMonth() + 1).padStart(2, "0"));
   const [waterProperty, setWaterProperty] = useState<string>("all");
 
   // Water location name mapping (account_number → location_name)
@@ -109,7 +109,7 @@ export default function Dashboard() {
   const [energyBills, setEnergyBills] = useState<EnergyBillDashboard[]>([]);
   const [energyBillsLoading, setEnergyBillsLoading] = useState(false);
   const [energyBillYear, setEnergyBillYear] = useState<string>(String(new Date().getFullYear()));
-  const [energyBillMonth, setEnergyBillMonth] = useState<string>("all");
+  const [energyBillMonth, setEnergyBillMonth] = useState<string>(String(new Date().getMonth() + 1).padStart(2, "0"));
   const [energyBillProperty, setEnergyBillProperty] = useState<string>("all");
 
   // Energy location name mapping (client_code → location_name)
