@@ -779,7 +779,7 @@ export default function Dashboard() {
                   <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
 
-                {waterHistoryData.length > 1 && (
+                {waterHistoryData.length > 0 && (
                   <ConsumptionHistoryChart
                     data={waterHistoryData}
                     title="Histórico Mensal — Consumo e Custo"
