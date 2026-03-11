@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sun, BarChart3, Bell, FileText, Zap, Shield, ArrowRight, Droplets, MapPin, ScanLine, Download } from "lucide-react";
+import { BarChart3, Bell, FileText, Zap, Shield, ArrowRight, Droplets, MapPin, ScanLine, Download, Gauge, Building2 } from "lucide-react";
 import { motion } from "framer-motion";
 import LoginDialog from "@/components/LoginDialog";
 
@@ -56,7 +56,7 @@ const features = [
       "Isolamento total de dados por organização com controle de acesso baseado em papéis.",
   },
   {
-    icon: Sun,
+    icon: BarChart3,
     title: "Análise de performance",
     description:
       "Compare geração esperada vs. real e identifique oportunidades de otimização.",
@@ -95,10 +95,10 @@ const Index = () => {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <Sun className="w-5 h-5 text-primary-foreground" />
+              <Gauge className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold tracking-tight">
-              Solar<span className="text-primary">Hub</span>
+              Utili<span className="text-primary">Hub</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -122,8 +122,8 @@ const Index = () => {
               transition={{ duration: 0.5 }}
               className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary"
             >
-              <Zap className="w-3.5 h-3.5" />
-              Plataforma de gestão solar e utilidades
+              <Gauge className="w-3.5 h-3.5" />
+              Gestão inteligente de utilidades
             </motion.div>
 
             <motion.h1
@@ -132,7 +132,7 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl font-extrabold tracking-tight md:text-6xl lg:text-7xl leading-[1.08]"
             >
-              Energia e água{" "}
+              Suas utilidades{" "}
               <span className="text-primary">sob controle total</span>
             </motion.h1>
 
@@ -142,8 +142,8 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed"
             >
-              Centralize usinas solares, contas de energia e água com
-              monitoramento em tempo real, importação de faturas por OCR,
+              Centralize energia elétrica, geração solar e água em um só lugar —
+              com monitoramento em tempo real, importação de faturas por OCR,
               alertas automáticos e relatórios prontos para decisão.
             </motion.p>
 
@@ -244,7 +244,7 @@ const Index = () => {
               Pronto para otimizar sua operação?
             </h2>
             <p className="text-muted-foreground text-lg">
-              Comece a monitorar usinas e faturas em minutos. Sem instalação complexa.
+              Comece a gerenciar energia e água em minutos. Sem instalação complexa.
             </p>
             <Button size="lg" className="gap-2 text-base px-8" onClick={() => setLoginOpen(true)}>
                 Começar agora
@@ -258,7 +258,7 @@ const Index = () => {
       <footer className="relative z-10 border-t border-border/50 py-8">
         <div className="container mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Sun className="w-4 h-4 text-primary" />
+            <Gauge className="w-4 h-4 text-primary" />
             <span className="font-medium text-foreground">UtiliHub</span>
           </div>
           <p>© {new Date().getFullYear()} UtiliHub. Todos os direitos reservados.</p>
