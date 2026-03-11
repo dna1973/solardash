@@ -12,6 +12,17 @@ import NomenclaturesPage from "./NomenclaturesPage";
 export default function SystemManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "usuarios";
+  const [locationCount, setLocationCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("property_locations")
+        .select("*", { count: "exact", head: true });
+      setLocationCount(count ?? 0);
+    };
+    fetchCount();
+  }, []);
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
