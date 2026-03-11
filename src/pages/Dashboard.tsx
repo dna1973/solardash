@@ -497,7 +497,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
                     <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
                     {waterByLocation.length > 0 && (
-                      <WaterPieChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
+                      <WaterBarChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
                     )}
                   </div>
                 )}
