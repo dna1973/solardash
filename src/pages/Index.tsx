@@ -132,7 +132,7 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl font-extrabold tracking-tight md:text-6xl lg:text-7xl leading-[1.08]"
             >
-              Energia e água{" "}
+              Suas utilidades{" "}
               <span className="text-primary">sob controle total</span>
             </motion.h1>
 
@@ -142,8 +142,8 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed"
             >
-              Centralize usinas solares, contas de energia e água com
-              monitoramento em tempo real, importação de faturas por OCR,
+              Centralize energia elétrica, geração solar e água em um só lugar —
+              com monitoramento em tempo real, importação de faturas por OCR,
               alertas automáticos e relatórios prontos para decisão.
             </motion.p>
 
