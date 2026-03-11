@@ -638,10 +638,10 @@ export default function Dashboard() {
                             <tr key={bill.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                               <td className="py-3 font-medium">{getEnergyDisplayName(bill)}</td>
                               <td className="py-3 text-muted-foreground">{bill.reference_month || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_kwh?.toFixed(0) || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs">R$ {bill.gross_value?.toFixed(2) || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs">R$ {bill.deductions_value?.toFixed(2) || "—"}</td>
-                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.net_value?.toFixed(2) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">{bill.consumption_kwh?.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.gross_value?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs">R$ {bill.deductions_value?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "—"}</td>
+                              <td className="py-3 text-right font-mono text-xs font-semibold">R$ {bill.net_value?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
