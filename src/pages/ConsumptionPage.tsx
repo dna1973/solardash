@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Building2, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download, Droplets, Pencil } from "lucide-react";
+import { Building2, Search, Zap, TrendingUp, DollarSign, BarChart3, MapPin, Plug, FileUp, FileText, Trash2, Receipt, Download, Droplets, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +94,36 @@ export default function ConsumptionPage() {
   const [waterFilterProperty, setWaterFilterProperty] = useState("all");
   const [waterFilterYear, setWaterFilterYear] = useState(defaultYear);
   const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
+
+  // Sorting state
+  type SortDir = "asc" | "desc" | null;
+  const [energySortCol, setEnergySortCol] = useState<string | null>(null);
+  const [energySortDir, setEnergySortDir] = useState<SortDir>(null);
+  const [waterSortCol, setWaterSortCol] = useState<string | null>(null);
+  const [waterSortDir, setWaterSortDir] = useState<SortDir>(null);
+
+  const toggleSort = (
+    col: string,
+    currentCol: string | null,
+    currentDir: SortDir,
+    setCol: (c: string | null) => void,
+    setDir: (d: SortDir) => void
+  ) => {
+    if (currentCol === col) {
+      if (currentDir === "asc") setDir("desc");
+      else if (currentDir === "desc") { setCol(null); setDir(null); }
+      else { setDir("asc"); }
+    } else {
+      setCol(col);
+      setDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col, currentCol, currentDir }: { col: string; currentCol: string | null; currentDir: SortDir }) => {
+    if (currentCol !== col) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-40" />;
+    if (currentDir === "asc") return <ArrowUp className="w-3 h-3 ml-1 text-primary" />;
+    return <ArrowDown className="w-3 h-3 ml-1 text-primary" />;
+  };
 
   const fetchLocations = async () => {
     const { data } = await supabase
@@ -277,6 +307,48 @@ export default function ConsumptionPage() {
     const matchMonth = waterFilterMonth === "all" || mm === waterFilterMonth;
     return matchProperty && matchYear && matchMonth;
   });
+
+  // Sort energy bills
+  const sortedEnergyBills = useMemo(() => {
+    if (!energySortCol || !energySortDir) return filteredBills;
+    return [...filteredBills].sort((a, b) => {
+      let va: any, vb: any;
+      switch (energySortCol) {
+        case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
+        case "local": va = getLocal(a); vb = getLocal(b); break;
+        case "consumption_kwh": va = a.consumption_kwh || 0; vb = b.consumption_kwh || 0; break;
+        case "gross_value": va = (a.net_value || 0) + (a.deductions_value || 0); vb = (b.net_value || 0) + (b.deductions_value || 0); break;
+        case "lighting_cost": va = a.lighting_cost || 0; vb = b.lighting_cost || 0; break;
+        case "deductions_value": va = a.deductions_value || 0; vb = b.deductions_value || 0; break;
+        case "net_value": va = a.net_value || 0; vb = b.net_value || 0; break;
+        case "created_at": va = a.created_at; vb = b.created_at; break;
+        default: return 0;
+      }
+      if (typeof va === "string") { const cmp = va.localeCompare(vb); return energySortDir === "asc" ? cmp : -cmp; }
+      return energySortDir === "asc" ? va - vb : vb - va;
+    });
+  }, [filteredBills, energySortCol, energySortDir]);
+
+  // Sort water bills
+  const sortedWaterBills = useMemo(() => {
+    if (!waterSortCol || !waterSortDir) return filteredWaterBills;
+    return [...filteredWaterBills].sort((a, b) => {
+      let va: any, vb: any;
+      switch (waterSortCol) {
+        case "reference_month": va = a.reference_month || ""; vb = b.reference_month || ""; break;
+        case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
+        case "local": va = getWaterLocal(a); vb = getWaterLocal(b); break;
+        case "consumption_m3": va = a.consumption_m3 || 0; vb = b.consumption_m3 || 0; break;
+        case "water_value": va = a.water_value || 0; vb = b.water_value || 0; break;
+        case "sewer_value": va = a.sewer_value || 0; vb = b.sewer_value || 0; break;
+        case "total_value": va = a.total_value || 0; vb = b.total_value || 0; break;
+        case "created_at": va = a.created_at; vb = b.created_at; break;
+        default: return 0;
+      }
+      if (typeof va === "string") { const cmp = va.localeCompare(vb); return waterSortDir === "asc" ? cmp : -cmp; }
+      return waterSortDir === "asc" ? va - vb : vb - va;
+    });
+  }, [filteredWaterBills, waterSortCol, waterSortDir]);
 
   const waterTotalConsumption = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
   const waterTotalWater = filteredWaterBills.reduce((s, b) => s + (b.water_value || 0), 0);
@@ -977,19 +1049,35 @@ export default function ConsumptionPage() {
                 <Table>
                   <TableHeader>
                      <TableRow>
-                      <TableHead>Nº da Conta</TableHead>
-                      <TableHead>Local</TableHead>
-                      <TableHead className="text-right">Consumo KW/H</TableHead>
-                      <TableHead className="text-right">Valor Bruto</TableHead>
-                      <TableHead className="text-right">Valor Ilum. Pública</TableHead>
-                      <TableHead className="text-right">Valor Deduções</TableHead>
-                       <TableHead className="text-right">Valor Líquido</TableHead>
-                       <TableHead>Importado em</TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("account_number", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Nº da Conta<SortIcon col="account_number" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_kwh", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Consumo KW/H<SortIcon col="consumption_kwh" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("gross_value", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Bruto<SortIcon col="gross_value" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("lighting_cost", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Ilum. Pública<SortIcon col="lighting_cost" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("deductions_value", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Deduções<SortIcon col="deductions_value" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("net_value", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Líquido<SortIcon col="net_value" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                       </TableHead>
+                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Importado em<SortIcon col="created_at" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                       </TableHead>
                        <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredBills.map((bill) => (
+                    {sortedEnergyBills.map((bill) => (
                       <TableRow key={bill.id}>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
                         <TableCell>
@@ -1123,19 +1211,35 @@ export default function ConsumptionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Referência</TableHead>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Local</TableHead>
-                      <TableHead className="text-right">Consumo (m³)</TableHead>
-                      <TableHead className="text-right">Valor Água</TableHead>
-                      <TableHead className="text-right">Valor Esgoto</TableHead>
-                       <TableHead className="text-right">Valor Total</TableHead>
-                       <TableHead>Importado em</TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("reference_month", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Referência<SortIcon col="reference_month" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("account_number", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Matrícula<SortIcon col="account_number" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_m3", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Consumo (m³)<SortIcon col="consumption_m3" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("water_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Água<SortIcon col="water_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("sewer_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Esgoto<SortIcon col="sewer_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("total_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Total<SortIcon col="total_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                       </TableHead>
+                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Importado em<SortIcon col="created_at" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                       </TableHead>
                        <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredWaterBills.map((bill) => (
+                    {sortedWaterBills.map((bill) => (
                       <TableRow key={bill.id}>
                         <TableCell className="text-xs">{bill.reference_month || "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
