@@ -296,7 +296,7 @@ export default function ConsumptionPage() {
   });
 
   // Water bill filters
-  const uniqueWaterProperties = [...new Set(waterBills.map((b) => getWaterLocal(b)).filter(Boolean))] as string[];
+  const uniqueWaterProperties = ([...new Set(waterBills.map((b) => getWaterLocal(b)).filter(Boolean))] as string[]).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const uniqueWaterYears = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
   const uniqueWaterMonths = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
 
