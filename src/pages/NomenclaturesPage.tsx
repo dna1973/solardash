@@ -27,12 +27,20 @@ function PlantMultiSelect({
   plants,
   selectedIds,
   onChange,
+  usedPlantIds = [],
 }: {
   plants: Plant[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
+  usedPlantIds?: string[];
 }) {
+  // Show plants that are either selected by this row or not used by others
+  const availablePlants = plants.filter(
+    (p) => selectedIds.includes(p.id) || !usedPlantIds.includes(p.id)
+  );
   const selectedNames = plants
+    .filter((p) => selectedIds.includes(p.id))
+    .map((p) => p.name);
     .filter((p) => selectedIds.includes(p.id))
     .map((p) => p.name);
 
