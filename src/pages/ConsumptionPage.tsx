@@ -916,8 +916,9 @@ export default function ConsumptionPage() {
                       <TableHead className="text-right">Valor Bruto</TableHead>
                       <TableHead className="text-right">Valor Ilum. Pública</TableHead>
                       <TableHead className="text-right">Valor Deduções</TableHead>
-                      <TableHead className="text-right">Valor Líquido</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                       <TableHead className="text-right">Valor Líquido</TableHead>
+                       <TableHead>Importado em</TableHead>
+                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
