@@ -137,7 +137,7 @@ const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                 <Link
                   to="/forgot-password"
                   onClick={() => onOpenChange(false)}
-                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                  className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors drop-shadow-[0_0_4px_hsl(var(--primary)/0.3)]"
                 >
                   Esqueci minha senha
                 </Link>
