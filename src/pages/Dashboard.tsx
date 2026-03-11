@@ -248,12 +248,14 @@ export default function Dashboard() {
   }, [filteredWaterBills]);
 
   const waterByLocation = useMemo(() => {
-    const byLoc: Record<string, number> = {};
+    const byLoc: Record<string, { m3: number; value: number }> = {};
     filteredWaterBills.forEach((b) => {
       const loc = getWaterDisplayName(b);
-      byLoc[loc] = (byLoc[loc] || 0) + (b.consumption_m3 || 0);
+      if (!byLoc[loc]) byLoc[loc] = { m3: 0, value: 0 };
+      byLoc[loc].m3 += b.consumption_m3 || 0;
+      byLoc[loc].value += b.total_value || 0;
     });
-    return Object.entries(byLoc).map(([name, value]) => ({ name, value }));
+    return Object.entries(byLoc).map(([name, d]) => ({ name, value: d.m3, totalValue: d.value }));
   }, [filteredWaterBills]);
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "usuário";
