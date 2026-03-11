@@ -259,9 +259,9 @@ const Index = () => {
         <div className="container mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Sun className="w-4 h-4 text-primary" />
-            <span className="font-medium text-foreground">SolarHub</span>
+            <span className="font-medium text-foreground">UtiliHub</span>
           </div>
-          <p>© {new Date().getFullYear()} SolarHub. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} UtiliHub. Todos os direitos reservados.</p>
         </div>
       </footer>
 
