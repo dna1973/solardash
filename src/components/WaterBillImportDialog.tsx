@@ -174,6 +174,19 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
       setStep("done");
       toast.success("Conta de água importada com sucesso!");
       onImported?.();
+
+      logAuditEvent({
+        eventType: "import",
+        description: `Conta de água importada: Matrícula ${extracted.account_number || "N/A"} — ${extracted.property_name || "N/A"} — Ref: ${extracted.reference_month || "N/A"}`,
+        entityType: "water_bill",
+        metadata: {
+          account_number: extracted.account_number,
+          property_name: extracted.property_name,
+          reference_month: extracted.reference_month,
+          consumption_m3: extracted.consumption_m3,
+          total_value: extracted.total_value,
+        },
+      });
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Erro ao salvar");

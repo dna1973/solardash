@@ -186,6 +186,19 @@ export function BillImportDialog({ open, onOpenChange, onImported }: BillImportD
       setStep("done");
       toast.success("Conta importada com sucesso!");
       onImported?.();
+
+      logAuditEvent({
+        eventType: "import",
+        description: `Conta de energia importada: UC ${extracted.account_number || "N/A"} — ${extracted.property_name || "N/A"} — Ref: ${extracted.reference_month || "N/A"}`,
+        entityType: "energy_bill",
+        metadata: {
+          account_number: extracted.account_number,
+          property_name: extracted.property_name,
+          reference_month: extracted.reference_month,
+          consumption_kwh: extracted.consumption_kwh,
+          gross_value: extracted.gross_value,
+        },
+      });
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Erro ao salvar");
