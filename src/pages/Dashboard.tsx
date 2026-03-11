@@ -666,7 +666,7 @@ export default function Dashboard() {
                   <StatCard title="Valor Líquido" value={`R$ ${energyBillStats.totalNet.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
 
-                {energyHistoryData.length > 1 && (
+                {energyHistoryData.length > 0 && (
                   <ConsumptionHistoryChart
                     data={energyHistoryData}
                     title="Histórico Mensal — Consumo, Geração e Custo"
