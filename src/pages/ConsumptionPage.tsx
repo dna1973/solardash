@@ -189,6 +189,68 @@ export default function ConsumptionPage() {
     }
   };
 
+  const saveEditBill = async () => {
+    if (!editingBill) return;
+    setEditSaving(true);
+    const { id, created_at, ...rest } = editingBill;
+    const { error } = await supabase.from("energy_bills").update({
+      account_number: rest.account_number,
+      property_name: rest.property_name,
+      address: rest.address,
+      utility_company: rest.utility_company,
+      client_code: rest.client_code,
+      reference_month: rest.reference_month,
+      consumption_kwh: rest.consumption_kwh,
+      generation_kwh: rest.generation_kwh,
+      amount_brl: rest.amount_brl,
+      tariff_type: rest.tariff_type,
+      due_date: rest.due_date,
+      invoice_number: rest.invoice_number,
+      invoice_value: rest.invoice_value,
+      gross_value: rest.gross_value,
+      lighting_cost: rest.lighting_cost,
+      deductions_value: rest.deductions_value,
+      net_value: rest.net_value,
+    }).eq("id", id);
+    setEditSaving(false);
+    if (error) {
+      toast.error("Erro ao salvar alterações");
+    } else {
+      toast.success("Conta atualizada!");
+      setBills((prev) => prev.map((b) => b.id === id ? editingBill : b));
+      setEditingBill(null);
+    }
+  };
+
+  const saveEditWaterBill = async () => {
+    if (!editingWaterBill) return;
+    setEditSaving(true);
+    const { id, created_at, consumption_history, ...rest } = editingWaterBill;
+    const { error } = await supabase.from("water_bills" as any).update({
+      account_number: rest.account_number,
+      property_name: rest.property_name,
+      address: rest.address,
+      utility_company: rest.utility_company,
+      client_code: rest.client_code,
+      reference_month: rest.reference_month,
+      consumption_m3: rest.consumption_m3,
+      water_value: rest.water_value,
+      sewer_value: rest.sewer_value,
+      total_value: rest.total_value,
+      tariff_type: rest.tariff_type,
+      due_date: rest.due_date,
+      invoice_number: rest.invoice_number,
+    }).eq("id", id);
+    setEditSaving(false);
+    if (error) {
+      toast.error("Erro ao salvar alterações");
+    } else {
+      toast.success("Conta de água atualizada!");
+      setWaterBills((prev) => prev.map((b) => b.id === id ? editingWaterBill : b));
+      setEditingWaterBill(null);
+    }
+  };
+
   // Derive unique filters from bills
   const uniqueProperties = [...new Set(bills.map((b) => getLocal(b)).filter(Boolean))] as string[];
   const uniqueYears = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
