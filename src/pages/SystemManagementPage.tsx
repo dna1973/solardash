@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, Settings, Plug, MapPin } from "lucide-react";
+import { Users, Settings, Plug, MapPin, Activity } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import UsersPage from "./UsersPage";
 import SettingsPage from "./SettingsPage";
 import McpDocPage from "./McpDocPage";
 import NomenclaturesPage from "./NomenclaturesPage";
+import AuditLogsPanel from "@/components/AuditLogsPanel";
 
 export default function SystemManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,6 +55,10 @@ export default function SystemManagementPage() {
               </Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="logs" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Logs
+          </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
             <Plug className="h-4 w-4" />
             API
@@ -70,6 +75,10 @@ export default function SystemManagementPage() {
 
         <TabsContent value="integracoes" className="mt-6">
           <SettingsPage embedded />
+        </TabsContent>
+
+        <TabsContent value="logs" className="mt-6">
+          <AuditLogsPanel />
         </TabsContent>
 
         <TabsContent value="api" className="mt-6">
