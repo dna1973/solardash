@@ -195,13 +195,17 @@ export default function Dashboard() {
     return Array.from(years).sort().reverse();
   }, [waterBills]);
 
+  const getWaterDisplayName = (bill: WaterBillDashboard) => {
+    return (bill.account_number && waterLocationMap[bill.account_number]) || bill.property_name || "Sem imóvel";
+  };
+
   const waterProperties = useMemo(() => {
     const props = new Set<string>();
     waterBills.forEach((b) => {
-      if (b.property_name) props.add(b.property_name);
+      props.add(getWaterDisplayName(b));
     });
     return Array.from(props).sort();
-  }, [waterBills]);
+  }, [waterBills, waterLocationMap]);
 
   const MONTHS_MAP: Record<string, string> = {
     "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
