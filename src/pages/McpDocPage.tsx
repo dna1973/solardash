@@ -282,11 +282,21 @@ export default function McpDocPage() {
 
             <div className="border-t border-border pt-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-foreground">Exemplo de chamada (cURL)</p>
-                <CopyButton text={exampleCall} label="Copiar cURL" />
+                <p className="text-sm font-medium text-foreground">Exemplo de chamada — CMD (Windows)</p>
+                <CopyButton text={exampleCall} label="Copiar CMD" />
               </div>
               <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono text-foreground whitespace-pre-wrap">
                 {exampleCall}
+              </pre>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-foreground">Exemplo de chamada — PowerShell</p>
+                <CopyButton text={exampleCallPowerShell} label="Copiar PowerShell" />
+              </div>
+              <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs font-mono text-foreground whitespace-pre-wrap">
+                {exampleCallPowerShell}
               </pre>
             </div>
           </CardContent>
