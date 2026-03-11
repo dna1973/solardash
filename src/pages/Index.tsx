@@ -56,7 +56,7 @@ const features = [
       "Isolamento total de dados por organização com controle de acesso baseado em papéis.",
   },
   {
-    icon: Sun,
+    icon: BarChart3,
     title: "Análise de performance",
     description:
       "Compare geração esperada vs. real e identifique oportunidades de otimização.",
