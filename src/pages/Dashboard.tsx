@@ -315,7 +315,7 @@ export default function Dashboard() {
               <Sun className="h-4 w-4" /> Geração
             </TabsTrigger>
             <TabsTrigger value="consumption" className="gap-1.5 text-xs md:text-sm">
-              <Plug className="h-4 w-4" /> Consumo
+              <Plug className="h-4 w-4" /> Energia
             </TabsTrigger>
             <TabsTrigger value="water" className="gap-1.5 text-xs md:text-sm">
               <Droplets className="h-4 w-4" /> Água
