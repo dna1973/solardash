@@ -518,13 +518,8 @@ export default function Dashboard() {
                   <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toFixed(0)}`} icon={DollarSign} variant="warning" />
                 </div>
 
-                {waterChartData.length > 0 && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
-                    <EnergyChart data={waterChartData} title="Consumo de Água por Mês (m³)" dataKeys={["generation"]} />
-                    {waterByLocation.length > 0 && (
-                      <WaterBarChart data={waterByLocation} title="Consumo por Imóvel (m³)" unit="m³" />
-                    )}
-                  </div>
+                {waterByLocation.length > 0 && (
+                  <WaterBarChart data={waterByLocation} title="Consumo por Imóvel" unit="m³" />
                 )}
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card p-5 shadow-card">
