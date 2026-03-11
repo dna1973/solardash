@@ -779,6 +779,19 @@ export default function Dashboard() {
                   <StatCard title="Valor Total" value={`R$ ${waterStats.totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={DollarSign} variant="warning" />
                 </div>
 
+                {waterHistoryData.length > 1 && (
+                  <ConsumptionHistoryChart
+                    data={waterHistoryData}
+                    title="Histórico Mensal — Consumo e Custo"
+                    leftUnit="m³"
+                    rightUnit="R$"
+                    series={[
+                      { dataKey: "consumption", name: "Consumo (m³)", color: "hsl(200, 75%, 50%)", yAxisId: "left" },
+                      { dataKey: "cost", name: "Custo (R$)", color: "hsl(35, 90%, 55%)", yAxisId: "right" },
+                    ]}
+                  />
+                )}
+
                 {waterByLocation.length > 0 && (
                   <WaterBarChart data={waterByLocation} title="Consumo por Imóvel" unit="m³" />
                 )}
