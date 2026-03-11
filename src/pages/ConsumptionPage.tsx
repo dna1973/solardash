@@ -95,6 +95,37 @@ export default function ConsumptionPage() {
   const [waterFilterYear, setWaterFilterYear] = useState(defaultYear);
   const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
 
+  // Sorting state
+  type SortDir = "asc" | "desc" | null;
+  const [energySortCol, setEnergySortCol] = useState<string | null>(null);
+  const [energySortDir, setEnergySortDir] = useState<SortDir>(null);
+  const [waterSortCol, setWaterSortCol] = useState<string | null>(null);
+  const [waterSortDir, setWaterSortDir] = useState<SortDir>(null);
+
+  const toggleSort = (
+    col: string,
+    currentCol: string | null,
+    currentDir: SortDir,
+    setCol: (c: string | null) => void,
+    setDir: (d: SortDir) => void
+  ) => {
+    if (currentCol === col) {
+      if (currentDir === "asc") setDir("desc");
+      else if (currentDir === "desc") { setCol(null); setDir(null); }
+      else { setDir("asc"); }
+    } else {
+      setCol(col);
+      setDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col, currentCol, currentDir }: { col: string; currentCol: string | null; currentDir: SortDir }) => {
+    if (currentCol !== col) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-40" />;
+    if (currentDir === "asc") return <ArrowUp className="w-3 h-3 ml-1 text-primary" />;
+    return <ArrowDown className="w-3 h-3 ml-1 text-primary" />;
+  };
+  const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
+
   const fetchLocations = async () => {
     const { data } = await supabase
       .from("property_locations")
