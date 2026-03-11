@@ -292,6 +292,7 @@ export default function NomenclaturesPage() {
                         plants={plants}
                         selectedIds={editNomPlants}
                         onChange={setEditNomPlants}
+                        usedPlantIds={getUsedPlantIdsExcluding(nom.id)}
                       />
                     </TableCell>
                     <TableCell className="text-right">
