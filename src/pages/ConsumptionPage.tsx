@@ -308,6 +308,48 @@ export default function ConsumptionPage() {
     return matchProperty && matchYear && matchMonth;
   });
 
+  // Sort energy bills
+  const sortedEnergyBills = useMemo(() => {
+    if (!energySortCol || !energySortDir) return filteredBills;
+    return [...filteredBills].sort((a, b) => {
+      let va: any, vb: any;
+      switch (energySortCol) {
+        case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
+        case "local": va = getLocal(a); vb = getLocal(b); break;
+        case "consumption_kwh": va = a.consumption_kwh || 0; vb = b.consumption_kwh || 0; break;
+        case "gross_value": va = (a.net_value || 0) + (a.deductions_value || 0); vb = (b.net_value || 0) + (b.deductions_value || 0); break;
+        case "lighting_cost": va = a.lighting_cost || 0; vb = b.lighting_cost || 0; break;
+        case "deductions_value": va = a.deductions_value || 0; vb = b.deductions_value || 0; break;
+        case "net_value": va = a.net_value || 0; vb = b.net_value || 0; break;
+        case "created_at": va = a.created_at; vb = b.created_at; break;
+        default: return 0;
+      }
+      if (typeof va === "string") { const cmp = va.localeCompare(vb); return energySortDir === "asc" ? cmp : -cmp; }
+      return energySortDir === "asc" ? va - vb : vb - va;
+    });
+  }, [filteredBills, energySortCol, energySortDir]);
+
+  // Sort water bills
+  const sortedWaterBills = useMemo(() => {
+    if (!waterSortCol || !waterSortDir) return filteredWaterBills;
+    return [...filteredWaterBills].sort((a, b) => {
+      let va: any, vb: any;
+      switch (waterSortCol) {
+        case "reference_month": va = a.reference_month || ""; vb = b.reference_month || ""; break;
+        case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
+        case "local": va = getWaterLocal(a); vb = getWaterLocal(b); break;
+        case "consumption_m3": va = a.consumption_m3 || 0; vb = b.consumption_m3 || 0; break;
+        case "water_value": va = a.water_value || 0; vb = b.water_value || 0; break;
+        case "sewer_value": va = a.sewer_value || 0; vb = b.sewer_value || 0; break;
+        case "total_value": va = a.total_value || 0; vb = b.total_value || 0; break;
+        case "created_at": va = a.created_at; vb = b.created_at; break;
+        default: return 0;
+      }
+      if (typeof va === "string") { const cmp = va.localeCompare(vb); return waterSortDir === "asc" ? cmp : -cmp; }
+      return waterSortDir === "asc" ? va - vb : vb - va;
+    });
+  }, [filteredWaterBills, waterSortCol, waterSortDir]);
+
   const waterTotalConsumption = filteredWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0);
   const waterTotalWater = filteredWaterBills.reduce((s, b) => s + (b.water_value || 0), 0);
   const waterTotalSewer = filteredWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0);
