@@ -1211,19 +1211,35 @@ export default function ConsumptionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Referência</TableHead>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead>Local</TableHead>
-                      <TableHead className="text-right">Consumo (m³)</TableHead>
-                      <TableHead className="text-right">Valor Água</TableHead>
-                      <TableHead className="text-right">Valor Esgoto</TableHead>
-                       <TableHead className="text-right">Valor Total</TableHead>
-                       <TableHead>Importado em</TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("reference_month", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Referência<SortIcon col="reference_month" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("account_number", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Matrícula<SortIcon col="account_number" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_m3", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Consumo (m³)<SortIcon col="consumption_m3" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("water_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Água<SortIcon col="water_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("sewer_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Esgoto<SortIcon col="sewer_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("total_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Total<SortIcon col="total_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                       </TableHead>
+                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Importado em<SortIcon col="created_at" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                       </TableHead>
                        <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredWaterBills.map((bill) => (
+                    {sortedWaterBills.map((bill) => (
                       <TableRow key={bill.id}>
                         <TableCell className="text-xs">{bill.reference_month || "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{bill.account_number || "—"}</TableCell>
