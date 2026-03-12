@@ -612,8 +612,8 @@ export default function ConsumptionPage() {
         const lines = col.header.split("\n");
         const textY = lines.length > 1 ? y + 3 : y + 5;
         lines.forEach((line, li) => {
-          const tx = col.align === "right" ? cx + col.width - 2 : cx + 2;
-          doc.text(line, tx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
+          const tx = cx + col.width / 2;
+          doc.text(line, tx, textY + li * 3.2, { align: "center" });
         });
         doc.setDrawColor(180, 190, 200);
         doc.line(cx, y, cx, y + 10);
