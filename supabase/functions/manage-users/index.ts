@@ -35,6 +35,24 @@ Deno.serve(async (req) => {
     const { action, ...params } = await req.json();
 
     switch (action) {
+      case "list_users": {
+        const { data: profiles } = await adminClient
+          .from("profiles")
+          .select("user_id")
+          .eq("tenant_id", (await adminClient.from("profiles").select("tenant_id").eq("user_id", caller.id).single()).data!.tenant_id);
+
+        const emailMap: Record<string, string> = {};
+        for (const p of profiles || []) {
+          const { data: { user } } = await adminClient.auth.admin.getUserById(p.user_id);
+          if (user?.email) emailMap[p.user_id] = user.email;
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, emails: emailMap }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       case "invite_user": {
         const { email, full_name, role } = params;
 

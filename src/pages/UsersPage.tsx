@@ -24,6 +24,7 @@ interface UserRow {
   id: string;
   user_id: string;
   name: string;
+  email: string;
   phone: string | null;
   role: string;
 }
@@ -43,6 +44,17 @@ function useUsers() {
         .select("user_id, role");
       if (rolesError) throw rolesError;
 
+      // Fetch emails via edge function
+      let emailMap: Record<string, string> = {};
+      try {
+        const { data: emailData } = await supabase.functions.invoke("manage-users", {
+          body: { action: "list_users" },
+        });
+        if (emailData?.success) emailMap = emailData.emails || {};
+      } catch {
+        // Non-admin users won't have access, that's ok
+      }
+
       const roleMap = new Map<string, string>();
       (roles || []).forEach((r) => roleMap.set(r.user_id, r.role));
 
@@ -50,6 +62,7 @@ function useUsers() {
         id: p.id,
         user_id: p.user_id,
         name: p.full_name || "Sem nome",
+        email: emailMap[p.user_id] || "",
         phone: p.phone,
         role: roleMap.get(p.user_id) || "operador",
       }));
@@ -235,6 +248,9 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                             {isSelf && (
                               <span className="ml-2 text-[10px] text-muted-foreground">(você)</span>
                             )}
+                            {user.email && (
+                              <p className="text-xs text-muted-foreground">{user.email}</p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -289,7 +305,7 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {!editingUser && (
+            {!editingUser ? (
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail *</Label>
                 <Input
@@ -299,6 +315,11 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                 />
+              </div>
+            ) : editingUser.email && (
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input value={editingUser.email} disabled className="bg-muted" />
               </div>
             )}
             <div className="space-y-2">
