@@ -293,7 +293,7 @@ export async function collectEnergy(session: APSystemsSession, plantId: string, 
       console.log(`apsystems: summary retornou ${todayValue} kWh para hoje`);
       return [{
         plant_external_id: plantId,
-        timestamp: new Date().toISOString(),
+        timestamp: `${today}T12:00:00Z`,
         energy_generated_kwh: Math.round(todayValue * 100) / 100,
         status: "ok",
       }];
