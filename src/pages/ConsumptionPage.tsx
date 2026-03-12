@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+import { autoFitColumns } from "@/lib/excelUtils";
 
 interface EnergyBill {
   id: string;

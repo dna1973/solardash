@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { autoFitColumns } from "@/lib/excelUtils";
 import jsPDF from "jspdf";
 
 interface Nomenclature {
