@@ -376,6 +376,7 @@ export default function ConsumptionPage() {
     const data = getBillsExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const ws = XLSX.utils.json_to_sheet(data);
+    autoFitColumns(ws, data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Contas");
     XLSX.writeFile(wb, "contas-energia.xlsx");
