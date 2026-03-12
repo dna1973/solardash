@@ -305,7 +305,7 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {!editingUser && (
+            {!editingUser ? (
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail *</Label>
                 <Input
@@ -315,6 +315,11 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                 />
+              </div>
+            ) : editingUser.email && (
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input value={editingUser.email} disabled className="bg-muted" />
               </div>
             )}
             <div className="space-y-2">
