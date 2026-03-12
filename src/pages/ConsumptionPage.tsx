@@ -362,16 +362,18 @@ export default function ConsumptionPage() {
   const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
   const getBillsExportData = () =>
-    filteredBills.map((b, i) => ({
-      "Nº": i + 1,
-      "Nº da Conta": b.account_number || "—",
-      "Local": getLocal(b),
-      "Consumo KW/H": b.consumption_kwh || 0,
-      "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
-      "Valor Iluminação Pública": b.lighting_cost || 0,
-      "Valor Deduções": b.deductions_value || 0,
-      "Valor Líquido": b.net_value || 0,
-    }));
+    [...filteredBills]
+      .sort((a, b) => getLocal(a).localeCompare(getLocal(b), "pt-BR"))
+      .map((b, i) => ({
+        "Nº": i + 1,
+        "Nº da Conta": b.account_number || "—",
+        "Local": getLocal(b),
+        "Consumo KW/H": b.consumption_kwh || 0,
+        "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
+        "Valor Iluminação Pública": b.lighting_cost || 0,
+        "Valor Deduções": b.deductions_value || 0,
+        "Valor Líquido": b.net_value || 0,
+      }));
 
   const exportExcel = () => {
     const data = getBillsExportData();
@@ -385,15 +387,17 @@ export default function ConsumptionPage() {
   };
 
   const exportWaterExcel = () => {
-    const data = filteredWaterBills.map((b, i) => ({
-      "Nº": i + 1,
-      "Matrícula": b.account_number || "—",
-      "Local": getWaterLocal(b),
-      "Consumo (m³)": b.consumption_m3 || 0,
-      "Valor Água (R$)": b.water_value || 0,
-      "Valor Esgoto (R$)": b.sewer_value || 0,
-      "Valor Total (R$)": b.total_value || 0,
-    }));
+    const data = [...filteredWaterBills]
+      .sort((a, b) => getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR"))
+      .map((b, i) => ({
+        "Nº": i + 1,
+        "Matrícula": b.account_number || "—",
+        "Local": getWaterLocal(b),
+        "Consumo (m³)": b.consumption_m3 || 0,
+        "Valor Água (R$)": b.water_value || 0,
+        "Valor Esgoto (R$)": b.sewer_value || 0,
+        "Valor Total (R$)": b.total_value || 0,
+      }));
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const ws = XLSX.utils.json_to_sheet(data);
     autoFitColumns(ws, data);
