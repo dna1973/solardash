@@ -270,6 +270,7 @@ function exportApiPdf(userEmail?: string) {
 }
 
 export default function McpDocPage() {
+  const { user } = useAuth();
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -279,7 +280,7 @@ export default function McpDocPage() {
             Documentação e configuração do servidor Model Context Protocol (MCP) para integração com clientes externos.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={exportApiPdf}>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApiPdf(user?.email ?? undefined)}>
           <FileDown className="h-4 w-4" />
           Exportar PDF
         </Button>
