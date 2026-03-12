@@ -44,6 +44,17 @@ function useUsers() {
         .select("user_id, role");
       if (rolesError) throw rolesError;
 
+      // Fetch emails via edge function
+      let emailMap: Record<string, string> = {};
+      try {
+        const { data: emailData } = await supabase.functions.invoke("manage-users", {
+          body: { action: "list_users" },
+        });
+        if (emailData?.success) emailMap = emailData.emails || {};
+      } catch {
+        // Non-admin users won't have access, that's ok
+      }
+
       const roleMap = new Map<string, string>();
       (roles || []).forEach((r) => roleMap.set(r.user_id, r.role));
 
@@ -51,6 +62,7 @@ function useUsers() {
         id: p.id,
         user_id: p.user_id,
         name: p.full_name || "Sem nome",
+        email: emailMap[p.user_id] || "",
         phone: p.phone,
         role: roleMap.get(p.user_id) || "operador",
       }));
