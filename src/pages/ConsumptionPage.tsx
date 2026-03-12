@@ -472,8 +472,8 @@ export default function ConsumptionPage() {
       cols.forEach((col) => {
         const colLines = col.header.split("\n"); const textY = colLines.length > 1 ? y + 3 : y + 5;
         colLines.forEach((line, li) => {
-          const colTx = col.align === "right" ? cx + col.width - 2 : cx + 2;
-          doc.text(line, colTx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
+          const colTx = cx + col.width / 2;
+          doc.text(line, colTx, textY + li * 3.2, { align: "center" });
         });
         doc.setDrawColor(180, 200, 220); doc.line(cx, y, cx, y + 10); cx += col.width;
       });
