@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, ExternalLink, Server, Key, Wrench, Code2, FileDown } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 
