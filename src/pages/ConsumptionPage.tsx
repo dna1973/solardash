@@ -530,7 +530,7 @@ export default function ConsumptionPage() {
     // Rodapé com nome do usuário e data/hora
     const totalPages1 = doc.getNumberOfPages();
     const now1 = new Date();
-    const footerText1 = `Gerado por: ${user?.email || "Usuário"} em ${now1.toLocaleDateString("pt-BR")} às ${now1.toLocaleTimeString("pt-BR")}`;
+    const footerText1 = `Gerado por: ${user?.user_metadata?.full_name || user?.email || "Usuário"} em ${now1.toLocaleDateString("pt-BR")} às ${now1.toLocaleTimeString("pt-BR")}`;
     for (let p = 1; p <= totalPages1; p++) {
       doc.setPage(p);
       doc.setFont("helvetica", "italic");
