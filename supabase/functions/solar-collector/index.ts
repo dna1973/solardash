@@ -423,60 +423,60 @@ async function syncAPsystemsOptimized(
   }
 
   // ─── Optimized path: plants already exist, only collect energy ───
+  // CRITICAL: Make only 1 summary call for the entire system, then divide by ecuCount
   const ecuCount = dbPlants.length;
-  console.log(`apsystems: ${ecuCount} plantas no DB, coletando apenas energia (summary-first)`);
+  console.log(`apsystems: ${ecuCount} plantas no DB, fazendo 1 única chamada de summary`);
 
   const sid = credentials.system_id || "";
   let energyPoints = 0;
+  const today = new Date().toISOString().split("T")[0];
 
-  for (let i = 0; i < dbPlants.length; i++) {
-    const plant = dbPlants[i];
-    const ecuId = plant.name.replace("ECU ", "").trim();
-    const externalId = `${sid}_ECU_${ecuId}`;
+  // Single summary call for the whole system
+  try {
+    const summaryData = await apsystems.collectEnergy(session, sid, undefined, 1);
+    // summaryData returns system total; divide by ecuCount for per-ECU value
+    const systemTotal = summaryData.length > 0 ? (summaryData[0].energy_generated_kwh || 0) : 0;
+    const perEcuValue = ecuCount > 0 ? Math.round((systemTotal / ecuCount) * 100) / 100 : 0;
 
-    // Delay between ECUs (5s to be safe with rate limits)
-    if (i > 0) {
-      console.log(`apsystems: aguardando 5s antes de ECU ${ecuId}...`);
-      await new Promise(r => setTimeout(r, 5000));
+    console.log(`apsystems: summary total=${systemTotal} kWh, por ECU=${perEcuValue} kWh`);
+
+    if (perEcuValue > 0) {
+      for (const plant of dbPlants) {
+        energyPoints += await persistEnergyEntries(supabase, plant.id, [{
+          plant_external_id: sid,
+          timestamp: `${today}T12:00:00Z`,
+          energy_generated_kwh: perEcuValue,
+          status: "ok",
+        }]);
+
+        // Update plant status to online
+        await supabase.from("plants").update({
+          status: "online",
+          updated_at: new Date().toISOString(),
+        }).eq("id", plant.id);
+      }
     }
-
-    try {
-      console.log(`apsystems: coletando energia ECU ${ecuId} (plant ${plant.id})`);
-      // Pass ecuCount to avoid extra API call to /details
-      const energyData = await apsystems.collectEnergy(session, externalId, undefined, ecuCount);
-      console.log(`apsystems: ECU ${ecuId} retornou ${energyData.length} pontos`);
-      energyPoints += await persistEnergyEntries(supabase, plant.id, energyData);
-
-      // Update plant status to online
-      await supabase.from("plants").update({
-        status: "online",
-        updated_at: new Date().toISOString(),
-      }).eq("id", plant.id);
-    } catch (e) {
-      console.error(`apsystems: erro ao coletar ECU ${ecuId}: ${e}`);
-      // Don't throw — continue with next ECU
-    }
+  } catch (e) {
+    console.error(`apsystems: erro no summary do sistema: ${e}`);
   }
 
-  // Historical data: only at 22-23h UTC window
+  // Historical data: only at 22-23h UTC window — 1 call for daily, shared across ECUs
   const currentHour = new Date().getUTCHours();
   if (currentHour >= 22) {
     console.log("apsystems: janela de coleta histórica ativa");
-    for (let i = 0; i < dbPlants.length; i++) {
-      const plant = dbPlants[i];
-      const ecuId = plant.name.replace("ECU ", "").trim();
-      const externalId = `${sid}_ECU_${ecuId}`;
+    const endDate = today;
+    const startDate30 = new Date();
+    startDate30.setDate(startDate30.getDate() - 30);
 
-      await new Promise(r => setTimeout(r, 5000));
-      try {
-        const endDate = new Date().toISOString().split("T")[0];
-        const startDate30 = new Date();
-        startDate30.setDate(startDate30.getDate() - 30);
-        const dailyData = await apsystems.collectDailyEnergy(session, externalId, startDate30.toISOString().split("T")[0], endDate);
+    try {
+      // 1 single daily call for the system
+      const dailyData = await apsystems.collectDailyEnergy(session, sid, startDate30.toISOString().split("T")[0], endDate, ecuCount);
+      // dailyData already divided by ecuCount inside the adapter
+      for (const plant of dbPlants) {
         energyPoints += await persistEnergyEntries(supabase, plant.id, dailyData);
-      } catch (e) {
-        console.log(`apsystems: erro histórico diário ECU ${ecuId}: ${e}`);
       }
+    } catch (e) {
+      console.log(`apsystems: erro histórico diário: ${e}`);
     }
   }
 
