@@ -255,6 +255,17 @@ function exportApiPdf(userEmail?: string) {
     y += 3.5;
   });
 
+  const totalPages = doc.getNumberOfPages();
+  const nowDt = new Date();
+  const footerText = `Gerado por: ${userEmail || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
+  }
+
   doc.save("documentacao-api-mcp.pdf");
 }
 
