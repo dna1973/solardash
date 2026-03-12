@@ -577,7 +577,7 @@ export default function ConsumptionPage() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(30, 30, 30);
-    doc.text("EXTRATO DE FATURAS", centerX, y + 1, { align: "center" });
+    doc.text("EXTRATO DE FATURAS DE ENERGIA", centerX, y + 1, { align: "center" });
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
