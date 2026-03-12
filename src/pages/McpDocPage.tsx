@@ -134,7 +134,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
   );
 }
 
-function exportApiPdf() {
+function exportApiPdf(userEmail?: string) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const marginL = 14;
