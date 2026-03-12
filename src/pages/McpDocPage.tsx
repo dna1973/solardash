@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, ExternalLink, Server, Key, Wrench, Code2, FileDown } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 
@@ -133,7 +134,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
   );
 }
 
-function exportApiPdf() {
+function exportApiPdf(userEmail?: string) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const marginL = 14;
@@ -254,10 +255,22 @@ function exportApiPdf() {
     y += 3.5;
   });
 
+  const totalPages = doc.getNumberOfPages();
+  const nowDt = new Date();
+  const footerText = `Gerado por: ${userEmail || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
+  }
+
   doc.save("documentacao-api-mcp.pdf");
 }
 
 export default function McpDocPage() {
+  const { user } = useAuth();
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -267,7 +280,7 @@ export default function McpDocPage() {
             Documentação e configuração do servidor Model Context Protocol (MCP) para integração com clientes externos.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={exportApiPdf}>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApiPdf(user?.email ?? undefined)}>
           <FileDown className="h-4 w-4" />
           Exportar PDF
         </Button>

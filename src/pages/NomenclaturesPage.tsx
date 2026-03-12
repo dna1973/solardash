@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Settings2, Pencil, Trash2, Save, X, Plus, FileDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -85,6 +86,7 @@ function PlantMultiSelect({
 }
 
 export default function NomenclaturesPage() {
+  const { user } = useAuth();
   const [nomenclatures, setNomenclatures] = useState<Nomenclature[]>([]);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [editingNom, setEditingNom] = useState<string | null>(null);
@@ -309,6 +311,17 @@ export default function NomenclaturesPage() {
       });
       y += 6;
     });
+
+    const totalPages = doc.getNumberOfPages();
+    const nowDt = new Date();
+    const footerText = `Gerado por: ${user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(footerText, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
+    }
 
     doc.save("localidades.pdf");
     toast.success("PDF exportado");
