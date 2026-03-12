@@ -408,15 +408,17 @@ export default function ConsumptionPage() {
   };
 
   const exportWaterPDF = () => {
-    const data = filteredWaterBills.map((b, i) => ({
-      "Nº": i + 1,
-      "Matrícula": b.account_number || "—",
-      "Local": getWaterLocal(b),
-      "Consumo (m³)": b.consumption_m3 || 0,
-      "Valor Água (R$)": b.water_value || 0,
-      "Valor Esgoto (R$)": b.sewer_value || 0,
-      "Valor Total (R$)": b.total_value || 0,
-    }));
+    const data = [...filteredWaterBills]
+      .sort((a, b) => getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR"))
+      .map((b, i) => ({
+        "Nº": i + 1,
+        "Matrícula": b.account_number || "—",
+        "Local": getWaterLocal(b),
+        "Consumo (m³)": b.consumption_m3 || 0,
+        "Valor Água (R$)": b.water_value || 0,
+        "Valor Esgoto (R$)": b.sewer_value || 0,
+        "Valor Total (R$)": b.total_value || 0,
+      }));
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
 
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -472,8 +474,8 @@ export default function ConsumptionPage() {
       cols.forEach((col) => {
         const colLines = col.header.split("\n"); const textY = colLines.length > 1 ? y + 3 : y + 5;
         colLines.forEach((line, li) => {
-          const colTx = col.align === "right" ? cx + col.width - 2 : cx + 2;
-          doc.text(line, colTx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
+          const colTx = cx + col.width / 2;
+          doc.text(line, colTx, textY + li * 3.2, { align: "center" });
         });
         doc.setDrawColor(180, 200, 220); doc.line(cx, y, cx, y + 10); cx += col.width;
       });
@@ -612,8 +614,8 @@ export default function ConsumptionPage() {
         const lines = col.header.split("\n");
         const textY = lines.length > 1 ? y + 3 : y + 5;
         lines.forEach((line, li) => {
-          const tx = col.align === "right" ? cx + col.width - 2 : cx + 2;
-          doc.text(line, tx, textY + li * 3.2, { align: col.align === "right" ? "right" : "left" });
+          const tx = cx + col.width / 2;
+          doc.text(line, tx, textY + li * 3.2, { align: "center" });
         });
         doc.setDrawColor(180, 190, 200);
         doc.line(cx, y, cx, y + 10);
