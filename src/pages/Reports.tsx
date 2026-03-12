@@ -233,7 +233,7 @@ export default function Reports() {
       return;
     }
     try {
-      const XLSX = await import("xlsx");
+      const XLSX = await import("xlsx-js-style");
 
       const summaryRows = [
         { Indicador: "Energia Gerada (média/mês)", Valor: `${(monthlyGen / 1000).toFixed(1)} MWh` },
