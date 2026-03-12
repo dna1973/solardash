@@ -1126,6 +1126,27 @@ export default function ConsumptionPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    <TableRow className="bg-muted/50 font-semibold border-t-2">
+                      <TableCell className="text-xs">Total</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{sortedEnergyBills.length} contas</TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedEnergyBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0).toLocaleString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedEnergyBills.reduce((s, b) => s + ((b as any).net_value || 0) + ((b as any).deductions_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedEnergyBills.reduce((s, b) => s + ((b as any).lighting_cost || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono text-destructive">
+                        {sortedEnergyBills.reduce((s, b) => s + ((b as any).deductions_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedEnergyBills.reduce((s, b) => s + ((b as any).net_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </CardContent>
@@ -1286,6 +1307,25 @@ export default function ConsumptionPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    <TableRow className="bg-muted/50 font-semibold border-t-2">
+                      <TableCell className="text-xs">Total</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{sortedWaterBills.length} contas</TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0).toLocaleString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.water_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.total_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </CardContent>
