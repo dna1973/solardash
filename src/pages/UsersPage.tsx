@@ -248,6 +248,9 @@ export default function UsersPage({ embedded = false }: { embedded?: boolean }) 
                             {isSelf && (
                               <span className="ml-2 text-[10px] text-muted-foreground">(você)</span>
                             )}
+                            {user.email && (
+                              <p className="text-xs text-muted-foreground">{user.email}</p>
+                            )}
                           </div>
                         </div>
                       </td>
