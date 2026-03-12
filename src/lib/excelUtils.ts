@@ -1,4 +1,4 @@
-import type { WorkSheet } from "xlsx";
+import type { WorkSheet } from "xlsx-js-style";
 
 /**
  * Auto-fit column widths and bold header row.
