@@ -314,7 +314,7 @@ export default function NomenclaturesPage() {
 
     const totalPages = doc.getNumberOfPages();
     const nowDt = new Date();
-    const footerText = `Gerado por: ${user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
+    const footerText = `Gerado por: ${user?.user_metadata?.full_name || user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       doc.setFont("helvetica", "italic");
