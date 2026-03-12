@@ -438,27 +438,15 @@ export default function ConsumptionPage() {
     const refLabel = [wml, wyl].filter(Boolean).join("/") || "Todos";
     const propLabel = waterFilterProperty !== "all" ? waterFilterProperty : "Todos os imóveis";
 
-    let y = 14; const headerH = 28;
+    let y = 14; const headerH = 22;
     doc.setFillColor(230, 244, 255); doc.rect(mx, y - 4, tableW, headerH, "F");
     doc.setDrawColor(160, 200, 230); doc.rect(mx, y - 4, tableW, headerH, "S");
-    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(30, 30, 30);
-    doc.text("EXTRATO DE CONTAS DE ÁGUA", mx + 3, y + 1);
-    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(80, 80, 80);
-    doc.text("Mês de Referência:", mx + 3, y + 7);
-    doc.setFont("helvetica", "bold"); doc.text(refLabel, mx + 3 + doc.getTextWidth("Mês de Referência: "), y + 7);
-    doc.setFont("helvetica", "normal"); doc.text("Imóvel:", mx + 3, y + 12);
-    doc.setFont("helvetica", "bold");
-    const propLines = wrapText(propLabel, 90, 7);
-    propLines.forEach((line, i) => { doc.text(line, mx + 3 + doc.getTextWidth("Imóvel: "), y + 12 + i * 3.5); });
-
-    const rightX = pageW - mx - 85;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(80, 80, 80);
-    [{ label: "Valor Água:", value: fmtMoney2(waterTotalWater) },
-     { label: "Valor Esgoto:", value: fmtMoney2(waterTotalSewer) },
-     { label: "Valor Total:", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
-      doc.setFont("helvetica", "normal"); doc.text(item.label, rightX, y + 1 + i * 5);
-      doc.setFont("helvetica", "bold"); doc.text(item.value, rightX + 80, y + 1 + i * 5, { align: "right" });
-    });
+    const centerX = mx + tableW / 2;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(30, 30, 30);
+    doc.text("EXTRATO DE CONTAS DE ÁGUA", centerX, y + 1, { align: "center" });
+    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(60, 60, 60);
+    doc.text(`Mês de Referência: ${refLabel}`, centerX, y + 8, { align: "center" });
+    doc.text(`Imóvel: ${propLabel}`, centerX, y + 14, { align: "center" });
 
     y += headerH + 4;
     const cols = [
