@@ -63,6 +63,7 @@ interface WaterBill {
 }
 
 export default function ConsumptionPage() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [waterImportOpen, setWaterImportOpen] = useState(false);
