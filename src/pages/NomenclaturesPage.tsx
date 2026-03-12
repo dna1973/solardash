@@ -86,6 +86,7 @@ function PlantMultiSelect({
 }
 
 export default function NomenclaturesPage() {
+  const { user } = useAuth();
   const [nomenclatures, setNomenclatures] = useState<Nomenclature[]>([]);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [editingNom, setEditingNom] = useState<string | null>(null);

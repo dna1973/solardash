@@ -18,6 +18,7 @@ function getYearOptions(data: any[]) {
 }
 
 export default function Reports() {
+  const { user } = useAuth();
   const { data: energyData = [], isLoading: loadingEnergy } = useEnergyData(undefined, "year");
   const { data: plantsData = [], isLoading: loadingPlants } = usePlants();
   const { toast } = useToast();
