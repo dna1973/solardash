@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2, RefreshCw, Zap, Settings2 } from "lucide-react";
+import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2, RefreshCw, Zap, Settings2, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { SyncLogsPanel } from "@/components/SyncLogsPanel";
@@ -97,6 +97,7 @@ export function IntegrationManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [savedIntegrations, setSavedIntegrations] = useState<SavedIntegration[]>([]);
   const [syncing, setSyncing] = useState(false);
+  const [visibleFields, setVisibleFields] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -342,13 +343,24 @@ export function IntegrationManager() {
                           {mfr.fields.map((field) => (
                             <div key={field.key} className="space-y-1.5">
                               <Label htmlFor={field.key} className="text-xs">{field.label}</Label>
-                              <Input
-                                id={field.key}
-                                type={field.type}
-                                placeholder={field.placeholder}
-                                value={formData[field.key] || ""}
-                                onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-                              />
+                              <div className="relative">
+                                <Input
+                                  id={field.key}
+                                  type={field.type === "password" && visibleFields[field.key] ? "text" : field.type}
+                                  placeholder={field.placeholder}
+                                  value={formData[field.key] || ""}
+                                  onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                                />
+                                {field.type === "password" && (
+                                  <button
+                                    type="button"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    onClick={() => setVisibleFields(prev => ({ ...prev, [field.key]: !prev[field.key] }))}
+                                  >
+                                    {visibleFields[field.key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           ))}
 
