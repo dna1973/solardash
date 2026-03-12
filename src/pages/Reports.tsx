@@ -1,4 +1,5 @@
 import { autoFitColumns } from "@/lib/excelUtils";
+import { useAuth } from "@/contexts/AuthContext";
 import { EnergyChart } from "@/components/EnergyChart";
 import { FileBarChart, Download, Leaf, Zap, TrendingUp, Loader2, BarChart3, Filter } from "lucide-react";
 import { motion } from "framer-motion";
