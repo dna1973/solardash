@@ -1,3 +1,4 @@
+import { autoFitColumns } from "@/lib/excelUtils";
 import { EnergyChart } from "@/components/EnergyChart";
 import { FileBarChart, Download, Leaf, Zap, TrendingUp, Loader2, BarChart3, Filter } from "lucide-react";
 import { motion } from "framer-motion";
@@ -241,7 +242,7 @@ export default function Reports() {
         { Indicador: "CO₂ Evitado (média/mês)", Valor: `${co2Monthly.toFixed(1)} ton` },
       ];
       const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
-      summarySheet["!cols"] = [{ wch: 30 }, { wch: 20 }];
+      autoFitColumns(summarySheet, summaryRows);
 
       const detailedRows = detailedTable.map((r) => ({
         Usina: r.plant,
@@ -251,7 +252,7 @@ export default function Reports() {
         "Injetada (kWh)": Math.round(r.injected),
       }));
       const detailedSheet = XLSX.utils.json_to_sheet(detailedRows);
-      detailedSheet["!cols"] = [{ wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+      autoFitColumns(detailedSheet, detailedRows);
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, summarySheet, "Resumo");
