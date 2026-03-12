@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2, RefreshCw, Zap, Settings2 } from "lucide-react";
+import { Loader2, Plug, CheckCircle2, XCircle, List, Save, Trash2, RefreshCw, Zap, Settings2, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { SyncLogsPanel } from "@/components/SyncLogsPanel";
