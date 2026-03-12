@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { autoFitColumns } from "@/lib/excelUtils";
 import jsPDF from "jspdf";
 
