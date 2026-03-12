@@ -268,6 +268,7 @@ export default function NomenclaturesPage() {
   const handleExportExcel = () => {
     const data = getExportData();
     const ws = XLSX.utils.json_to_sheet(data);
+    autoFitColumns(ws, data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Localidades");
     XLSX.writeFile(wb, "localidades.xlsx");
