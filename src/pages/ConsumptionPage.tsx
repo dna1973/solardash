@@ -736,6 +736,18 @@ export default function ConsumptionPage() {
       doc.text(item.value, footerX + 78, y + i * 6, { align: "right" });
     });
 
+    // Rodapé com nome do usuário e data/hora
+    const totalPages2 = doc.getNumberOfPages();
+    const now2 = new Date();
+    const footerText2 = `Gerado por: ${user?.email || "Usuário"} em ${now2.toLocaleDateString("pt-BR")} às ${now2.toLocaleTimeString("pt-BR")}`;
+    for (let p = 1; p <= totalPages2; p++) {
+      doc.setPage(p);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(footerText2, pageW / 2, pageH - 6, { align: "center" });
+    }
+
     doc.save("extrato-faturas.pdf");
     toast.success("PDF exportado!");
   };
