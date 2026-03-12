@@ -527,6 +527,18 @@ export default function ConsumptionPage() {
       doc.setFont("helvetica", "bold"); doc.text(item.value, footerX + 78, y + i * 6, { align: "right" });
     });
 
+    // Rodapé com nome do usuário e data/hora
+    const totalPages1 = doc.getNumberOfPages();
+    const now1 = new Date();
+    const footerText1 = `Gerado por: ${user?.email || "Usuário"} em ${now1.toLocaleDateString("pt-BR")} às ${now1.toLocaleTimeString("pt-BR")}`;
+    for (let p = 1; p <= totalPages1; p++) {
+      doc.setPage(p);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(footerText1, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
+    }
+
     doc.save("extrato-contas-agua.pdf");
     toast.success("PDF exportado!");
   };
