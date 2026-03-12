@@ -280,7 +280,7 @@ export default function McpDocPage() {
             Documentação e configuração do servidor Model Context Protocol (MCP) para integração com clientes externos.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApiPdf(user?.email ?? undefined)}>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApiPdf(user?.user_metadata?.full_name || user?.email || undefined)}>
           <FileDown className="h-4 w-4" />
           Exportar PDF
         </Button>
