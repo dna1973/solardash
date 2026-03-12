@@ -97,6 +97,7 @@ export function IntegrationManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [savedIntegrations, setSavedIntegrations] = useState<SavedIntegration[]>([]);
   const [syncing, setSyncing] = useState(false);
+  const [visibleFields, setVisibleFields] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
