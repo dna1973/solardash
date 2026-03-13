@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.solar-mcp]
 verify_jwt = false
+
+[functions.ocr-generation-report]
+verify_jwt = false

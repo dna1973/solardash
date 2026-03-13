@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { usePlants, useAlerts } from "@/hooks/useSupabaseData";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
-import { Sun, MapPin, Calendar, Loader2, Factory, Wrench, AlertTriangle, Search, Filter, X } from "lucide-react";
+import { Sun, MapPin, Calendar, Loader2, Factory, Wrench, AlertTriangle, Search, Filter, X, FileUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Alerts from "./Alerts";
+import { GenerationImportDialog } from "@/components/GenerationImportDialog";
 
 export default function Plants() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function Plants() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterManufacturer, setFilterManufacturer] = useState("all");
   const [filterIntegrator, setFilterIntegrator] = useState("all");
+  const [importOpen, setImportOpen] = useState(false);
 
   const activeAlertCount = (dbAlerts || []).filter((a) => !a.resolved).length;
 
@@ -81,9 +83,15 @@ export default function Plants() {
           </p>
         </div>
         {activeTab === "usinas" && (
-          <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto">
-            + Nova Usina
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
+              <FileUp className="h-4 w-4" />
+              Importar Geração (PDF)
+            </Button>
+            <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity flex-1 sm:flex-initial">
+              + Nova Usina
+            </button>
+          </div>
         )}
       </div>
 
@@ -269,6 +277,7 @@ export default function Plants() {
           <Alerts embedded />
         </TabsContent>
       </Tabs>
+      <GenerationImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
