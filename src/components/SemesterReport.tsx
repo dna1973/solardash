@@ -567,6 +567,74 @@ export function SemesterReport() {
     }
   }, [generationByPlantMonth, rateiData, semesterAlerts, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, year, semester, toast]);
 
+  // Import commission members via OCR from portaria PDF
+  const handleImportCommission = useCallback(async (file: File) => {
+    setImportingCommission(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const { data, error } = await supabase.functions.invoke("generate-semester-report", {
+        body: {
+          mode: "extract_commission",
+          fileBase64: base64,
+          fileType: file.type,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.members && Array.isArray(data.members)) {
+        const updated: CommissionMember[] = DEFAULT_COMMISSION.map((m) => ({ ...m }));
+        const seatMap: Record<string, number> = {
+          "Presidente": 0, "Vice-Presidente": 1,
+          "DEL01": 2, "DEL02": 3, "DEL03": 4, "DEL04": 5, "DEL05": 6, "DEL06": 7,
+        };
+
+        data.members.forEach((m: { role: string; name: string; matricula?: string; lotacao?: string }) => {
+          let idx = -1;
+          for (const [key, seatIdx] of Object.entries(seatMap)) {
+            if (m.role?.toUpperCase().includes(key.toUpperCase()) || m.lotacao?.toUpperCase().includes(key.toUpperCase())) {
+              idx = seatIdx;
+              break;
+            }
+          }
+          if (idx === -1 && m.lotacao?.toUpperCase().includes("SEDE")) {
+            // First empty SEDE slot
+            if (!updated[0].name) idx = 0;
+            else if (!updated[1].name) idx = 1;
+          }
+          if (idx >= 0 && idx < updated.length) {
+            updated[idx] = {
+              ...updated[idx],
+              name: `${m.name}${m.matricula ? ` (${m.matricula})` : ""}`,
+            };
+          }
+        });
+
+        setCommission(updated);
+        toast({ title: "Membros importados com sucesso!", description: `${data.members.length} membros extraídos do documento.` });
+      } else {
+        throw new Error("Não foi possível extrair os membros do documento.");
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao importar membros", description: err.message, variant: "destructive" });
+    } finally {
+      setImportingCommission(false);
+    }
+  }, [toast]);
+
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
 
   if (isLoading) {
