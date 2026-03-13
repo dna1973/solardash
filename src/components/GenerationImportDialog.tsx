@@ -269,8 +269,25 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
         {/* Review */}
         {step === "review" && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {rows.length} registros extraídos. Revise e corrija antes de salvar.
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <p className="text-sm text-muted-foreground">
+                {rows.length} registros extraídos. Revise e corrija antes de salvar.
+              </p>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium whitespace-nowrap">Ano de referência:</Label>
+                <Input
+                  type="number"
+                  className="h-8 w-24 text-sm"
+                  value={importYear}
+                  onChange={(e) => {
+                    const y = parseInt(e.target.value) || new Date().getFullYear();
+                    setImportYear(y);
+                    setRows((prev) => prev.map((r) => ({ ...r, year: y })));
+                  }}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
               Linhas sem usina mapeada (em vermelho) serão ignoradas.
             </p>
 
