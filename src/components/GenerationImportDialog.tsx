@@ -50,6 +50,7 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
     setErrorMsg("");
     setSavedCount(0);
     setSkippedCount(0);
+    setImportYear(new Date().getFullYear());
   };
 
   const handleFile = (f: File) => {
