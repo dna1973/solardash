@@ -54,6 +54,8 @@ interface WaterBill {
   consumption_m3: number | null;
   water_value: number | null;
   sewer_value: number | null;
+  gross_value: number | null;
+  deductions_value: number | null;
   total_value: number | null;
   tariff_type: string | null;
   due_date: string | null;
