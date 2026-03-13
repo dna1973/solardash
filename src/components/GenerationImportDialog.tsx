@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuditLog } from "@/hooks/useAuditLog";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Upload, FileText, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
 
