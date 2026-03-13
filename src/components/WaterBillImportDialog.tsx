@@ -19,6 +19,8 @@ interface ExtractedWaterBillData {
   water_value?: number;
   sewer_value?: number;
   total_value?: number;
+  gross_value?: number;
+  deductions_value?: number;
   tariff_type?: string;
   due_date?: string;
   invoice_number?: string;
