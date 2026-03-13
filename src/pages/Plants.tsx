@@ -277,6 +277,7 @@ export default function Plants() {
           <Alerts embedded />
         </TabsContent>
       </Tabs>
+      <GenerationImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
