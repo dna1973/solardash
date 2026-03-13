@@ -424,46 +424,69 @@ export function SemesterReport() {
       });
       const plantBars = Array.from(plantAgg.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-      const chartLeft = 65;
-      const chartRight = pageW - 14;
-      const maxBarW = chartRight - chartLeft - 40; // reserve 40mm for labels
+      const chartLeft = 14;
+      const labelW = 52; // space for plant name labels
+      const barLeft = chartLeft + labelW;
+      const barRight = pageW - 14;
+      const maxBarW = barRight - barLeft;
       const barH = 5;
       const barGap = 8;
-      const maxVal = Math.max(...plantBars.flatMap((p) => [p.expected, p.generated]), 1);
+      // maxVal = total (largest possible bar), so TOTAL bar fills exactly maxBarW
+      const totalMax = Math.max(totalExpected, totalGenerated, 1);
 
       // Legend
       doc.setFontSize(7);
       doc.setFillColor(59, 130, 246);
-      doc.rect(chartLeft, y - 3, 8, 3, "F");
+      doc.rect(barLeft, y - 3, 8, 3, "F");
       doc.setTextColor(80, 80, 80);
-      doc.text("Previsto", chartLeft + 10, y);
+      doc.text("Previsto", barLeft + 10, y);
       doc.setFillColor(34, 139, 34);
-      doc.rect(chartLeft + 35, y - 3, 8, 3, "F");
-      doc.text("Realizado", chartLeft + 45, y);
+      doc.rect(barLeft + 35, y - 3, 8, 3, "F");
+      doc.text("Realizado", barLeft + 45, y);
       y += 6;
 
       const drawBarRow = (name: string, expected: number, generated: number, bold = false) => {
         addCheckPage();
-        doc.setFontSize(7);
+        doc.setFontSize(6.5);
         doc.setFont("helvetica", bold ? "bold" : "normal");
         doc.setTextColor(34, 34, 34);
-        const label = name.length > 25 ? name.slice(0, 24) + "…" : name;
-        doc.text(label, chartLeft - 2, y + 1, { align: "right" });
+        const label = name.length > 28 ? name.slice(0, 27) + "…" : name;
+        doc.text(label, barLeft - 2, y + 1, { align: "right" });
 
-        const expectedW = Math.max((expected / maxVal) * maxBarW, 0.5);
+        const expectedW = Math.max((expected / totalMax) * maxBarW, 0.5);
         doc.setFillColor(59, 130, 246);
-        doc.rect(chartLeft, y - 2, expectedW, barH / 2, "F");
+        doc.rect(barLeft, y - 2, expectedW, barH / 2, "F");
 
-        const generatedW = Math.max((generated / maxVal) * maxBarW, 0.5);
+        const generatedW = Math.max((generated / totalMax) * maxBarW, 0.5);
         doc.setFillColor(34, 139, 34);
-        doc.rect(chartLeft, y + barH / 2 - 2, generatedW, barH / 2, "F");
+        doc.rect(barLeft, y + barH / 2 - 2, generatedW, barH / 2, "F");
 
-        doc.setFontSize(6);
-        doc.setTextColor(80, 80, 80);
+        // Labels: put inside bar if it would overflow, otherwise outside
+        doc.setFontSize(5.5);
         doc.setFont("helvetica", "normal");
         const perf = expected > 0 ? Math.round((generated / expected) * 100) : 0;
-        doc.text(`${Math.round(expected).toLocaleString("pt-BR")} kWh`, chartLeft + expectedW + 2, y);
-        doc.text(`${Math.round(generated).toLocaleString("pt-BR")} kWh (${perf}%)`, chartLeft + generatedW + 2, y + barH / 2);
+        const expText = `${Math.round(expected).toLocaleString("pt-BR")} kWh`;
+        const genText = `${Math.round(generated).toLocaleString("pt-BR")} kWh (${perf}%)`;
+        const expTextW = doc.getTextWidth(expText);
+        const genTextW = doc.getTextWidth(genText);
+
+        // Expected label
+        if (barLeft + expectedW + 2 + expTextW > barRight) {
+          doc.setTextColor(255, 255, 255);
+          doc.text(expText, barLeft + expectedW - 2, y, { align: "right" });
+        } else {
+          doc.setTextColor(80, 80, 80);
+          doc.text(expText, barLeft + expectedW + 2, y);
+        }
+
+        // Generated label
+        if (barLeft + generatedW + 2 + genTextW > barRight) {
+          doc.setTextColor(255, 255, 255);
+          doc.text(genText, barLeft + generatedW - 2, y + barH / 2, { align: "right" });
+        } else {
+          doc.setTextColor(80, 80, 80);
+          doc.text(genText, barLeft + generatedW + 2, y + barH / 2);
+        }
 
         y += barGap;
       };
