@@ -602,185 +602,83 @@ export function SemesterReport() {
     }
   }, [aiResult, generationByPlantMonth, rateiData, semesterAlerts, alertsByType, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, commission, showChecklist, checklist, year, semester, user, toast]);
 
-  // Export DOCX
-  const handleExportDOCX = useCallback(async () => {
+  // Export DOCX (HTML-to-DOC, Vite compatible)
+  const handleExportDOCX = useCallback(() => {
     try {
-      const docx = await import("docx");
-      const { saveAs } = await import("file-saver");
+      const nowDt = new Date();
+      const footerText = `Gerado por: ${user?.user_metadata?.full_name || user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
 
-      const children: any[] = [];
+      let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>
+body{font-family:Calibri,sans-serif;font-size:11pt;color:#222}
+h1{text-align:center;font-size:14pt;margin-bottom:4px}
+.sub{text-align:center;font-size:9pt;color:#505050;margin-bottom:2px}
+.sbox{background:#228B22;color:#fff;padding:8px 16px;text-align:center;margin:16px 0}
+.sbox h2{font-size:12pt;margin:0}.sbox p{font-size:8pt;margin:2px 0 0}
+.st{font-size:11pt;font-weight:bold;border-bottom:2px solid #3B82F6;padding-bottom:4px;margin-top:20px;margin-bottom:8px}
+table{border-collapse:collapse;width:100%;margin-bottom:12px;font-size:8pt}
+th{background:#3B82F6;color:#fff;padding:4px 6px;text-align:left;font-weight:bold}
+td{padding:4px 6px;border-bottom:1px solid #ddd}
+.alt td{background:#f5f5f5}.tot td{background:#e8e8e8;font-weight:bold}
+.j{text-align:justify;font-size:9pt;color:#323232;line-height:1.6}
+.ft{font-size:7pt;color:#808080;font-style:italic;margin-top:30px}
+</style></head><body>
+<h1>RELATÓRIO SEMESTRAL DE EFICIÊNCIA ENERGÉTICA</h1>
+<p class="sub">Conforme Art. 4º da Portaria nº 11/2026 — CGE-PE</p>
+<p class="sub">${semesterLabel}</p>
+<div class="sbox"><h2>ECONOMIA TOTAL NO SEMESTRE: R$ ${totalSaving.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</h2>
+<p>Tarifa: R$ ${tariffValue.toFixed(2)}/kWh | Geração: ${(totalGenerated / 1000).toFixed(1)} MWh</p></div>`;
 
-      // Title
-      children.push(
-        new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { after: 100 }, children: [
-          new docx.TextRun({ text: "RELATÓRIO SEMESTRAL DE EFICIÊNCIA ENERGÉTICA", bold: true, size: 28, font: "Calibri" }),
-        ]}),
-        new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { after: 80 }, children: [
-          new docx.TextRun({ text: "Conforme Art. 4º da Portaria nº 11/2026 — CGE-PE", size: 18, color: "505050", font: "Calibri" }),
-        ]}),
-        new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { after: 200 }, children: [
-          new docx.TextRun({ text: semesterLabel, size: 18, color: "505050", font: "Calibri" }),
-        ]}),
-      );
-
-      // Saving highlight
-      children.push(
-        new docx.Paragraph({ spacing: { after: 100 }, shading: { type: docx.ShadingType.SOLID, color: "228B22" }, children: [
-          new docx.TextRun({ text: `ECONOMIA TOTAL NO SEMESTRE: R$ ${totalSaving.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, bold: true, size: 24, color: "FFFFFF", font: "Calibri" }),
-        ]}),
-        new docx.Paragraph({ spacing: { after: 300 }, children: [
-          new docx.TextRun({ text: `Tarifa: R$ ${tariffValue.toFixed(2)}/kWh | Geração: ${(totalGenerated / 1000).toFixed(1)} MWh`, size: 16, color: "505050", font: "Calibri" }),
-        ]}),
-      );
-
-      // 1. Resumo Executivo
       if (aiResult?.resumoExecutivo) {
-        children.push(
-          new docx.Paragraph({ spacing: { before: 200, after: 100 }, children: [
-            new docx.TextRun({ text: "1. Resumo Executivo", bold: true, size: 22, font: "Calibri" }),
-          ]}),
-          new docx.Paragraph({ alignment: docx.AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
-            new docx.TextRun({ text: aiResult.resumoExecutivo, size: 18, font: "Calibri" }),
-          ]}),
-        );
+        html += `<p class="st">1. Resumo Executivo</p><p class="j">${aiResult.resumoExecutivo.replace(/\n/g, "<br/>")}</p>`;
       }
 
-      // 2. Geração Prevista vs Realizada - Table
-      children.push(
-        new docx.Paragraph({ spacing: { before: 200, after: 100 }, children: [
-          new docx.TextRun({ text: "2. Geração Prevista vs. Realizada", bold: true, size: 22, font: "Calibri" }),
-        ]}),
-      );
-
-      const genHeaderRow = new docx.TableRow({ tableHeader: true, children: [
-        "Usina", "Mês", "Previsto (kWh)", "Realizado (kWh)", "Desempenho (%)"
-      ].map(h => new docx.TableCell({ shading: { type: docx.ShadingType.SOLID, color: "3B82F6" }, children: [
-        new docx.Paragraph({ children: [new docx.TextRun({ text: h, bold: true, size: 16, color: "FFFFFF", font: "Calibri" })] })
-      ]}))});
-
-      const genRows = generationByPlantMonth.map(r => new docx.TableRow({ children: [
-        r.plantName, r.monthLabel,
-        Math.round(r.expectedKwh).toLocaleString("pt-BR"),
-        Math.round(r.generated).toLocaleString("pt-BR"),
-        `${Math.round(r.performance)}%`,
-      ].map(v => new docx.TableCell({ children: [
-        new docx.Paragraph({ children: [new docx.TextRun({ text: v, size: 16, font: "Calibri" })] })
-      ]}))
-      }));
-
-      // Total row
-      genRows.push(new docx.TableRow({ children: [
-        "TOTAL", "",
-        Math.round(totalExpected).toLocaleString("pt-BR"),
-        Math.round(totalGenerated).toLocaleString("pt-BR"),
-        totalExpected > 0 ? `${Math.round((totalGenerated / totalExpected) * 100)}%` : "—",
-      ].map(v => new docx.TableCell({ shading: { type: docx.ShadingType.SOLID, color: "F0F0F0" }, children: [
-        new docx.Paragraph({ children: [new docx.TextRun({ text: v, bold: true, size: 16, font: "Calibri" })] })
-      ]}))
-      }));
-
-      children.push(new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows: [genHeaderRow, ...genRows] }));
-
-      // 3. Rateio
-      if (rateiData.length > 0) {
-        children.push(
-          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
-            new docx.TextRun({ text: "3. Rateio de Créditos por Unidade Consumidora", bold: true, size: 22, font: "Calibri" }),
-          ]}),
-        );
-        const ratHeaderRow = new docx.TableRow({ tableHeader: true, children: [
-          "Unidade (UC)", "Consumo (kWh)", "Geração (kWh)", "Saldo Créditos", "Valor (R$)"
-        ].map(h => new docx.TableCell({ shading: { type: docx.ShadingType.SOLID, color: "3B82F6" }, children: [
-          new docx.Paragraph({ children: [new docx.TextRun({ text: h, bold: true, size: 16, color: "FFFFFF", font: "Calibri" })] })
-        ]}))});
-        const ratRows = rateiData.map(r => new docx.TableRow({ children: [
-          r.locationName, Math.round(r.totalConsumption).toLocaleString("pt-BR"),
-          Math.round(r.totalGeneration).toLocaleString("pt-BR"),
-          Math.round(r.creditBalance).toLocaleString("pt-BR"),
-          `R$ ${r.totalValue.toFixed(2)}`,
-        ].map(v => new docx.TableCell({ children: [
-          new docx.Paragraph({ children: [new docx.TextRun({ text: v, size: 16, font: "Calibri" })] })
-        ]}))
-        }));
-        children.push(new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows: [ratHeaderRow, ...ratRows] }));
-      }
-
-      // 4. Status Operacional
-      children.push(
-        new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
-          new docx.TextRun({ text: "4. Status Operacional dos Ativos", bold: true, size: 22, font: "Calibri" }),
-        ]}),
-        new docx.Paragraph({ spacing: { after: 80 }, children: [
-          new docx.TextRun({ text: `Total de alertas no semestre: ${semesterAlerts.length}`, size: 18, font: "Calibri" }),
-        ]}),
-      );
-      alertsByType.forEach(a => {
-        children.push(new docx.Paragraph({ spacing: { after: 40 }, children: [
-          new docx.TextRun({ text: `• ${a.type}: ${a.count} ocorrência(s)`, size: 16, font: "Calibri" }),
-        ]}));
+      html += `<p class="st">2. Geração Prevista vs. Realizada</p><table><tr><th>Usina</th><th>Mês</th><th>Previsto (kWh)</th><th>Realizado (kWh)</th><th>Desempenho (%)</th></tr>`;
+      generationByPlantMonth.forEach((r, i) => {
+        html += `<tr${i % 2 === 1 ? ' class="alt"' : ''}><td>${r.plantName}</td><td>${r.monthLabel}</td><td>${Math.round(r.expectedKwh).toLocaleString("pt-BR")}</td><td>${Math.round(r.generated).toLocaleString("pt-BR")}</td><td>${Math.round(r.performance)}%</td></tr>`;
       });
+      html += `<tr class="tot"><td colspan="2">TOTAL</td><td>${Math.round(totalExpected).toLocaleString("pt-BR")}</td><td>${Math.round(totalGenerated).toLocaleString("pt-BR")}</td><td>${totalExpected > 0 ? Math.round((totalGenerated / totalExpected) * 100) + "%" : "—"}</td></tr></table>`;
 
-      // Checklist
-      if (showChecklist) {
-        children.push(
-          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
-            new docx.TextRun({ text: "5. Levantamento Inicial — Checklist (Art. 5º)", bold: true, size: 22, font: "Calibri" }),
-          ]}),
-        );
-        checklist.forEach((item: any) => {
-          children.push(new docx.Paragraph({ spacing: { after: 40 }, children: [
-            new docx.TextRun({ text: `[${item.done ? "✓" : " "}] ${item.label}`, size: 16, font: "Calibri" }),
-          ]}));
+      if (rateiData.length > 0) {
+        html += `<p class="st">3. Rateio de Créditos por Unidade Consumidora</p><table><tr><th>Unidade (UC)</th><th>Consumo (kWh)</th><th>Geração (kWh)</th><th>Saldo Créditos</th><th>Valor (R$)</th></tr>`;
+        rateiData.forEach((r, i) => {
+          html += `<tr${i % 2 === 1 ? ' class="alt"' : ''}><td>${r.locationName}</td><td>${Math.round(r.totalConsumption).toLocaleString("pt-BR")}</td><td>${Math.round(r.totalGeneration).toLocaleString("pt-BR")}</td><td>${Math.round(r.creditBalance).toLocaleString("pt-BR")}</td><td>R$ ${r.totalValue.toFixed(2)}</td></tr>`;
         });
+        html += `</table>`;
       }
 
-      // Conclusão
+      html += `<p class="st">4. Status Operacional dos Ativos</p><p style="font-size:9pt">Total de alertas no semestre: ${semesterAlerts.length}</p>`;
+      alertsByType.forEach(a => { html += `<p style="font-size:8pt;margin:2px 0">• ${a.type}: ${a.count} ocorrência(s)</p>`; });
+
+      if (showChecklist) {
+        html += `<p class="st">5. Levantamento Inicial — Checklist (Art. 5º)</p>`;
+        checklist.forEach((item: any) => { html += `<p style="font-size:8pt;margin:2px 0">[${item.done ? "✓" : " "}] ${item.label}</p>`; });
+      }
+
       if (aiResult?.conclusaoRecomendacoes) {
-        children.push(
-          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
-            new docx.TextRun({ text: `${showChecklist ? "6" : "5"}. Conclusão e Recomendações`, bold: true, size: 22, font: "Calibri" }),
-          ]}),
-          new docx.Paragraph({ alignment: docx.AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
-            new docx.TextRun({ text: aiResult.conclusaoRecomendacoes, size: 18, font: "Calibri" }),
-          ]}),
-        );
+        html += `<p class="st">${showChecklist ? "6" : "5"}. Conclusão e Recomendações</p><p class="j">${aiResult.conclusaoRecomendacoes.replace(/\n/g, "<br/>")}</p>`;
       }
 
-      // Commission
       const activeMembers = commission.filter(m => m.name.trim());
       if (activeMembers.length > 0) {
-        const sectionNum = showChecklist ? "7" : "6";
-        children.push(
-          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
-            new docx.TextRun({ text: `${sectionNum}. Membros da Comissão CGE-PE (Art. 3º)`, bold: true, size: 22, font: "Calibri" }),
-          ]}),
-        );
-        activeMembers.forEach(m => {
-          children.push(new docx.Paragraph({ spacing: { after: 40 }, children: [
-            new docx.TextRun({ text: `${m.role}: `, bold: true, size: 16, font: "Calibri" }),
-            new docx.TextRun({ text: m.name, size: 16, font: "Calibri" }),
-          ]}));
-        });
+        html += `<p class="st">${showChecklist ? "7" : "6"}. Membros da Comissão CGE-PE (Art. 3º)</p>`;
+        activeMembers.forEach(m => { html += `<p style="font-size:8pt;margin:2px 0"><b>${m.role}:</b> ${m.name}</p>`; });
       }
 
-      // Footer
-      const nowDt = new Date();
-      children.push(
-        new docx.Paragraph({ spacing: { before: 400 }, children: [
-          new docx.TextRun({ text: `Gerado por: ${user?.user_metadata?.full_name || user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`, size: 14, italics: true, color: "808080", font: "Calibri" }),
-        ]}),
-      );
+      html += `<p class="ft">${footerText}</p></body></html>`;
 
-      const document = new docx.Document({
-        sections: [{ properties: {}, children }],
-      });
-
-      const blob = await docx.Packer.toBlob(document);
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
       const now = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
-      saveAs(blob, `relatorio-semestral-${semester}sem-${year}-${now}.docx`);
-      toast({ title: "DOCX exportado!" });
+      a.download = `relatorio-semestral-${semester}sem-${year}-${now}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Documento Word exportado!" });
     } catch (err: any) {
-      toast({ title: "Erro ao exportar DOCX", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao exportar documento", description: err.message, variant: "destructive" });
     }
   }, [aiResult, generationByPlantMonth, rateiData, semesterAlerts, alertsByType, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, commission, showChecklist, checklist, year, semester, user, toast]);
 
