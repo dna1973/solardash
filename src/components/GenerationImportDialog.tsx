@@ -35,7 +35,13 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
   const [errorMsg, setErrorMsg] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
-  
+  const [importYear, setImportYear] = useState<number>(new Date().getFullYear());
+
+  // Try to extract year from filename
+  const extractYearFromFilename = (name: string): number | null => {
+    const match = name.match(/(20\d{2})/);
+    return match ? parseInt(match[1]) : null;
+  };
 
   const reset = () => {
     setStep("upload");
@@ -44,6 +50,7 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
     setErrorMsg("");
     setSavedCount(0);
     setSkippedCount(0);
+    setImportYear(new Date().getFullYear());
   };
 
   const handleFile = (f: File) => {
@@ -105,7 +112,15 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
         };
       });
 
-      setRows(extractedRows);
+      // Determine year: prefer filename, fallback to AI extraction, then current year
+      const fileYear = file ? extractYearFromFilename(file.name) : null;
+      const detectedYear = fileYear || result.year || new Date().getFullYear();
+      setImportYear(detectedYear);
+
+      // Override year from AI with detected year
+      const finalRows = extractedRows.map((r: GenerationRow) => ({ ...r, year: detectedYear }));
+
+      setRows(finalRows);
       setStep("review");
     } catch (err: any) {
       console.error("Error processing:", err);
@@ -254,8 +269,25 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
         {/* Review */}
         {step === "review" && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {rows.length} registros extraídos. Revise e corrija antes de salvar.
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <p className="text-sm text-muted-foreground">
+                {rows.length} registros extraídos. Revise e corrija antes de salvar.
+              </p>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium whitespace-nowrap">Ano de referência:</Label>
+                <Input
+                  type="number"
+                  className="h-8 w-24 text-sm"
+                  value={importYear}
+                  onChange={(e) => {
+                    const y = parseInt(e.target.value) || new Date().getFullYear();
+                    setImportYear(y);
+                    setRows((prev) => prev.map((r) => ({ ...r, year: y })));
+                  }}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
               Linhas sem usina mapeada (em vermelho) serão ignoradas.
             </p>
 
