@@ -16,6 +16,7 @@ interface PlantEditDialogProps {
     integrator: string | null;
     latitude: number | null;
     longitude: number | null;
+    capacity_kwp: number;
   };
   onSave: (data: {
     location: string;
@@ -23,6 +24,7 @@ interface PlantEditDialogProps {
     integrator: string;
     latitude: number | null;
     longitude: number | null;
+    capacity_kwp: number;
   }) => Promise<void>;
 }
 
@@ -30,6 +32,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
   const [location, setLocation] = useState(plant.location || "");
   const [utilityCompany, setUtilityCompany] = useState(plant.utility_company || "");
   const [integrator, setIntegrator] = useState(plant.integrator || "");
+  const [capacityKwp, setCapacityKwp] = useState(plant.capacity_kwp);
   const [lat, setLat] = useState<number | null>(plant.latitude);
   const [lng, setLng] = useState<number | null>(plant.longitude);
   const [saving, setSaving] = useState(false);
@@ -39,6 +42,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
       setLocation(plant.location || "");
       setUtilityCompany(plant.utility_company || "");
       setIntegrator(plant.integrator || "");
+      setCapacityKwp(plant.capacity_kwp);
       setLat(plant.latitude);
       setLng(plant.longitude);
     }
@@ -47,7 +51,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave({ location, utility_company: utilityCompany, integrator, latitude: lat, longitude: lng });
+      await onSave({ location, utility_company: utilityCompany, integrator, capacity_kwp: capacityKwp, latitude: lat, longitude: lng });
       onOpenChange(false);
     } finally {
       setSaving(false);
@@ -89,6 +93,18 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
               value={integrator}
               onChange={(e) => setIntegrator(e.target.value)}
               placeholder="Ex: Solar Brasil, EcoEnergia"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="capacity">Capacidade (kWp)</Label>
+            <Input
+              id="capacity"
+              type="number"
+              step="0.01"
+              value={capacityKwp}
+              onChange={(e) => setCapacityKwp(parseFloat(e.target.value) || 0)}
+              placeholder="Ex: 75.6"
             />
           </div>
 
