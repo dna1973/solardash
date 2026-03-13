@@ -13,10 +13,17 @@ const LOW_GENERATION_PCT = 0.10; // alert if generating < 10% of capacity during
 const ZERO_GENERATION_HOURS = 2;  // alert if zero generation for 2+ hours during daytime
 const OFFLINE_HOURS = 4;          // alert if no data for 4+ hours
 
+// Temporary kill switch requested by business until integrations are stable
+const ALERT_MONITORING_ENABLED = false;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    if (!ALERT_MONITORING_ENABLED) {
+      console.log("check-generation-alerts: monitoramento suspenso temporariamente");
+      return jsonOk({ success: true, suspended: true, alerts_created: 0, plants_checked: 0 });
+    }
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
