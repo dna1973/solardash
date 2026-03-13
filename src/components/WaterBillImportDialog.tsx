@@ -156,6 +156,8 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
         water_value: extracted.water_value || 0,
         sewer_value: extracted.sewer_value || 0,
         total_value: extracted.total_value || 0,
+        gross_value: extracted.gross_value || 0,
+        deductions_value: extracted.deductions_value || 0,
         tariff_type: extracted.tariff_type || null,
         due_date: extracted.due_date || null,
         invoice_number: extracted.invoice_number || null,
