@@ -1606,7 +1606,15 @@ export default function ConsumptionPage() {
                 <Input type="number" step="0.01" value={editingWaterBill.sewer_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, sewer_value: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Valor Total (R$)</Label>
+                <Label className="text-xs">Valor Bruto (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.gross_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, gross_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Dedução (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.deductions_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, deductions_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Líquido (R$)</Label>
                 <Input type="number" step="0.01" value={editingWaterBill.total_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, total_value: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <div className="space-y-1.5">
