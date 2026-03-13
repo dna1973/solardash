@@ -112,7 +112,15 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
         };
       });
 
-      setRows(extractedRows);
+      // Determine year: prefer filename, fallback to AI extraction, then current year
+      const fileYear = file ? extractYearFromFilename(file.name) : null;
+      const detectedYear = fileYear || result.year || new Date().getFullYear();
+      setImportYear(detectedYear);
+
+      // Override year from AI with detected year
+      const finalRows = extractedRows.map((r: GenerationRow) => ({ ...r, year: detectedYear }));
+
+      setRows(finalRows);
       setStep("review");
     } catch (err: any) {
       console.error("Error processing:", err);
