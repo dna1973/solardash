@@ -602,26 +602,25 @@ export function SemesterReport() {
       if (data?.error) throw new Error(data.error);
 
       if (data?.members && Array.isArray(data.members)) {
-        const updated: CommissionMember[] = DEFAULT_COMMISSION.map((m) => ({ ...m }));
-        const seatMap: Record<string, number> = {
-          "Presidente": 0, "Vice-Presidente": 1,
-          "DEL01": 2, "DEL02": 3, "DEL03": 4, "DEL04": 5, "DEL05": 6, "DEL06": 7,
+        const updated: CommissionMember[] = DEFAULT_COMMISSION.map((m) => ({ ...m, name: "" }));
+        
+        // Map: SEDE members go to slots 0,1; DEL01 to 2,3; DEL02 to 4,5; etc.
+        const slotMap: Record<string, number[]> = {
+          "SEDE": [0, 1],
+          "DEL01": [2, 3], "DEL02": [4, 5], "DEL03": [6, 7],
+          "DEL04": [8, 9], "DEL05": [10, 11], "DEL06": [12, 13],
         };
 
-        data.members.forEach((m: { role: string; name: string; matricula?: string; lotacao?: string }) => {
-          let idx = -1;
-          for (const [key, seatIdx] of Object.entries(seatMap)) {
-            if (m.role?.toUpperCase().includes(key.toUpperCase()) || m.lotacao?.toUpperCase().includes(key.toUpperCase())) {
-              idx = seatIdx;
-              break;
-            }
+        data.members.forEach((m: { name: string; matricula?: string; lotacao?: string; role?: string }) => {
+          const lotacao = (m.lotacao || m.role || "").toUpperCase().replace("-PE", "");
+          let slots: number[] | undefined;
+          for (const [key, s] of Object.entries(slotMap)) {
+            if (lotacao.includes(key)) { slots = s; break; }
           }
-          if (idx === -1 && m.lotacao?.toUpperCase().includes("SEDE")) {
-            // First empty SEDE slot
-            if (!updated[0].name) idx = 0;
-            else if (!updated[1].name) idx = 1;
-          }
-          if (idx >= 0 && idx < updated.length) {
+          if (!slots) return;
+          // Find first empty slot in this group
+          const idx = slots.find((i) => i < updated.length && !updated[i].name);
+          if (idx !== undefined) {
             updated[idx] = {
               ...updated[idx],
               name: `${m.name}${m.matricula ? ` (${m.matricula})` : ""}`,
