@@ -488,12 +488,7 @@ export function SemesterReport() {
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(50, 50, 50);
-        const lines = doc.splitTextToSize(aiResult.conclusaoRecomendacoes, pageW - 28);
-        for (const line of lines) {
-          addCheckPage();
-          doc.text(line, 14, y, { align: "justify", maxWidth: pageW - 28 });
-          y += 4;
-        }
+        drawJustifiedText(aiResult.conclusaoRecomendacoes, pageW - 28);
         y += 6;
       }
 
