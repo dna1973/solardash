@@ -445,6 +445,12 @@ export default function Reports() {
           </div>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="semester">
+          <SemesterReport />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
