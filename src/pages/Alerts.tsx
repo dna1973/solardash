@@ -182,7 +182,8 @@ export default function Alerts({ embedded = false }: { embedded?: boolean }) {
         </div>
       )}
 
-      <AnomalyDetector />
+      {/* AnomalyDetector suspenso até as integrações estarem operacionais */}
+      {/* <AnomalyDetector /> */}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
