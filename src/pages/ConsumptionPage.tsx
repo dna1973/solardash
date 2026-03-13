@@ -271,6 +271,8 @@ export default function ConsumptionPage() {
       consumption_m3: rest.consumption_m3,
       water_value: rest.water_value,
       sewer_value: rest.sewer_value,
+      gross_value: rest.gross_value,
+      deductions_value: rest.deductions_value,
       total_value: rest.total_value,
       tariff_type: rest.tariff_type,
       due_date: rest.due_date,
