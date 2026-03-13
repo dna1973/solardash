@@ -37,14 +37,20 @@ interface CommissionMember {
 }
 
 const DEFAULT_COMMISSION: CommissionMember[] = [
-  { role: "Presidente", name: "" },
-  { role: "Vice-Presidente", name: "" },
-  { role: "Membro DEL01", name: "" },
-  { role: "Membro DEL02", name: "" },
-  { role: "Membro DEL03", name: "" },
-  { role: "Membro DEL04", name: "" },
-  { role: "Membro DEL05", name: "" },
-  { role: "Membro DEL06", name: "" },
+  { role: "Presidente (SEDE)", name: "JOSÉ ANTÔNIO DE OLIVEIRA (1069581)" },
+  { role: "Vice-Presidente (SEDE)", name: "MAURÍCIO MACHADO DANTAS (1463420)" },
+  { role: "Membro DEL01", name: "MARCUS THIAGO BISPO DOS SANTOS (3262525)" },
+  { role: "Membro DEL01", name: "AILTON DA SILVA MACEDO (1997029)" },
+  { role: "Membro DEL02", name: "HELIO DAVINO DE MELO (1986492)" },
+  { role: "Membro DEL02", name: "JOSE MARIA DE LIMA JUNIOR (1516361)" },
+  { role: "Membro DEL03", name: "DANIEL NUNES DE ÁVILA (1542458)" },
+  { role: "Membro DEL03", name: "DARLEY CLEYTON SILVEIRA CIRINO (1541359)" },
+  { role: "Membro DEL04", name: "RIVALDO SOARES DO NASCIMENTO FILHO (3158710)" },
+  { role: "Membro DEL04", name: "ARIEL BEZERRA GOMES (3262922)" },
+  { role: "Membro DEL05", name: "CARLOS EVALDO ALVES DA CRUZ (1777646)" },
+  { role: "Membro DEL05", name: "DIEGO TAVARES DE MELO (3262574)" },
+  { role: "Membro DEL06", name: "MOACIR GOMES DE SOUSA (1461179)" },
+  { role: "Membro DEL06", name: "PARNESIO RAMOS DAMASCENO (1503071)" },
 ];
 
 function getSemesterMonths(semester: number): number[] {

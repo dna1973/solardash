@@ -295,10 +295,10 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="analysis" className="w-full">
+      <Tabs defaultValue="semester" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="analysis">Análise Energética</TabsTrigger>
           <TabsTrigger value="semester">Relatório Semestral</TabsTrigger>
+          <TabsTrigger value="analysis">Análise Energética</TabsTrigger>
         </TabsList>
 
         <TabsContent value="analysis" className="space-y-6">
