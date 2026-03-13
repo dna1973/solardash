@@ -376,6 +376,27 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
+                <Label className="text-xs">Valor Bruto (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.gross_value ?? 0}
+                  onChange={(e) => updateField("gross_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Deduções (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.deductions_value ?? 0}
+                  onChange={(e) => updateField("deductions_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
                 <Label className="text-xs">Valor Água (R$)</Label>
                 <Input
                   type="number"
