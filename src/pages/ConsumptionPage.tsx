@@ -1287,6 +1287,12 @@ export default function ConsumptionPage() {
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.sewer_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.gross_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.deductions_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
                         <TableCell className="text-right text-sm font-mono font-semibold">
                           {(bill.total_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
