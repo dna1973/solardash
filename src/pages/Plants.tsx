@@ -83,9 +83,15 @@ export default function Plants() {
           </p>
         </div>
         {activeTab === "usinas" && (
-          <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto">
-            + Nova Usina
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
+              <FileUp className="h-4 w-4" />
+              Importar Geração (PDF)
+            </Button>
+            <button className="gradient-primary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity flex-1 sm:flex-initial">
+              + Nova Usina
+            </button>
+          </div>
         )}
       </div>
 
