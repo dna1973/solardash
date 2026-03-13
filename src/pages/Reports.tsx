@@ -295,7 +295,13 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      <Tabs defaultValue="analysis" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="analysis">Análise Energética</TabsTrigger>
+          <TabsTrigger value="semester">Relatório Semestral</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="analysis" className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">Relatórios</h1>
