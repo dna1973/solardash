@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2, Download, Sparkles, DollarSign, AlertTriangle, CheckCircle2,
-  Shield, Users, ClipboardList, Zap, BarChart3, FileText
+  Shield, Users, ClipboardList, Zap, BarChart3, FileText, Upload
 } from "lucide-react";
 
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -66,6 +66,7 @@ export function SemesterReport() {
   const [tariff, setTariff] = useState("0.75");
   const [showChecklist, setShowChecklist] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [importingCommission, setImportingCommission] = useState(false);
   const [aiResult, setAiResult] = useState<{ resumoExecutivo: string; conclusaoRecomendacoes: string } | null>(null);
 
   // Load/save checklist from localStorage
@@ -374,7 +375,7 @@ export function SemesterReport() {
         const lines = doc.splitTextToSize(aiResult.resumoExecutivo, pageW - 28);
         for (const line of lines) {
           addCheckPage();
-          doc.text(line, 14, y);
+          doc.text(line, 14, y, { align: "justify", maxWidth: pageW - 28 });
           y += 4;
         }
         y += 4;
@@ -462,7 +463,7 @@ export function SemesterReport() {
         const lines = doc.splitTextToSize(aiResult.conclusaoRecomendacoes, pageW - 28);
         for (const line of lines) {
           addCheckPage();
-          doc.text(line, 14, y);
+          doc.text(line, 14, y, { align: "justify", maxWidth: pageW - 28 });
           y += 4;
         }
         y += 6;
@@ -566,6 +567,74 @@ export function SemesterReport() {
     }
   }, [generationByPlantMonth, rateiData, semesterAlerts, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, year, semester, toast]);
 
+  // Import commission members via OCR from portaria PDF
+  const handleImportCommission = useCallback(async (file: File) => {
+    setImportingCommission(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const { data, error } = await supabase.functions.invoke("generate-semester-report", {
+        body: {
+          mode: "extract_commission",
+          fileBase64: base64,
+          fileType: file.type,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.members && Array.isArray(data.members)) {
+        const updated: CommissionMember[] = DEFAULT_COMMISSION.map((m) => ({ ...m }));
+        const seatMap: Record<string, number> = {
+          "Presidente": 0, "Vice-Presidente": 1,
+          "DEL01": 2, "DEL02": 3, "DEL03": 4, "DEL04": 5, "DEL05": 6, "DEL06": 7,
+        };
+
+        data.members.forEach((m: { role: string; name: string; matricula?: string; lotacao?: string }) => {
+          let idx = -1;
+          for (const [key, seatIdx] of Object.entries(seatMap)) {
+            if (m.role?.toUpperCase().includes(key.toUpperCase()) || m.lotacao?.toUpperCase().includes(key.toUpperCase())) {
+              idx = seatIdx;
+              break;
+            }
+          }
+          if (idx === -1 && m.lotacao?.toUpperCase().includes("SEDE")) {
+            // First empty SEDE slot
+            if (!updated[0].name) idx = 0;
+            else if (!updated[1].name) idx = 1;
+          }
+          if (idx >= 0 && idx < updated.length) {
+            updated[idx] = {
+              ...updated[idx],
+              name: `${m.name}${m.matricula ? ` (${m.matricula})` : ""}`,
+            };
+          }
+        });
+
+        setCommission(updated);
+        toast({ title: "Membros importados com sucesso!", description: `${data.members.length} membros extraídos do documento.` });
+      } else {
+        throw new Error("Não foi possível extrair os membros do documento.");
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao importar membros", description: err.message, variant: "destructive" });
+    } finally {
+      setImportingCommission(false);
+    }
+  }, [toast]);
+
   const isLoading = loadingPlants || loadingAlerts || loadingEnergy;
 
   if (isLoading) {
@@ -666,13 +735,13 @@ export function SemesterReport() {
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5 text-primary" /> Resumo Executivo
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiResult.resumoExecutivo}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line text-justify">{aiResult.resumoExecutivo}</p>
               </div>
               <div>
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Conclusão e Recomendações
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiResult.conclusaoRecomendacoes}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line text-justify">{aiResult.conclusaoRecomendacoes}</p>
               </div>
             </div>
           ) : (
@@ -876,10 +945,27 @@ export function SemesterReport() {
       {/* Membros da Comissão */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            Membros da Comissão (Art. 3º)
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Membros da Comissão (Art. 3º)
+            </CardTitle>
+            <label className="flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+              {importingCommission ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+              {importingCommission ? "Importando..." : "Importar da Portaria (OCR)"}
+              <input
+                type="file"
+                accept=".pdf,image/*"
+                className="hidden"
+                disabled={importingCommission}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportCommission(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
