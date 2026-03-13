@@ -172,9 +172,9 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
       setSkippedCount(skipped);
 
       if (saved > 0) {
-        await logEvent({
-          event_type: "generation_import",
-          entity_type: "energy_data",
+        await logAuditEvent({
+          eventType: "generation_import",
+          entityType: "energy_data",
           description: `Importação de ${saved} registros de geração via PDF`,
           metadata: { saved, skipped, file_name: file?.name },
         });
