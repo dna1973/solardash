@@ -69,7 +69,7 @@ export function SemesterReport() {
 
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [selectedSemester, setSelectedSemester] = useState(String(currentSemester));
-  const [tariff, setTariff] = useState("0.75");
+  const [tariff, setTariff] = useState("1.00");
   const [showChecklist, setShowChecklist] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [importingCommission, setImportingCommission] = useState(false);
