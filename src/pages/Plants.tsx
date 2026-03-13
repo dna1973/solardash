@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { usePlants, useAlerts } from "@/hooks/useSupabaseData";
 import { PlantStatusBadge } from "@/components/PlantStatusBadge";
-import { Sun, MapPin, Calendar, Loader2, Factory, Wrench, AlertTriangle, Search, Filter, X } from "lucide-react";
+import { Sun, MapPin, Calendar, Loader2, Factory, Wrench, AlertTriangle, Search, Filter, X, FileUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Alerts from "./Alerts";
+import { GenerationImportDialog } from "@/components/GenerationImportDialog";
 
 export default function Plants() {
   const navigate = useNavigate();
