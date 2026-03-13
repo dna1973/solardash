@@ -32,6 +32,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
   const [location, setLocation] = useState(plant.location || "");
   const [utilityCompany, setUtilityCompany] = useState(plant.utility_company || "");
   const [integrator, setIntegrator] = useState(plant.integrator || "");
+  const [capacityKwp, setCapacityKwp] = useState(plant.capacity_kwp);
   const [lat, setLat] = useState<number | null>(plant.latitude);
   const [lng, setLng] = useState<number | null>(plant.longitude);
   const [saving, setSaving] = useState(false);
@@ -41,6 +42,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
       setLocation(plant.location || "");
       setUtilityCompany(plant.utility_company || "");
       setIntegrator(plant.integrator || "");
+      setCapacityKwp(plant.capacity_kwp);
       setLat(plant.latitude);
       setLng(plant.longitude);
     }
@@ -49,7 +51,7 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave({ location, utility_company: utilityCompany, integrator, latitude: lat, longitude: lng });
+      await onSave({ location, utility_company: utilityCompany, integrator, capacity_kwp: capacityKwp, latitude: lat, longitude: lng });
       onOpenChange(false);
     } finally {
       setSaving(false);
