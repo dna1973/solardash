@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePlants, useAlerts, useEnergyData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { autoFitColumns } from "@/lib/excelUtils";
+
 import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2, Download, Sparkles, DollarSign, AlertTriangle, CheckCircle2,
-  Shield, Users, ClipboardList, Zap, BarChart3, FileText, Upload
+  Shield, Users, ClipboardList, Zap, BarChart3, FileText, Upload, FileDown
 } from "lucide-react";
 
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -602,71 +602,187 @@ export function SemesterReport() {
     }
   }, [aiResult, generationByPlantMonth, rateiData, semesterAlerts, alertsByType, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, commission, showChecklist, checklist, year, semester, user, toast]);
 
-  // Export Excel
-  const handleExportExcel = useCallback(async () => {
+  // Export DOCX
+  const handleExportDOCX = useCallback(async () => {
     try {
-      const XLSX = await import("xlsx-js-style");
-      const wb = XLSX.utils.book_new();
+      const docx = await import("docx");
+      const { saveAs } = await import("file-saver");
 
-      // Summary
-      const summaryRows = [
-        { Indicador: "Período", Valor: semesterLabel },
-        { Indicador: "Tarifa Média (R$/kWh)", Valor: tariffValue.toFixed(2) },
-        { Indicador: "Geração Total (kWh)", Valor: Math.round(totalGenerated).toLocaleString("pt-BR") },
-        { Indicador: "Geração Prevista (kWh)", Valor: Math.round(totalExpected).toLocaleString("pt-BR") },
-        { Indicador: "Economia Total (R$)", Valor: `R$ ${totalSaving.toFixed(2)}` },
-        { Indicador: "Desempenho (%)", Valor: totalExpected > 0 ? `${Math.round((totalGenerated / totalExpected) * 100)}%` : "—" },
-        { Indicador: "Alertas no Semestre", Valor: String(semesterAlerts.length) },
-      ];
-      const s1 = XLSX.utils.json_to_sheet(summaryRows);
-      autoFitColumns(s1, summaryRows);
-      XLSX.utils.book_append_sheet(wb, s1, "Resumo");
+      const children: any[] = [];
 
-      // Generation detail
-      const genRows = generationByPlantMonth.map((r) => ({
-        Usina: r.plantName, Mês: r.monthLabel,
-        "Previsto (kWh)": Math.round(r.expectedKwh),
-        "Realizado (kWh)": Math.round(r.generated),
-        "Desempenho (%)": Math.round(r.performance),
+      // Title
+      children.push(
+        new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { after: 100 }, children: [
+          new docx.TextRun({ text: "RELATÓRIO SEMESTRAL DE EFICIÊNCIA ENERGÉTICA", bold: true, size: 28, font: "Calibri" }),
+        ]}),
+        new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { after: 80 }, children: [
+          new docx.TextRun({ text: "Conforme Art. 4º da Portaria nº 11/2026 — CGE-PE", size: 18, color: "505050", font: "Calibri" }),
+        ]}),
+        new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, spacing: { after: 200 }, children: [
+          new docx.TextRun({ text: semesterLabel, size: 18, color: "505050", font: "Calibri" }),
+        ]}),
+      );
+
+      // Saving highlight
+      children.push(
+        new docx.Paragraph({ spacing: { after: 100 }, shading: { type: docx.ShadingType.SOLID, color: "228B22" }, children: [
+          new docx.TextRun({ text: `ECONOMIA TOTAL NO SEMESTRE: R$ ${totalSaving.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, bold: true, size: 24, color: "FFFFFF", font: "Calibri" }),
+        ]}),
+        new docx.Paragraph({ spacing: { after: 300 }, children: [
+          new docx.TextRun({ text: `Tarifa: R$ ${tariffValue.toFixed(2)}/kWh | Geração: ${(totalGenerated / 1000).toFixed(1)} MWh`, size: 16, color: "505050", font: "Calibri" }),
+        ]}),
+      );
+
+      // 1. Resumo Executivo
+      if (aiResult?.resumoExecutivo) {
+        children.push(
+          new docx.Paragraph({ spacing: { before: 200, after: 100 }, children: [
+            new docx.TextRun({ text: "1. Resumo Executivo", bold: true, size: 22, font: "Calibri" }),
+          ]}),
+          new docx.Paragraph({ alignment: docx.AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
+            new docx.TextRun({ text: aiResult.resumoExecutivo, size: 18, font: "Calibri" }),
+          ]}),
+        );
+      }
+
+      // 2. Geração Prevista vs Realizada - Table
+      children.push(
+        new docx.Paragraph({ spacing: { before: 200, after: 100 }, children: [
+          new docx.TextRun({ text: "2. Geração Prevista vs. Realizada", bold: true, size: 22, font: "Calibri" }),
+        ]}),
+      );
+
+      const genHeaderRow = new docx.TableRow({ tableHeader: true, children: [
+        "Usina", "Mês", "Previsto (kWh)", "Realizado (kWh)", "Desempenho (%)"
+      ].map(h => new docx.TableCell({ shading: { type: docx.ShadingType.SOLID, color: "3B82F6" }, children: [
+        new docx.Paragraph({ children: [new docx.TextRun({ text: h, bold: true, size: 16, color: "FFFFFF", font: "Calibri" })] })
+      ]}))});
+
+      const genRows = generationByPlantMonth.map(r => new docx.TableRow({ children: [
+        r.plantName, r.monthLabel,
+        Math.round(r.expectedKwh).toLocaleString("pt-BR"),
+        Math.round(r.generated).toLocaleString("pt-BR"),
+        `${Math.round(r.performance)}%`,
+      ].map(v => new docx.TableCell({ children: [
+        new docx.Paragraph({ children: [new docx.TextRun({ text: v, size: 16, font: "Calibri" })] })
+      ]}))
       }));
-      const s2 = XLSX.utils.json_to_sheet(genRows);
-      autoFitColumns(s2, genRows);
-      XLSX.utils.book_append_sheet(wb, s2, "Geração");
 
-      // Rateio
+      // Total row
+      genRows.push(new docx.TableRow({ children: [
+        "TOTAL", "",
+        Math.round(totalExpected).toLocaleString("pt-BR"),
+        Math.round(totalGenerated).toLocaleString("pt-BR"),
+        totalExpected > 0 ? `${Math.round((totalGenerated / totalExpected) * 100)}%` : "—",
+      ].map(v => new docx.TableCell({ shading: { type: docx.ShadingType.SOLID, color: "F0F0F0" }, children: [
+        new docx.Paragraph({ children: [new docx.TextRun({ text: v, bold: true, size: 16, font: "Calibri" })] })
+      ]}))
+      }));
+
+      children.push(new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows: [genHeaderRow, ...genRows] }));
+
+      // 3. Rateio
       if (rateiData.length > 0) {
-        const ratRows = rateiData.map((r) => ({
-          "Unidade Consumidora": r.locationName,
-          "Consumo (kWh)": Math.round(r.totalConsumption),
-          "Geração (kWh)": Math.round(r.totalGeneration),
-          "Saldo Créditos": Math.round(r.creditBalance),
-          "Valor Total (R$)": r.totalValue.toFixed(2),
-          "Nº Faturas": r.bills,
+        children.push(
+          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
+            new docx.TextRun({ text: "3. Rateio de Créditos por Unidade Consumidora", bold: true, size: 22, font: "Calibri" }),
+          ]}),
+        );
+        const ratHeaderRow = new docx.TableRow({ tableHeader: true, children: [
+          "Unidade (UC)", "Consumo (kWh)", "Geração (kWh)", "Saldo Créditos", "Valor (R$)"
+        ].map(h => new docx.TableCell({ shading: { type: docx.ShadingType.SOLID, color: "3B82F6" }, children: [
+          new docx.Paragraph({ children: [new docx.TextRun({ text: h, bold: true, size: 16, color: "FFFFFF", font: "Calibri" })] })
+        ]}))});
+        const ratRows = rateiData.map(r => new docx.TableRow({ children: [
+          r.locationName, Math.round(r.totalConsumption).toLocaleString("pt-BR"),
+          Math.round(r.totalGeneration).toLocaleString("pt-BR"),
+          Math.round(r.creditBalance).toLocaleString("pt-BR"),
+          `R$ ${r.totalValue.toFixed(2)}`,
+        ].map(v => new docx.TableCell({ children: [
+          new docx.Paragraph({ children: [new docx.TextRun({ text: v, size: 16, font: "Calibri" })] })
+        ]}))
         }));
-        const s3 = XLSX.utils.json_to_sheet(ratRows);
-        autoFitColumns(s3, ratRows);
-        XLSX.utils.book_append_sheet(wb, s3, "Rateio UC");
+        children.push(new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows: [ratHeaderRow, ...ratRows] }));
       }
 
-      // Alerts
-      if (semesterAlerts.length > 0) {
-        const alertRows = semesterAlerts.map((a: any) => ({
-          Tipo: a.type, Mensagem: a.message,
-          Data: new Date(a.created_at).toLocaleDateString("pt-BR"),
-          Resolvido: a.resolved ? "Sim" : "Não",
-        }));
-        const s4 = XLSX.utils.json_to_sheet(alertRows);
-        autoFitColumns(s4, alertRows);
-        XLSX.utils.book_append_sheet(wb, s4, "Alertas");
+      // 4. Status Operacional
+      children.push(
+        new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
+          new docx.TextRun({ text: "4. Status Operacional dos Ativos", bold: true, size: 22, font: "Calibri" }),
+        ]}),
+        new docx.Paragraph({ spacing: { after: 80 }, children: [
+          new docx.TextRun({ text: `Total de alertas no semestre: ${semesterAlerts.length}`, size: 18, font: "Calibri" }),
+        ]}),
+      );
+      alertsByType.forEach(a => {
+        children.push(new docx.Paragraph({ spacing: { after: 40 }, children: [
+          new docx.TextRun({ text: `• ${a.type}: ${a.count} ocorrência(s)`, size: 16, font: "Calibri" }),
+        ]}));
+      });
+
+      // Checklist
+      if (showChecklist) {
+        children.push(
+          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
+            new docx.TextRun({ text: "5. Levantamento Inicial — Checklist (Art. 5º)", bold: true, size: 22, font: "Calibri" }),
+          ]}),
+        );
+        checklist.forEach((item: any) => {
+          children.push(new docx.Paragraph({ spacing: { after: 40 }, children: [
+            new docx.TextRun({ text: `[${item.done ? "✓" : " "}] ${item.label}`, size: 16, font: "Calibri" }),
+          ]}));
+        });
       }
 
+      // Conclusão
+      if (aiResult?.conclusaoRecomendacoes) {
+        children.push(
+          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
+            new docx.TextRun({ text: `${showChecklist ? "6" : "5"}. Conclusão e Recomendações`, bold: true, size: 22, font: "Calibri" }),
+          ]}),
+          new docx.Paragraph({ alignment: docx.AlignmentType.JUSTIFIED, spacing: { after: 200 }, children: [
+            new docx.TextRun({ text: aiResult.conclusaoRecomendacoes, size: 18, font: "Calibri" }),
+          ]}),
+        );
+      }
+
+      // Commission
+      const activeMembers = commission.filter(m => m.name.trim());
+      if (activeMembers.length > 0) {
+        const sectionNum = showChecklist ? "7" : "6";
+        children.push(
+          new docx.Paragraph({ spacing: { before: 300, after: 100 }, children: [
+            new docx.TextRun({ text: `${sectionNum}. Membros da Comissão CGE-PE (Art. 3º)`, bold: true, size: 22, font: "Calibri" }),
+          ]}),
+        );
+        activeMembers.forEach(m => {
+          children.push(new docx.Paragraph({ spacing: { after: 40 }, children: [
+            new docx.TextRun({ text: `${m.role}: `, bold: true, size: 16, font: "Calibri" }),
+            new docx.TextRun({ text: m.name, size: 16, font: "Calibri" }),
+          ]}));
+        });
+      }
+
+      // Footer
+      const nowDt = new Date();
+      children.push(
+        new docx.Paragraph({ spacing: { before: 400 }, children: [
+          new docx.TextRun({ text: `Gerado por: ${user?.user_metadata?.full_name || user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`, size: 14, italics: true, color: "808080", font: "Calibri" }),
+        ]}),
+      );
+
+      const document = new docx.Document({
+        sections: [{ properties: {}, children }],
+      });
+
+      const blob = await docx.Packer.toBlob(document);
       const now = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
-      XLSX.writeFile(wb, `relatorio-semestral-${semester}sem-${year}-${now}.xlsx`);
-      toast({ title: "Excel exportado!" });
+      saveAs(blob, `relatorio-semestral-${semester}sem-${year}-${now}.docx`);
+      toast({ title: "DOCX exportado!" });
     } catch (err: any) {
-      toast({ title: "Erro ao exportar Excel", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao exportar DOCX", description: err.message, variant: "destructive" });
     }
-  }, [generationByPlantMonth, rateiData, semesterAlerts, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, year, semester, toast]);
+  }, [aiResult, generationByPlantMonth, rateiData, semesterAlerts, alertsByType, totalSaving, totalGenerated, totalExpected, tariffValue, semesterLabel, commission, showChecklist, checklist, year, semester, user, toast]);
 
   // Import commission members via OCR from portaria PDF
   const handleImportCommission = useCallback(async (file: File) => {
@@ -851,6 +967,18 @@ export function SemesterReport() {
           )}
         </CardContent>
       </Card>
+
+      {/* Export Buttons */}
+      <div className="flex flex-wrap gap-3">
+        <button onClick={handleExportPDF}
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors">
+          <Download className="h-4 w-4" /> Exportar PDF
+        </button>
+        <button onClick={handleExportDOCX}
+          className="flex items-center gap-1.5 border text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-muted transition-colors">
+          <FileDown className="h-4 w-4" /> Exportar DOCX
+        </button>
+      </div>
 
       {/* Table: Prevista vs Realizada */}
       {generationByPlantMonth.length > 0 && (
@@ -1088,17 +1216,6 @@ export function SemesterReport() {
         </CardContent>
       </Card>
 
-      {/* Export Buttons */}
-      <div className="flex flex-wrap gap-3">
-        <button onClick={handleExportPDF}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors">
-          <Download className="h-4 w-4" /> Exportar PDF
-        </button>
-        <button onClick={handleExportExcel}
-          className="flex items-center gap-1.5 border text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-muted transition-colors">
-          <Download className="h-4 w-4" /> Exportar Excel
-        </button>
-      </div>
     </div>
   );
 }
