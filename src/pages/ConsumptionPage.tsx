@@ -468,13 +468,15 @@ export default function ConsumptionPage() {
 
     y += headerH + 4;
     const cols = [
-      { header: "Nº", width: 12, align: "left" as const },
-      { header: "MATRÍCULA", width: 30, align: "left" as const },
-      { header: "LOCAL", width: 90, align: "left" as const },
-      { header: "CONSUMO\n(m³)", width: 30, align: "right" as const },
-      { header: "Valor\nÁgua", width: 35, align: "right" as const },
-      { header: "Valor\nEsgoto", width: 35, align: "right" as const },
-      { header: "Valor\nTotal", width: 35, align: "right" as const },
+      { header: "Nº", width: 10, align: "left" as const },
+      { header: "MATRÍCULA", width: 25, align: "left" as const },
+      { header: "LOCAL", width: 70, align: "left" as const },
+      { header: "CONSUMO\n(m³)", width: 25, align: "right" as const },
+      { header: "Valor\nÁgua", width: 28, align: "right" as const },
+      { header: "Valor\nEsgoto", width: 28, align: "right" as const },
+      { header: "Valor\nBruto", width: 28, align: "right" as const },
+      { header: "Dedução", width: 28, align: "right" as const },
+      { header: "Valor\nLíquido", width: 35, align: "right" as const },
     ];
     const usedW2 = cols.reduce((s, c) => s + c.width, 0);
     if (usedW2 < tableW) cols[cols.length - 1].width += tableW - usedW2;
