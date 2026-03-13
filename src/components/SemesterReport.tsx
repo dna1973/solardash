@@ -86,7 +86,12 @@ export function SemesterReport() {
   const [commission, setCommission] = useState<CommissionMember[]>(() => {
     try {
       const saved = localStorage.getItem("semester_report_commission");
-      return saved ? JSON.parse(saved) : DEFAULT_COMMISSION;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If old format (8 members), reset to new default (14 members)
+        if (Array.isArray(parsed) && parsed.length === DEFAULT_COMMISSION.length) return parsed;
+      }
+      return DEFAULT_COMMISSION;
     } catch { return DEFAULT_COMMISSION; }
   });
 
