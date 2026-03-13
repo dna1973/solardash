@@ -1335,6 +1335,12 @@ export default function ConsumptionPage() {
                         {sortedWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.gross_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.deductions_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
                         {sortedWaterBills.reduce((s, b) => s + (b.total_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell></TableCell>
