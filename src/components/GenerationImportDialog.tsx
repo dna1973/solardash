@@ -35,7 +35,7 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
   const [errorMsg, setErrorMsg] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
-  const { logEvent } = useAuditLog();
+  
 
   const reset = () => {
     setStep("upload");
