@@ -37,14 +37,20 @@ interface CommissionMember {
 }
 
 const DEFAULT_COMMISSION: CommissionMember[] = [
-  { role: "Presidente", name: "" },
-  { role: "Vice-Presidente", name: "" },
-  { role: "Membro DEL01", name: "" },
-  { role: "Membro DEL02", name: "" },
-  { role: "Membro DEL03", name: "" },
-  { role: "Membro DEL04", name: "" },
-  { role: "Membro DEL05", name: "" },
-  { role: "Membro DEL06", name: "" },
+  { role: "Presidente (SEDE)", name: "JOSÉ ANTÔNIO DE OLIVEIRA (1069581)" },
+  { role: "Vice-Presidente (SEDE)", name: "MAURÍCIO MACHADO DANTAS (1463420)" },
+  { role: "Membro DEL01", name: "MARCUS THIAGO BISPO DOS SANTOS (3262525)" },
+  { role: "Membro DEL01", name: "AILTON DA SILVA MACEDO (1997029)" },
+  { role: "Membro DEL02", name: "HELIO DAVINO DE MELO (1986492)" },
+  { role: "Membro DEL02", name: "JOSE MARIA DE LIMA JUNIOR (1516361)" },
+  { role: "Membro DEL03", name: "DANIEL NUNES DE ÁVILA (1542458)" },
+  { role: "Membro DEL03", name: "DARLEY CLEYTON SILVEIRA CIRINO (1541359)" },
+  { role: "Membro DEL04", name: "RIVALDO SOARES DO NASCIMENTO FILHO (3158710)" },
+  { role: "Membro DEL04", name: "ARIEL BEZERRA GOMES (3262922)" },
+  { role: "Membro DEL05", name: "CARLOS EVALDO ALVES DA CRUZ (1777646)" },
+  { role: "Membro DEL05", name: "DIEGO TAVARES DE MELO (3262574)" },
+  { role: "Membro DEL06", name: "MOACIR GOMES DE SOUSA (1461179)" },
+  { role: "Membro DEL06", name: "PARNESIO RAMOS DAMASCENO (1503071)" },
 ];
 
 function getSemesterMonths(semester: number): number[] {
@@ -80,7 +86,12 @@ export function SemesterReport() {
   const [commission, setCommission] = useState<CommissionMember[]>(() => {
     try {
       const saved = localStorage.getItem("semester_report_commission");
-      return saved ? JSON.parse(saved) : DEFAULT_COMMISSION;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If old format (8 members), reset to new default (14 members)
+        if (Array.isArray(parsed) && parsed.length === DEFAULT_COMMISSION.length) return parsed;
+      }
+      return DEFAULT_COMMISSION;
     } catch { return DEFAULT_COMMISSION; }
   });
 
@@ -596,26 +607,25 @@ export function SemesterReport() {
       if (data?.error) throw new Error(data.error);
 
       if (data?.members && Array.isArray(data.members)) {
-        const updated: CommissionMember[] = DEFAULT_COMMISSION.map((m) => ({ ...m }));
-        const seatMap: Record<string, number> = {
-          "Presidente": 0, "Vice-Presidente": 1,
-          "DEL01": 2, "DEL02": 3, "DEL03": 4, "DEL04": 5, "DEL05": 6, "DEL06": 7,
+        const updated: CommissionMember[] = DEFAULT_COMMISSION.map((m) => ({ ...m, name: "" }));
+        
+        // Map: SEDE members go to slots 0,1; DEL01 to 2,3; DEL02 to 4,5; etc.
+        const slotMap: Record<string, number[]> = {
+          "SEDE": [0, 1],
+          "DEL01": [2, 3], "DEL02": [4, 5], "DEL03": [6, 7],
+          "DEL04": [8, 9], "DEL05": [10, 11], "DEL06": [12, 13],
         };
 
-        data.members.forEach((m: { role: string; name: string; matricula?: string; lotacao?: string }) => {
-          let idx = -1;
-          for (const [key, seatIdx] of Object.entries(seatMap)) {
-            if (m.role?.toUpperCase().includes(key.toUpperCase()) || m.lotacao?.toUpperCase().includes(key.toUpperCase())) {
-              idx = seatIdx;
-              break;
-            }
+        data.members.forEach((m: { name: string; matricula?: string; lotacao?: string; role?: string }) => {
+          const lotacao = (m.lotacao || m.role || "").toUpperCase().replace("-PE", "");
+          let slots: number[] | undefined;
+          for (const [key, s] of Object.entries(slotMap)) {
+            if (lotacao.includes(key)) { slots = s; break; }
           }
-          if (idx === -1 && m.lotacao?.toUpperCase().includes("SEDE")) {
-            // First empty SEDE slot
-            if (!updated[0].name) idx = 0;
-            else if (!updated[1].name) idx = 1;
-          }
-          if (idx >= 0 && idx < updated.length) {
+          if (!slots) return;
+          // Find first empty slot in this group
+          const idx = slots.find((i) => i < updated.length && !updated[i].name);
+          if (idx !== undefined) {
             updated[idx] = {
               ...updated[idx],
               name: `${m.name}${m.matricula ? ` (${m.matricula})` : ""}`,
@@ -968,7 +978,7 @@ export function SemesterReport() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {commission.map((member, i) => (
               <div key={i} className="space-y-1">
                 <Label className="text-xs text-muted-foreground">{member.role}</Label>
