@@ -425,8 +425,8 @@ export function SemesterReport() {
       const plantBars = Array.from(plantAgg.values()).sort((a, b) => a.name.localeCompare(b.name));
 
       const chartLeft = 65;
-      const chartRight = pageW - 20;
-      const chartW = chartRight - chartLeft;
+      const chartRight = pageW - 14;
+      const maxBarW = chartRight - chartLeft - 40; // reserve 40mm for labels
       const barH = 5;
       const barGap = 8;
       const maxVal = Math.max(...plantBars.flatMap((p) => [p.expected, p.generated]), 1);
@@ -442,55 +442,35 @@ export function SemesterReport() {
       doc.text("Realizado", chartLeft + 45, y);
       y += 6;
 
-      plantBars.forEach((plant) => {
+      const drawBarRow = (name: string, expected: number, generated: number, bold = false) => {
         addCheckPage();
-        // Plant name label
         doc.setFontSize(7);
-        doc.setFont("helvetica", "normal");
+        doc.setFont("helvetica", bold ? "bold" : "normal");
         doc.setTextColor(34, 34, 34);
-        const label = plant.name.length > 25 ? plant.name.slice(0, 24) + "…" : plant.name;
+        const label = name.length > 25 ? name.slice(0, 24) + "…" : name;
         doc.text(label, chartLeft - 2, y + 1, { align: "right" });
 
-        // Expected bar (blue)
-        const expectedW = Math.max((plant.expected / maxVal) * chartW, 0.5);
+        const expectedW = Math.max((expected / maxVal) * maxBarW, 0.5);
         doc.setFillColor(59, 130, 246);
         doc.rect(chartLeft, y - 2, expectedW, barH / 2, "F");
 
-        // Generated bar (green)
-        const generatedW = Math.max((plant.generated / maxVal) * chartW, 0.5);
+        const generatedW = Math.max((generated / maxVal) * maxBarW, 0.5);
         doc.setFillColor(34, 139, 34);
         doc.rect(chartLeft, y + barH / 2 - 2, generatedW, barH / 2, "F");
 
-        // Value labels
         doc.setFontSize(6);
         doc.setTextColor(80, 80, 80);
-        const expectedLabel = Math.round(plant.expected).toLocaleString("pt-BR");
-        const generatedLabel = Math.round(plant.generated).toLocaleString("pt-BR");
-        const perf = plant.expected > 0 ? Math.round((plant.generated / plant.expected) * 100) : 0;
-        doc.text(`${expectedLabel} kWh`, chartLeft + expectedW + 2, y);
-        doc.text(`${generatedLabel} kWh (${perf}%)`, chartLeft + generatedW + 2, y + barH / 2);
+        doc.setFont("helvetica", "normal");
+        const perf = expected > 0 ? Math.round((generated / expected) * 100) : 0;
+        doc.text(`${Math.round(expected).toLocaleString("pt-BR")} kWh`, chartLeft + expectedW + 2, y);
+        doc.text(`${Math.round(generated).toLocaleString("pt-BR")} kWh (${perf}%)`, chartLeft + generatedW + 2, y + barH / 2);
 
         y += barGap;
-      });
+      };
 
-      // Totals row
-      addCheckPage();
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.setTextColor(34, 34, 34);
-      doc.text("TOTAL", chartLeft - 2, y + 1, { align: "right" });
-      const totalExpW = Math.max((totalExpected / maxVal) * chartW, 0.5);
-      const totalGenW = Math.max((totalGenerated / maxVal) * chartW, 0.5);
-      doc.setFillColor(59, 130, 246);
-      doc.rect(chartLeft, y - 2, totalExpW, barH / 2, "F");
-      doc.setFillColor(34, 139, 34);
-      doc.rect(chartLeft, y + barH / 2 - 2, totalGenW, barH / 2, "F");
-      doc.setFontSize(6);
-      doc.setTextColor(80, 80, 80);
-      doc.text(`${Math.round(totalExpected).toLocaleString("pt-BR")} kWh`, chartLeft + totalExpW + 2, y);
-      doc.text(`${Math.round(totalGenerated).toLocaleString("pt-BR")} kWh (${totalExpected > 0 ? Math.round((totalGenerated / totalExpected) * 100) : 0}%)`, chartLeft + totalGenW + 2, y + barH / 2);
-      doc.setFont("helvetica", "normal");
-      y += 10;
+      plantBars.forEach((plant) => drawBarRow(plant.name, plant.expected, plant.generated));
+      drawBarRow("TOTAL", totalExpected, totalGenerated, true);
+      y += 2;
 
       // 3. Rateio de Créditos
       if (rateiData.length > 0) {
