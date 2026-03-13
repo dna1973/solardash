@@ -667,7 +667,9 @@ export type Database = {
           consumption_history: Json | null
           consumption_m3: number | null
           created_at: string
+          deductions_value: number | null
           due_date: string | null
+          gross_value: number | null
           id: string
           invoice_number: string | null
           pdf_path: string | null
@@ -689,7 +691,9 @@ export type Database = {
           consumption_history?: Json | null
           consumption_m3?: number | null
           created_at?: string
+          deductions_value?: number | null
           due_date?: string | null
+          gross_value?: number | null
           id?: string
           invoice_number?: string | null
           pdf_path?: string | null
@@ -711,7 +715,9 @@ export type Database = {
           consumption_history?: Json | null
           consumption_m3?: number | null
           created_at?: string
+          deductions_value?: number | null
           due_date?: string | null
+          gross_value?: number | null
           id?: string
           invoice_number?: string | null
           pdf_path?: string | null
