@@ -497,6 +497,7 @@ export function SemesterReport() {
         addSection("3. Rateio de Créditos por Unidade Consumidora");
         doc.setFontSize(7);
         const ratHeaders = ["Unidade (UC)", "Consumo (kWh)", "Geração (kWh)", "Saldo Créditos", "Valor (R$)"];
+        const colW = (pageW - 28) / 5;
         doc.setFillColor(59, 130, 246);
         doc.setTextColor(255, 255, 255);
         doc.rect(14, y - 4, pageW - 28, 6, "F");
