@@ -523,16 +523,41 @@ export function SemesterReport() {
         y += 4;
       }
 
-      // Signature line
+      // Signature lines for Presidente and Vice-Presidente
       addCheckPage();
       y += 10;
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.3);
-      doc.line(pageW / 2 - 40, y, pageW / 2 + 40, y);
-      y += 5;
-      doc.setFontSize(8);
-      doc.setTextColor(34, 34, 34);
-      doc.text("Superintendente", pageW / 2, y, { align: "center" });
+      const presidente = commission.find((m) => m.role.includes("Presidente") && !m.role.includes("Vice"));
+      const vice = commission.find((m) => m.role.includes("Vice"));
+      const signatories = [presidente, vice].filter(Boolean) as CommissionMember[];
+      
+      if (signatories.length === 2) {
+        const sigW = (pageW - 28) / 2;
+        signatories.forEach((s, i) => {
+          const cx = 14 + i * sigW + sigW / 2;
+          doc.setDrawColor(0, 0, 0);
+          doc.setLineWidth(0.3);
+          doc.line(cx - 35, y, cx + 35, y);
+          doc.setFontSize(7.5);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(34, 34, 34);
+          doc.text(s.name, cx, y + 4, { align: "center", maxWidth: 70 });
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(80, 80, 80);
+          doc.text(s.role, cx, y + 8, { align: "center" });
+        });
+      } else if (signatories.length === 1) {
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.3);
+        doc.line(pageW / 2 - 35, y, pageW / 2 + 35, y);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(34, 34, 34);
+        doc.text(signatories[0].name, pageW / 2, y + 4, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.text(signatories[0].role, pageW / 2, y + 8, { align: "center" });
+      }
 
       // Footer on all pages
       const totalPages = doc.getNumberOfPages();
