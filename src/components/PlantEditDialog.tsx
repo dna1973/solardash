@@ -16,6 +16,7 @@ interface PlantEditDialogProps {
     integrator: string | null;
     latitude: number | null;
     longitude: number | null;
+    capacity_kwp: number;
   };
   onSave: (data: {
     location: string;
@@ -23,6 +24,7 @@ interface PlantEditDialogProps {
     integrator: string;
     latitude: number | null;
     longitude: number | null;
+    capacity_kwp: number;
   }) => Promise<void>;
 }
 
