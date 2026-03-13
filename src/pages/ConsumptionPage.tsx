@@ -54,6 +54,8 @@ interface WaterBill {
   consumption_m3: number | null;
   water_value: number | null;
   sewer_value: number | null;
+  gross_value: number | null;
+  deductions_value: number | null;
   total_value: number | null;
   tariff_type: string | null;
   due_date: string | null;
@@ -172,7 +174,7 @@ export default function ConsumptionPage() {
     setWaterBillsLoading(true);
     const { data, error } = await supabase
       .from("water_bills" as any)
-      .select("id, property_name, address, utility_company, account_number, client_code, reference_month, consumption_m3, water_value, sewer_value, total_value, tariff_type, due_date, invoice_number, consumption_history, created_at")
+      .select("id, property_name, address, utility_company, account_number, client_code, reference_month, consumption_m3, water_value, sewer_value, gross_value, deductions_value, total_value, tariff_type, due_date, invoice_number, consumption_history, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -269,6 +271,8 @@ export default function ConsumptionPage() {
       consumption_m3: rest.consumption_m3,
       water_value: rest.water_value,
       sewer_value: rest.sewer_value,
+      gross_value: rest.gross_value,
+      deductions_value: rest.deductions_value,
       total_value: rest.total_value,
       tariff_type: rest.tariff_type,
       due_date: rest.due_date,
@@ -344,6 +348,8 @@ export default function ConsumptionPage() {
         case "consumption_m3": va = a.consumption_m3 || 0; vb = b.consumption_m3 || 0; break;
         case "water_value": va = a.water_value || 0; vb = b.water_value || 0; break;
         case "sewer_value": va = a.sewer_value || 0; vb = b.sewer_value || 0; break;
+        case "gross_value": va = a.gross_value || 0; vb = b.gross_value || 0; break;
+        case "deductions_value": va = a.deductions_value || 0; vb = b.deductions_value || 0; break;
         case "total_value": va = a.total_value || 0; vb = b.total_value || 0; break;
         case "created_at": va = a.created_at; vb = b.created_at; break;
         default: return 0;
@@ -398,7 +404,9 @@ export default function ConsumptionPage() {
         "Consumo (m³)": b.consumption_m3 || 0,
         "Valor Água (R$)": b.water_value || 0,
         "Valor Esgoto (R$)": b.sewer_value || 0,
-        "Valor Total (R$)": b.total_value || 0,
+        "Valor Bruto (R$)": b.gross_value || 0,
+        "Dedução (R$)": b.deductions_value || 0,
+        "Valor Líquido (R$)": b.total_value || 0,
       }));
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const ws = XLSX.utils.json_to_sheet(data);
@@ -419,7 +427,9 @@ export default function ConsumptionPage() {
         "Consumo (m³)": b.consumption_m3 || 0,
         "Valor Água (R$)": b.water_value || 0,
         "Valor Esgoto (R$)": b.sewer_value || 0,
-        "Valor Total (R$)": b.total_value || 0,
+        "Valor Bruto (R$)": b.gross_value || 0,
+        "Dedução (R$)": b.deductions_value || 0,
+        "Valor Líquido (R$)": b.total_value || 0,
       }));
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
 
@@ -1248,8 +1258,14 @@ export default function ConsumptionPage() {
                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("sewer_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center justify-end">Valor Esgoto<SortIcon col="sewer_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("gross_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Bruto<SortIcon col="gross_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("deductions_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Dedução<SortIcon col="deductions_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
                        <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("total_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
-                        <span className="inline-flex items-center justify-end">Valor Total<SortIcon col="total_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                        <span className="inline-flex items-center justify-end">Valor Líquido<SortIcon col="total_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                        </TableHead>
                        <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center">Importado em<SortIcon col="created_at" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
@@ -1276,6 +1292,12 @@ export default function ConsumptionPage() {
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.sewer_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.gross_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          {(bill.deductions_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className="text-right text-sm font-mono font-semibold">
                           {(bill.total_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -1317,6 +1339,12 @@ export default function ConsumptionPage() {
                       </TableCell>
                       <TableCell className="text-right text-sm font-mono">
                         {sortedWaterBills.reduce((s, b) => s + (b.sewer_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.gross_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell className="text-right text-sm font-mono">
+                        {sortedWaterBills.reduce((s, b) => s + (b.deductions_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell className="text-right text-sm font-mono">
                         {sortedWaterBills.reduce((s, b) => s + (b.total_value || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -1578,7 +1606,15 @@ export default function ConsumptionPage() {
                 <Input type="number" step="0.01" value={editingWaterBill.sewer_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, sewer_value: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Valor Total (R$)</Label>
+                <Label className="text-xs">Valor Bruto (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.gross_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, gross_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Dedução (R$)</Label>
+                <Input type="number" step="0.01" value={editingWaterBill.deductions_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, deductions_value: e.target.value ? Number(e.target.value) : null })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Líquido (R$)</Label>
                 <Input type="number" step="0.01" value={editingWaterBill.total_value ?? ""} onChange={(e) => setEditingWaterBill({ ...editingWaterBill, total_value: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <div className="space-y-1.5">
