@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePlants, useAlerts, useEnergyData } from "@/hooks/useSupabaseData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { autoFitColumns } from "@/lib/excelUtils";
+
 import { motion } from "framer-motion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
