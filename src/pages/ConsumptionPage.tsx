@@ -535,7 +535,9 @@ export default function ConsumptionPage() {
     const footerX = pageW - mx - 80;
     [{ label: "Valor Água", value: fmtMoney2(waterTotalWater) },
      { label: "Valor Esgoto", value: fmtMoney2(waterTotalSewer) },
-     { label: "Valor Total", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
+     { label: "Valor Bruto", value: fmtMoney2(waterTotalGross) },
+     { label: "Dedução", value: fmtMoney2(waterTotalDeductions) },
+     { label: "Valor Líquido", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
       doc.setDrawColor(200, 220, 240); doc.line(footerX, y + i * 6 + 2, footerX + 80, y + i * 6 + 2);
       doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.text(item.label, footerX + 2, y + i * 6);
       doc.setFont("helvetica", "bold"); doc.text(item.value, footerX + 78, y + i * 6, { align: "right" });
