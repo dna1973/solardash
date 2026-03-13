@@ -336,15 +336,7 @@ export function SemesterReport() {
       doc.text(semesterLabel, pageW / 2, y, { align: "center" });
       y += 4;
 
-      // Commission members in header
-      const activeMembers = commission.filter((m) => m.name.trim());
-      if (activeMembers.length > 0) {
-        doc.setFontSize(7);
-        doc.setTextColor(100, 100, 100);
-        const memberLine = activeMembers.map((m) => `${m.role}: ${m.name}`).join(" | ");
-        doc.text(memberLine, pageW / 2, y, { align: "center", maxWidth: pageW - 28 });
-        y += 5;
-      }
+      // (Commission members moved to end of report)
 
       // Saving highlight
       y += 4;
