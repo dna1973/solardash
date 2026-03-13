@@ -945,10 +945,27 @@ export function SemesterReport() {
       {/* Membros da Comissão */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            Membros da Comissão (Art. 3º)
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Membros da Comissão (Art. 3º)
+            </CardTitle>
+            <label className="flex items-center gap-1.5 border text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+              {importingCommission ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+              {importingCommission ? "Importando..." : "Importar da Portaria (OCR)"}
+              <input
+                type="file"
+                accept=".pdf,image/*"
+                className="hidden"
+                disabled={importingCommission}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportCommission(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
