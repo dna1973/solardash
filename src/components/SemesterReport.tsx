@@ -462,7 +462,7 @@ export function SemesterReport() {
         const lines = doc.splitTextToSize(aiResult.conclusaoRecomendacoes, pageW - 28);
         for (const line of lines) {
           addCheckPage();
-          doc.text(line, 14, y);
+          doc.text(line, 14, y, { align: "justify", maxWidth: pageW - 28 });
           y += 4;
         }
         y += 6;
