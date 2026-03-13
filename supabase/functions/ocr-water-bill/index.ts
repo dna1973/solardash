@@ -93,10 +93,12 @@ Instruções de extração — siga rigorosamente:
 8. "consumption_m3": Consumo total de água em metros cúbicos (m³) no período.
 9. "water_value": Valor cobrado pela água (R$). Procure por "Água" ou "Tarifa de Água".
 10. "sewer_value": Valor cobrado pelo esgoto (R$). Procure por "Esgoto" ou "Tarifa de Esgoto".
-11. "total_value": Valor total da fatura (R$). Procure por "TOTAL" ou "Valor a Pagar".
-12. "tariff_type": Categoria/tipo de tarifa (ex: "Residencial", "Comercial", "Industrial", "Social").
-13. "due_date": Data de vencimento no formato "YYYY-MM-DD" (ex: "2025-12-19").
-14. "consumption_history": Array de objetos com o histórico de consumo dos meses anteriores, se disponível na fatura.
+11. "total_value": Valor total da fatura (R$). Procure por "TOTAL" ou "Valor a Pagar". Este é o valor líquido final.
+12. "gross_value": Valor bruto da fatura (R$). Se não houver campo explícito, calcule como total_value + deductions_value.
+13. "deductions_value": Valor total de descontos/deduções (R$). Procure por "Desconto", "Dedução", "Abatimento".
+14. "tariff_type": Categoria/tipo de tarifa (ex: "Residencial", "Comercial", "Industrial", "Social", "PÚBLICO").
+15. "due_date": Data de vencimento no formato "YYYY-MM-DD" (ex: "2025-12-19").
+16. "consumption_history": Array de objetos com o histórico de consumo dos meses anteriores, se disponível na fatura.
     Cada item deve ter: {"month": "MM/YYYY", "consumption_m3": number}
     Se não houver histórico, retorne array vazio [].
 

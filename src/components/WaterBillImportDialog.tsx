@@ -19,6 +19,8 @@ interface ExtractedWaterBillData {
   water_value?: number;
   sewer_value?: number;
   total_value?: number;
+  gross_value?: number;
+  deductions_value?: number;
   tariff_type?: string;
   due_date?: string;
   invoice_number?: string;
@@ -154,6 +156,8 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
         water_value: extracted.water_value || 0,
         sewer_value: extracted.sewer_value || 0,
         total_value: extracted.total_value || 0,
+        gross_value: extracted.gross_value || 0,
+        deductions_value: extracted.deductions_value || 0,
         tariff_type: extracted.tariff_type || null,
         due_date: extracted.due_date || null,
         invoice_number: extracted.invoice_number || null,
@@ -366,6 +370,27 @@ export function WaterBillImportDialog({ open, onOpenChange, onImported }: WaterB
                   step="0.01"
                   value={extracted.total_value ?? 0}
                   onChange={(e) => updateField("total_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor Bruto (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.gross_value ?? 0}
+                  onChange={(e) => updateField("gross_value", parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Deduções (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={extracted.deductions_value ?? 0}
+                  onChange={(e) => updateField("deductions_value", parseFloat(e.target.value) || 0)}
                 />
               </div>
             </div>
