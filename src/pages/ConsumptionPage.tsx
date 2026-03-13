@@ -468,13 +468,15 @@ export default function ConsumptionPage() {
 
     y += headerH + 4;
     const cols = [
-      { header: "Nº", width: 12, align: "left" as const },
-      { header: "MATRÍCULA", width: 30, align: "left" as const },
-      { header: "LOCAL", width: 90, align: "left" as const },
-      { header: "CONSUMO\n(m³)", width: 30, align: "right" as const },
-      { header: "Valor\nÁgua", width: 35, align: "right" as const },
-      { header: "Valor\nEsgoto", width: 35, align: "right" as const },
-      { header: "Valor\nTotal", width: 35, align: "right" as const },
+      { header: "Nº", width: 10, align: "left" as const },
+      { header: "MATRÍCULA", width: 25, align: "left" as const },
+      { header: "LOCAL", width: 70, align: "left" as const },
+      { header: "CONSUMO\n(m³)", width: 25, align: "right" as const },
+      { header: "Valor\nÁgua", width: 28, align: "right" as const },
+      { header: "Valor\nEsgoto", width: 28, align: "right" as const },
+      { header: "Valor\nBruto", width: 28, align: "right" as const },
+      { header: "Dedução", width: 28, align: "right" as const },
+      { header: "Valor\nLíquido", width: 35, align: "right" as const },
     ];
     const usedW2 = cols.reduce((s, c) => s + c.width, 0);
     if (usedW2 < tableW) cols[cols.length - 1].width += tableW - usedW2;
@@ -523,7 +525,9 @@ export default function ConsumptionPage() {
     const totalLabelX2 = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX2, y + 0.5, { align: "right" });
-    const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalValue)];
+    const waterTotalGross = filteredWaterBills.reduce((s, b) => s + (b.gross_value || 0), 0);
+    const waterTotalDeductions = filteredWaterBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
+    const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalGross), fmtMoney2(waterTotalDeductions), fmtMoney2(waterTotalValue)];
     let ttx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
     totalVals.forEach((val, i) => { const col = cols[i + 3]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
 
@@ -531,7 +535,9 @@ export default function ConsumptionPage() {
     const footerX = pageW - mx - 80;
     [{ label: "Valor Água", value: fmtMoney2(waterTotalWater) },
      { label: "Valor Esgoto", value: fmtMoney2(waterTotalSewer) },
-     { label: "Valor Total", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
+     { label: "Valor Bruto", value: fmtMoney2(waterTotalGross) },
+     { label: "Dedução", value: fmtMoney2(waterTotalDeductions) },
+     { label: "Valor Líquido", value: fmtMoney2(waterTotalValue) }].forEach((item, i) => {
       doc.setDrawColor(200, 220, 240); doc.line(footerX, y + i * 6 + 2, footerX + 80, y + i * 6 + 2);
       doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.text(item.label, footerX + 2, y + i * 6);
       doc.setFont("helvetica", "bold"); doc.text(item.value, footerX + 78, y + i * 6, { align: "right" });
