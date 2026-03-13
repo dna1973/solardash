@@ -23,6 +23,7 @@ export default function Plants() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterManufacturer, setFilterManufacturer] = useState("all");
   const [filterIntegrator, setFilterIntegrator] = useState("all");
+  const [importOpen, setImportOpen] = useState(false);
 
   const activeAlertCount = (dbAlerts || []).filter((a) => !a.resolved).length;
 
