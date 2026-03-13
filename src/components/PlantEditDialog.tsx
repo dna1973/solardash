@@ -96,7 +96,18 @@ export function PlantEditDialog({ open, onOpenChange, plant, onSave }: PlantEdit
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="capacity">Capacidade (kWp)</Label>
+            <Input
+              id="capacity"
+              type="number"
+              step="0.01"
+              value={capacityKwp}
+              onChange={(e) => setCapacityKwp(parseFloat(e.target.value) || 0)}
+              placeholder="Ex: 75.6"
+            />
+          </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="lat">Latitude</Label>
               <Input
