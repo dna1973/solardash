@@ -411,35 +411,86 @@ export function SemesterReport() {
         y += 4;
       }
 
-      // 2. Geração Prevista vs Realizada
+      // 2. Geração Prevista vs Realizada — Horizontal bar chart condensed by plant
       addSection("2. Geração Prevista vs. Realizada");
-      doc.setFontSize(7);
-      const genHeaders = ["Usina", "Mês", "Previsto (kWh)", "Realizado (kWh)", "Desempenho (%)"];
-      doc.setFillColor(59, 130, 246);
-      doc.setTextColor(255, 255, 255);
-      doc.rect(14, y - 4, pageW - 28, 6, "F");
-      const colW = (pageW - 28) / 5;
-      genHeaders.forEach((h, i) => doc.text(h, 16 + i * colW, y, { align: "left" }));
-      y += 5;
-      doc.setTextColor(34, 34, 34);
-      generationByPlantMonth.forEach((r, idx) => {
-        addCheckPage();
-        if (idx % 2 === 0) { doc.setFillColor(245, 245, 245); doc.rect(14, y - 3.5, pageW - 28, 5, "F"); }
-        doc.text(r.plantName.slice(0, 20), 16, y);
-        doc.text(r.monthLabel, 16 + colW, y);
-        doc.text(Math.round(r.expectedKwh).toLocaleString("pt-BR"), 16 + colW * 2, y);
-        doc.text(Math.round(r.generated).toLocaleString("pt-BR"), 16 + colW * 3, y);
-        doc.text(`${Math.round(r.performance)}%`, 16 + colW * 4, y);
-        y += 5;
+
+      // Aggregate data by plant
+      const plantAgg = new Map<string, { name: string; expected: number; generated: number }>();
+      generationByPlantMonth.forEach((r) => {
+        const entry = plantAgg.get(r.plantId) || { name: r.plantName, expected: 0, generated: 0 };
+        entry.expected += r.expectedKwh;
+        entry.generated += r.generated;
+        plantAgg.set(r.plantId, entry);
       });
-      // Totals
+      const plantBars = Array.from(plantAgg.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+      const chartLeft = 65;
+      const chartRight = pageW - 20;
+      const chartW = chartRight - chartLeft;
+      const barH = 5;
+      const barGap = 8;
+      const maxVal = Math.max(...plantBars.flatMap((p) => [p.expected, p.generated]), 1);
+
+      // Legend
+      doc.setFontSize(7);
+      doc.setFillColor(59, 130, 246);
+      doc.rect(chartLeft, y - 3, 8, 3, "F");
+      doc.setTextColor(80, 80, 80);
+      doc.text("Previsto", chartLeft + 10, y);
+      doc.setFillColor(34, 139, 34);
+      doc.rect(chartLeft + 35, y - 3, 8, 3, "F");
+      doc.text("Realizado", chartLeft + 45, y);
+      y += 6;
+
+      plantBars.forEach((plant) => {
+        addCheckPage();
+        // Plant name label
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(34, 34, 34);
+        const label = plant.name.length > 25 ? plant.name.slice(0, 24) + "…" : plant.name;
+        doc.text(label, chartLeft - 2, y + 1, { align: "right" });
+
+        // Expected bar (blue)
+        const expectedW = Math.max((plant.expected / maxVal) * chartW, 0.5);
+        doc.setFillColor(59, 130, 246);
+        doc.rect(chartLeft, y - 2, expectedW, barH / 2, "F");
+
+        // Generated bar (green)
+        const generatedW = Math.max((plant.generated / maxVal) * chartW, 0.5);
+        doc.setFillColor(34, 139, 34);
+        doc.rect(chartLeft, y + barH / 2 - 2, generatedW, barH / 2, "F");
+
+        // Value labels
+        doc.setFontSize(6);
+        doc.setTextColor(80, 80, 80);
+        const expectedLabel = Math.round(plant.expected).toLocaleString("pt-BR");
+        const generatedLabel = Math.round(plant.generated).toLocaleString("pt-BR");
+        const perf = plant.expected > 0 ? Math.round((plant.generated / plant.expected) * 100) : 0;
+        doc.text(`${expectedLabel} kWh`, chartLeft + expectedW + 2, y);
+        doc.text(`${generatedLabel} kWh (${perf}%)`, chartLeft + generatedW + 2, y + barH / 2);
+
+        y += barGap;
+      });
+
+      // Totals row
+      addCheckPage();
       doc.setFont("helvetica", "bold");
-      doc.text("TOTAL", 16, y);
-      doc.text(Math.round(totalExpected).toLocaleString("pt-BR"), 16 + colW * 2, y);
-      doc.text(Math.round(totalGenerated).toLocaleString("pt-BR"), 16 + colW * 3, y);
-      doc.text(totalExpected > 0 ? `${Math.round((totalGenerated / totalExpected) * 100)}%` : "—", 16 + colW * 4, y);
+      doc.setFontSize(8);
+      doc.setTextColor(34, 34, 34);
+      doc.text("TOTAL", chartLeft - 2, y + 1, { align: "right" });
+      const totalExpW = Math.max((totalExpected / maxVal) * chartW, 0.5);
+      const totalGenW = Math.max((totalGenerated / maxVal) * chartW, 0.5);
+      doc.setFillColor(59, 130, 246);
+      doc.rect(chartLeft, y - 2, totalExpW, barH / 2, "F");
+      doc.setFillColor(34, 139, 34);
+      doc.rect(chartLeft, y + barH / 2 - 2, totalGenW, barH / 2, "F");
+      doc.setFontSize(6);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`${Math.round(totalExpected).toLocaleString("pt-BR")} kWh`, chartLeft + totalExpW + 2, y);
+      doc.text(`${Math.round(totalGenerated).toLocaleString("pt-BR")} kWh (${totalExpected > 0 ? Math.round((totalGenerated / totalExpected) * 100) : 0}%)`, chartLeft + totalGenW + 2, y + barH / 2);
       doc.setFont("helvetica", "normal");
-      y += 8;
+      y += 10;
 
       // 3. Rateio de Créditos
       if (rateiData.length > 0) {
