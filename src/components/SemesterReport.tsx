@@ -968,6 +968,18 @@ export function SemesterReport() {
         </CardContent>
       </Card>
 
+      {/* Export Buttons */}
+      <div className="flex flex-wrap gap-3">
+        <button onClick={handleExportPDF}
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors">
+          <Download className="h-4 w-4" /> Exportar PDF
+        </button>
+        <button onClick={handleExportDOCX}
+          className="flex items-center gap-1.5 border text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-muted transition-colors">
+          <FileDown className="h-4 w-4" /> Exportar DOCX
+        </button>
+      </div>
+
       {/* Table: Prevista vs Realizada */}
       {generationByPlantMonth.length > 0 && (
         <div className="rounded-xl bg-card shadow-card overflow-hidden">
