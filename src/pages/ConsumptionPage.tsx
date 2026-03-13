@@ -346,6 +346,8 @@ export default function ConsumptionPage() {
         case "consumption_m3": va = a.consumption_m3 || 0; vb = b.consumption_m3 || 0; break;
         case "water_value": va = a.water_value || 0; vb = b.water_value || 0; break;
         case "sewer_value": va = a.sewer_value || 0; vb = b.sewer_value || 0; break;
+        case "gross_value": va = a.gross_value || 0; vb = b.gross_value || 0; break;
+        case "deductions_value": va = a.deductions_value || 0; vb = b.deductions_value || 0; break;
         case "total_value": va = a.total_value || 0; vb = b.total_value || 0; break;
         case "created_at": va = a.created_at; vb = b.created_at; break;
         default: return 0;
