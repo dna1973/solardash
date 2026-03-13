@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2, Download, Sparkles, DollarSign, AlertTriangle, CheckCircle2,
-  Shield, Users, ClipboardList, Zap, BarChart3, FileText, Upload
+  Shield, Users, ClipboardList, Zap, BarChart3, FileText, Upload, FileDown
 } from "lucide-react";
 
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
