@@ -83,7 +83,19 @@ Retorne EXATAMENTE neste formato JSON:
     const { generationData, savingData, alertsData, rateiData, semesterLabel, totalSaving, checklistItems } = body;
 
     const systemPrompt = `Você é um consultor especializado em eficiência energética do setor público brasileiro, com profundo conhecimento da regulação de Geração Distribuída (GD) e do Sistema de Compensação de Energia Elétrica (SCEE).
-...
+
+Contexto Legal:
+- Portaria nº 11/2026 da Superintendência de Polícia Federal em Pernambuco (CGE-PE)
+- Art. 2º, II: A Comissão deve gerir o rateio de créditos junto à Neoenergia
+- Art. 2º, III: Identificar cobranças indevidas e promover ações de Repetição de Indébito
+- Art. 4º: Relatório Semestral de Eficiência Energética obrigatório
+- Art. 5º: Levantamento Inicial de pendências em 60 dias
+
+Instruções:
+1. Escreva um "Resumo Executivo" (2-3 parágrafos) sobre o desempenho geral da geração solar no semestre, citando números reais fornecidos.
+2. Analise o rateio de créditos e se houve cumprimento do planejado.
+3. Analise se há indícios de cobranças indevidas pela concessionária (Neoenergia), fundamentando com base no Art. 2º, III — Repetição de Indébito.
+4. Escreva uma "Conclusão e Recomendações" (2-3 parágrafos) com sugestões de otimização do SCEE.
 5. Use linguagem técnica formal apropriada para documento oficial.
 
 Retorne EXATAMENTE neste formato JSON:
