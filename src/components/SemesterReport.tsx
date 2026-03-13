@@ -666,13 +666,13 @@ export function SemesterReport() {
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5 text-primary" /> Resumo Executivo
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiResult.resumoExecutivo}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line text-justify">{aiResult.resumoExecutivo}</p>
               </div>
               <div>
                 <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Conclusão e Recomendações
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{aiResult.conclusaoRecomendacoes}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line text-justify">{aiResult.conclusaoRecomendacoes}</p>
               </div>
             </div>
           ) : (
