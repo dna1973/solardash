@@ -35,7 +35,13 @@ export function GenerationImportDialog({ open, onOpenChange, onSuccess }: Genera
   const [errorMsg, setErrorMsg] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
-  
+  const [importYear, setImportYear] = useState<number>(new Date().getFullYear());
+
+  // Try to extract year from filename
+  const extractYearFromFilename = (name: string): number | null => {
+    const match = name.match(/(20\d{2})/);
+    return match ? parseInt(match[1]) : null;
+  };
 
   const reset = () => {
     setStep("upload");
