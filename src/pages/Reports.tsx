@@ -224,6 +224,31 @@ export default function Reports() {
         if (y > 190) { doc.addPage(); y = 20; }
       }
 
+      // Commission members
+      let commissionMembers: Array<{ role: string; name: string }> = [];
+      try {
+        const saved = localStorage.getItem("semester_report_commission");
+        if (saved) commissionMembers = JSON.parse(saved).filter((m: any) => m.name?.trim());
+      } catch {}
+
+      if (commissionMembers.length > 0) {
+        if (y > 170) { doc.addPage(); y = 20; }
+        y += 4;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(34, 34, 34);
+        doc.text("Membros da Comissão CGE-PE (Portaria nº 11/2026)", 14, y);
+        y += 5;
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(80, 80, 80);
+        commissionMembers.forEach((m) => {
+          if (y > 190) { doc.addPage(); y = 20; }
+          doc.text(`${m.role}: ${m.name}`, 16, y);
+          y += 4;
+        });
+      }
+
       const totalPages = doc.getNumberOfPages();
       const nowDt = new Date();
       const footerText = `Gerado por: ${user?.user_metadata?.full_name || user?.email || "Usuário"} em ${nowDt.toLocaleDateString("pt-BR")} às ${nowDt.toLocaleTimeString("pt-BR")}`;
