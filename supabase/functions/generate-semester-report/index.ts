@@ -1,0 +1,125 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const { generationData, savingData, alertsData, rateiData, semesterLabel, totalSaving, checklistItems } = await req.json();
+
+    const systemPrompt = `Você é um consultor especializado em eficiência energética do setor público brasileiro, com profundo conhecimento da regulação de Geração Distribuída (GD) e do Sistema de Compensação de Energia Elétrica (SCEE).
+
+Contexto Legal:
+- Portaria nº 11/2026 da Superintendência de Polícia Federal em Pernambuco (CGE-PE)
+- Art. 2º, II: A Comissão deve gerir o rateio de créditos junto à Neoenergia
+- Art. 2º, III: Identificar cobranças indevidas e promover ações de Repetição de Indébito
+- Art. 4º: Relatório Semestral de Eficiência Energética obrigatório
+- Art. 5º: Levantamento Inicial de pendências em 60 dias
+
+Instruções:
+1. Escreva um "Resumo Executivo" (2-3 parágrafos) sobre o desempenho geral da geração solar no semestre, citando números reais fornecidos.
+2. Analise o rateio de créditos e se houve cumprimento do planejado.
+3. Analise se há indícios de cobranças indevidas pela concessionária (Neoenergia), fundamentando com base no Art. 2º, III — Repetição de Indébito.
+4. Escreva uma "Conclusão e Recomendações" (2-3 parágrafos) com sugestões de otimização do SCEE.
+5. Use linguagem técnica formal apropriada para documento oficial.
+
+Retorne EXATAMENTE neste formato JSON:
+{
+  "resumoExecutivo": "texto...",
+  "conclusaoRecomendacoes": "texto..."
+}`;
+
+    const userPrompt = `Dados do ${semesterLabel}:
+
+GERAÇÃO POR USINA/MÊS:
+${JSON.stringify(generationData, null, 2)}
+
+ECONOMIA TOTAL DO SEMESTRE: R$ ${totalSaving?.toFixed(2) || "0,00"}
+
+SAVING POR USINA:
+${JSON.stringify(savingData, null, 2)}
+
+RATEIO DE CRÉDITOS POR UNIDADE CONSUMIDORA:
+${JSON.stringify(rateiData, null, 2)}
+
+ALERTAS E EVENTOS DO PERÍODO:
+${JSON.stringify(alertsData, null, 2)}
+
+${checklistItems ? `PENDÊNCIAS DO LEVANTAMENTO INICIAL (Art. 5º):\n${JSON.stringify(checklistItems, null, 2)}` : ""}
+
+Gere o Resumo Executivo e a Conclusão/Recomendações conforme instruído.`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns minutos." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes. Adicione créditos no workspace." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(JSON.stringify({ error: "Erro ao gerar análise com IA" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const aiResult = await response.json();
+    const content = aiResult.choices?.[0]?.message?.content || "";
+
+    // Parse JSON from the AI response
+    let parsed;
+    try {
+      // Try to extract JSON from markdown code blocks if present
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonStr = jsonMatch ? jsonMatch[1].trim() : content.trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      parsed = {
+        resumoExecutivo: content,
+        conclusaoRecomendacoes: "",
+      };
+    }
+
+    return new Response(JSON.stringify({ success: true, ...parsed }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("generate-semester-report error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
