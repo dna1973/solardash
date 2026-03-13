@@ -1252,8 +1252,14 @@ export default function ConsumptionPage() {
                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("sewer_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center justify-end">Valor Esgoto<SortIcon col="sewer_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("gross_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Valor Bruto<SortIcon col="gross_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("deductions_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center justify-end">Dedução<SortIcon col="deductions_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
                        <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("total_value", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
-                        <span className="inline-flex items-center justify-end">Valor Total<SortIcon col="total_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                        <span className="inline-flex items-center justify-end">Valor Líquido<SortIcon col="total_value" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                        </TableHead>
                        <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center">Importado em<SortIcon col="created_at" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
