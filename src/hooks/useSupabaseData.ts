@@ -122,20 +122,34 @@ export function useEnergyData(plantId?: string, period: EnergyPeriod = "today", 
   return useQuery({
     queryKey: ["energy_data", plantId, period, from, to],
     queryFn: async () => {
-      let query = supabase
-        .from("energy_data")
-        .select("*")
-        .gte("timestamp", from)
-        .lte("timestamp", to)
-        .order("timestamp", { ascending: true });
+      const PAGE_SIZE = 1000;
+      let allData: any[] = [];
+      let page = 0;
+      let hasMore = true;
 
-      if (plantId) {
-        query = query.eq("plant_id", plantId);
+      while (hasMore) {
+        let query = supabase
+          .from("energy_data")
+          .select("*")
+          .gte("timestamp", from)
+          .lte("timestamp", to)
+          .order("timestamp", { ascending: true })
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+        if (plantId) {
+          query = query.eq("plant_id", plantId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const rows = data || [];
+        allData = allData.concat(rows);
+        hasMore = rows.length === PAGE_SIZE;
+        page++;
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+      return allData;
     },
   });
 }
