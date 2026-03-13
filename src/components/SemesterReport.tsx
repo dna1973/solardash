@@ -136,17 +136,16 @@ export function SemesterReport() {
     });
   }, [energyData, year, semesterMonths]);
 
-  // Generation by plant/month
+  // Generation by plant/month - includes ALL plants, even those without energy data
   const generationByPlantMonth = useMemo(() => {
-    const map = new Map<string, Map<number, { generated: number; consumed: number }>>();
-    const plantNames = new Map<string, string>();
-    (plantsData as any[]).forEach((p) => plantNames.set(p.id, p.name));
+    // Build a map of energy data by plant+month
+    const dataMap = new Map<string, Map<number, { generated: number; consumed: number }>>();
 
     semesterEnergyData.forEach((d) => {
       const month = new Date(d.timestamp).getMonth();
       const plantId = d.plant_id;
-      if (!map.has(plantId)) map.set(plantId, new Map());
-      const mMap = map.get(plantId)!;
+      if (!dataMap.has(plantId)) dataMap.set(plantId, new Map());
+      const mMap = dataMap.get(plantId)!;
       const entry = mMap.get(month) || { generated: 0, consumed: 0 };
       entry.generated += d.energy_generated_kwh || 0;
       entry.consumed += d.energy_consumed_kwh || 0;
@@ -158,15 +157,18 @@ export function SemesterReport() {
       generated: number; consumed: number; expectedKwh: number; performance: number;
     }> = [];
 
-    map.forEach((monthMap, plantId) => {
-      const plant = (plantsData as any[]).find((p) => p.id === plantId);
-      const capacityKwp = plant?.capacity_kwp || 0;
+    // Iterate over ALL plants, not just those with data
+    (plantsData as any[]).forEach((plant) => {
+      const capacityKwp = plant.capacity_kwp || 0;
+      const plantMonthData = dataMap.get(plant.id);
 
-      monthMap.forEach((val, month) => {
+      // For each month in the semester, create a row
+      semesterMonths.forEach((month) => {
+        const val = plantMonthData?.get(month) || { generated: 0, consumed: 0 };
         const expectedKwh = capacityKwp * AVG_SUN_HOURS * DAYS_PER_MONTH[month];
         rows.push({
-          plantId,
-          plantName: plantNames.get(plantId) || "—",
+          plantId: plant.id,
+          plantName: plant.name,
           month,
           monthLabel: MONTH_NAMES[month],
           generated: val.generated,
@@ -178,7 +180,7 @@ export function SemesterReport() {
     });
 
     return rows.sort((a, b) => a.plantName.localeCompare(b.plantName) || a.month - b.month);
-  }, [semesterEnergyData, plantsData]);
+  }, [semesterEnergyData, plantsData, semesterMonths]);
 
   // Saving totals
   const totalGenerated = useMemo(() => generationByPlantMonth.reduce((s, r) => s + r.generated, 0), [generationByPlantMonth]);
