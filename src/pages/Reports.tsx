@@ -8,6 +8,8 @@ import { useMemo, useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SemesterReport } from "@/components/SemesterReport";
 
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -293,7 +295,13 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      <Tabs defaultValue="analysis" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="analysis">Análise Energética</TabsTrigger>
+          <TabsTrigger value="semester">Relatório Semestral</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="analysis" className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">Relatórios</h1>
@@ -437,6 +445,12 @@ export default function Reports() {
           </div>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="semester">
+          <SemesterReport />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
