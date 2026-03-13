@@ -336,15 +336,7 @@ export function SemesterReport() {
       doc.text(semesterLabel, pageW / 2, y, { align: "center" });
       y += 4;
 
-      // Commission members in header
-      const activeMembers = commission.filter((m) => m.name.trim());
-      if (activeMembers.length > 0) {
-        doc.setFontSize(7);
-        doc.setTextColor(100, 100, 100);
-        const memberLine = activeMembers.map((m) => `${m.role}: ${m.name}`).join(" | ");
-        doc.text(memberLine, pageW / 2, y, { align: "center", maxWidth: pageW - 28 });
-        y += 5;
-      }
+      // (Commission members moved to end of report)
 
       // Saving highlight
       y += 4;
@@ -478,6 +470,57 @@ export function SemesterReport() {
           y += 4;
         }
         y += 6;
+      }
+
+      // Commission members section
+      const activeMembers = commission.filter((m) => m.name.trim());
+      if (activeMembers.length > 0) {
+        const sectionNum = showChecklist ? "7" : "6";
+        addSection(`${sectionNum}. Membros da Comissão CGE-PE (Art. 3º)`);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50, 50, 50);
+
+        // Group by DEL
+        const groups: Record<string, CommissionMember[]> = {};
+        activeMembers.forEach((m) => {
+          const groupKey = m.role.includes("SEDE") || m.role.includes("Presidente") ? "SEDE" :
+            m.role.replace("Membro ", "").trim();
+          if (!groups[groupKey]) groups[groupKey] = [];
+          groups[groupKey].push(m);
+        });
+
+        // Render as a table
+        const colW1 = 45;
+        const colW2 = pageW - 28 - colW1;
+        doc.setFillColor(59, 130, 246);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.rect(14, y - 4, pageW - 28, 6, "F");
+        doc.text("Lotação / Função", 16, y);
+        doc.text("Nome (Matrícula)", 16 + colW1, y);
+        y += 5;
+        doc.setTextColor(34, 34, 34);
+        doc.setFont("helvetica", "normal");
+
+        let rowIdx = 0;
+        Object.entries(groups).forEach(([group, members]) => {
+          members.forEach((m) => {
+            addCheckPage();
+            if (rowIdx % 2 === 0) {
+              doc.setFillColor(245, 245, 245);
+              doc.rect(14, y - 3.5, pageW - 28, 5, "F");
+            }
+            doc.setFont("helvetica", "bold");
+            doc.text(m.role, 16, y);
+            doc.setFont("helvetica", "normal");
+            doc.text(m.name, 16 + colW1, y);
+            y += 5;
+            rowIdx++;
+          });
+        });
+        y += 4;
       }
 
       // Signature line
