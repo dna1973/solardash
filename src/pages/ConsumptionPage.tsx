@@ -525,7 +525,9 @@ export default function ConsumptionPage() {
     const totalLabelX2 = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX2, y + 0.5, { align: "right" });
-    const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalValue)];
+    const waterTotalGross = filteredWaterBills.reduce((s, b) => s + (b.gross_value || 0), 0);
+    const waterTotalDeductions = filteredWaterBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
+    const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalGross), fmtMoney2(waterTotalDeductions), fmtMoney2(waterTotalValue)];
     let ttx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
     totalVals.forEach((val, i) => { const col = cols[i + 3]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
 
