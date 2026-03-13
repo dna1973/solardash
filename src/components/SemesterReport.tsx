@@ -66,6 +66,7 @@ export function SemesterReport() {
   const [tariff, setTariff] = useState("0.75");
   const [showChecklist, setShowChecklist] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [importingCommission, setImportingCommission] = useState(false);
   const [aiResult, setAiResult] = useState<{ resumoExecutivo: string; conclusaoRecomendacoes: string } | null>(null);
 
   // Load/save checklist from localStorage
