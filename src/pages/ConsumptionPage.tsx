@@ -174,7 +174,7 @@ export default function ConsumptionPage() {
     setWaterBillsLoading(true);
     const { data, error } = await supabase
       .from("water_bills" as any)
-      .select("id, property_name, address, utility_company, account_number, client_code, reference_month, consumption_m3, water_value, sewer_value, total_value, tariff_type, due_date, invoice_number, consumption_history, created_at")
+      .select("id, property_name, address, utility_company, account_number, client_code, reference_month, consumption_m3, water_value, sewer_value, gross_value, deductions_value, total_value, tariff_type, due_date, invoice_number, consumption_history, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
