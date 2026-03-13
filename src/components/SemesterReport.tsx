@@ -355,6 +355,36 @@ export function SemesterReport() {
         if (y > 260) { doc.addPage(); y = 20; }
       };
 
+      // Justified text helper: distributes words across full line width
+      const drawJustifiedText = (text: string, maxWidth: number) => {
+        const allLines = doc.splitTextToSize(text, maxWidth);
+        for (let li = 0; li < allLines.length; li++) {
+          addCheckPage();
+          const line = allLines[li];
+          const isLastLine = li === allLines.length - 1 || allLines[li + 1] === "" || line === "";
+          // Also treat lines before an empty line (paragraph break) as last
+          const isParagraphEnd = isLastLine || (li + 1 < allLines.length && allLines[li + 1].trim() === "");
+
+          if (isParagraphEnd || !line.trim()) {
+            doc.text(line, 14, y);
+          } else {
+            const words = line.split(/\s+/);
+            if (words.length <= 1) {
+              doc.text(line, 14, y);
+            } else {
+              const totalWordsWidth = words.reduce((sum, w) => sum + doc.getTextWidth(w), 0);
+              const extraSpace = (maxWidth - totalWordsWidth) / (words.length - 1);
+              let cx = 14;
+              words.forEach((word, wi) => {
+                doc.text(word, cx, y);
+                cx += doc.getTextWidth(word) + (wi < words.length - 1 ? extraSpace : 0);
+              });
+            }
+          }
+          y += 4;
+        }
+      };
+
       // Section helper
       const addSection = (title: string) => {
         addCheckPage();
@@ -375,12 +405,7 @@ export function SemesterReport() {
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(50, 50, 50);
-        const lines = doc.splitTextToSize(aiResult.resumoExecutivo, pageW - 28);
-        for (const line of lines) {
-          addCheckPage();
-          doc.text(line, 14, y, { align: "justify", maxWidth: pageW - 28 });
-          y += 4;
-        }
+        drawJustifiedText(aiResult.resumoExecutivo, pageW - 28);
         y += 4;
       }
 
