@@ -402,7 +402,9 @@ export default function ConsumptionPage() {
         "Consumo (m³)": b.consumption_m3 || 0,
         "Valor Água (R$)": b.water_value || 0,
         "Valor Esgoto (R$)": b.sewer_value || 0,
-        "Valor Total (R$)": b.total_value || 0,
+        "Valor Bruto (R$)": b.gross_value || 0,
+        "Dedução (R$)": b.deductions_value || 0,
+        "Valor Líquido (R$)": b.total_value || 0,
       }));
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const ws = XLSX.utils.json_to_sheet(data);
