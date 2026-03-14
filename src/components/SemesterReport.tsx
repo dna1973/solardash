@@ -411,13 +411,23 @@ export function SemesterReport() {
         y += 4;
       }
 
+      // Build plant-to-location name mapping
+      const plantToLocationName = new Map<string, string>();
+      locationPlants.forEach((lp: any) => {
+        const loc = propertyLocations.find((pl: any) => pl.id === lp.location_id);
+        if (loc) {
+          plantToLocationName.set(lp.plant_id, loc.location_name);
+        }
+      });
+
       // 2. Geração Prevista vs Realizada — Horizontal bar chart condensed by plant
       addSection("2. Geração Prevista vs. Realizada");
 
-      // Aggregate data by plant
+      // Aggregate data by plant, using location name as display label
       const plantAgg = new Map<string, { name: string; expected: number; generated: number }>();
       generationByPlantMonth.forEach((r) => {
-        const entry = plantAgg.get(r.plantId) || { name: r.plantName, expected: 0, generated: 0 };
+        const displayName = plantToLocationName.get(r.plantId) || r.plantName;
+        const entry = plantAgg.get(r.plantId) || { name: displayName, expected: 0, generated: 0 };
         entry.expected += r.expectedKwh;
         entry.generated += r.generated;
         plantAgg.set(r.plantId, entry);
