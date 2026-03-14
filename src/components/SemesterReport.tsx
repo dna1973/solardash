@@ -505,6 +505,46 @@ export function SemesterReport() {
       drawBarRow("TOTAL", totalExpected, totalGenerated, true);
       y += 2;
 
+      // 2.1 Tabela de Associação Usinas x Localidades
+      const plantsWithLocation = Array.from(plantAgg.entries())
+        .filter(([plantId]) => plantToLocationName.has(plantId))
+        .map(([plantId, agg]) => {
+          const plant = (plantsData as any[]).find((p: any) => p.id === plantId);
+          return { plantName: plant?.name || plantId, locationName: plantToLocationName.get(plantId)! };
+        })
+        .sort((a, b) => a.locationName.localeCompare(b.locationName));
+
+      if (plantsWithLocation.length > 0) {
+        addCheckPage();
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(34, 34, 34);
+        doc.text("Associação Usinas x Localidades", 14, y);
+        y += 5;
+
+        const assocColW1 = (pageW - 28) / 2;
+        const assocColW2 = (pageW - 28) / 2;
+        doc.setFillColor(59, 130, 246);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.rect(14, y - 4, pageW - 28, 6, "F");
+        doc.text("Localidade", 16, y);
+        doc.text("Usina", 16 + assocColW1, y);
+        y += 5;
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(34, 34, 34);
+        plantsWithLocation.forEach((item, idx) => {
+          addCheckPage();
+          if (idx % 2 === 0) { doc.setFillColor(245, 245, 245); doc.rect(14, y - 3.5, pageW - 28, 5, "F"); }
+          doc.text(item.locationName.length > 35 ? item.locationName.slice(0, 34) + "…" : item.locationName, 16, y);
+          doc.text(item.plantName.length > 35 ? item.plantName.slice(0, 34) + "…" : item.plantName, 16 + assocColW1, y);
+          y += 5;
+        });
+        y += 4;
+      }
+
       // 3. Rateio de Créditos
       if (rateiData.length > 0) {
         addSection("3. Rateio de Créditos por Unidade Consumidora");
