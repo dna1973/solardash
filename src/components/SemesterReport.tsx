@@ -422,6 +422,12 @@ export function SemesterReport() {
 
       // 2. Geração Prevista vs Realizada — Horizontal bar chart condensed by plant
       addSection("2. Geração Prevista vs. Realizada");
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      const semMonthNames = semesterMonths.map((m) => MONTH_NAMES[m]);
+      doc.text(`Período: ${semMonthNames[0]}–${semMonthNames[semMonthNames.length - 1]} / ${year}`, 14, y);
+      y += 6;
 
       // Aggregate data by plant, using location name as display label
       const plantAgg = new Map<string, { name: string; expected: number; generated: number }>();
