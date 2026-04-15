@@ -299,6 +299,7 @@ Analise a imagem da conta de energia e extraia os seguintes dados em formato JSO
 Retorne APENAS o JSON, sem markdown ou texto adicional.
 
 Campos: utility_company, account_number, client_code, invoice_number, property_name, address, reference_month (MM/YYYY), consumption_kwh, generation_kwh, gross_value, lighting_cost, deductions_value, net_value, invoice_value, amount_brl, tariff_type, due_date (YYYY-MM-DD), peak_demand_kw, off_peak_demand_kw, qd.
+IMPORTANTE sobre gross_value: Some TODOS os itens positivos (Consumo-TUSD, Consumo-TE, Demanda, ICMS-CDE, etc), excluindo apenas deduções negativas e iluminação pública. Validação: gross_value ≈ net_value + deductions_value.
 
 IMPORTANTE sobre lighting_cost: O valor correto da iluminação pública é o PRIMEIRO valor numérico que aparece LOGO APÓS o texto "Ilum. Púb. Municipal" — não confunda com ICMS ou outros tributos.
 IMPORTANTE sobre consumption_kwh: Em faturas horossazonais, some kWh Ponta + kWh Fora Ponta (não duplique TUSD+TE do mesmo posto).
