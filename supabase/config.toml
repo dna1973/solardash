@@ -1,16 +1,4 @@
 project_id = "oonatblrieucuchhqzgq"
 
-[functions.detect-anomalies]
-verify_jwt = false
-
-[functions.solar-collector]
-verify_jwt = false
-
-[functions.ocr-energy-bill]
-verify_jwt = false
-
-[functions.solar-mcp]
-verify_jwt = false
-
-[functions.ocr-generation-report]
+[functions.create-test-user]
 verify_jwt = false
