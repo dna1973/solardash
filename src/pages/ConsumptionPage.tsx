@@ -306,12 +306,12 @@ export default function ConsumptionPage() {
 
   // Derive unique filters from bills
   const uniqueProperties = ([...new Set(bills.map((b) => getLocal(b)).filter(Boolean))] as string[]).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  const uniqueYears = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
-  const uniqueMonths = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
+  const uniqueYears = [...new Set(bills.map((b) => periodParts(b.reference_month, b.due_date, billPeriodMode).yyyy).filter(Boolean))].sort() as string[];
+  const uniqueMonths = [...new Set(bills.map((b) => periodParts(b.reference_month, b.due_date, billPeriodMode).mm).filter(Boolean))].sort() as string[];
   const monthNames: Record<string, string> = { "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro" };
 
   const filteredBills = bills.filter((b) => {
-    const [mm, yyyy] = (b.reference_month || "").split("/");
+    const { mm, yyyy } = periodParts(b.reference_month, b.due_date, billPeriodMode);
     const matchProperty = billFilterProperty === "all" || getLocal(b) === billFilterProperty;
     const matchYear = billFilterYear === "all" || yyyy === billFilterYear;
     const matchMonth = billFilterMonth === "all" || mm === billFilterMonth;
@@ -320,11 +320,11 @@ export default function ConsumptionPage() {
 
   // Water bill filters
   const uniqueWaterProperties = ([...new Set(waterBills.map((b) => getWaterLocal(b)).filter(Boolean))] as string[]).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  const uniqueWaterYears = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
-  const uniqueWaterMonths = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
+  const uniqueWaterYears = [...new Set(waterBills.map((b) => periodParts(b.reference_month, b.due_date, waterPeriodMode).yyyy).filter(Boolean))].sort() as string[];
+  const uniqueWaterMonths = [...new Set(waterBills.map((b) => periodParts(b.reference_month, b.due_date, waterPeriodMode).mm).filter(Boolean))].sort() as string[];
 
   const filteredWaterBills = waterBills.filter((b) => {
-    const [mm, yyyy] = (b.reference_month || "").split("/");
+    const { mm, yyyy } = periodParts(b.reference_month, b.due_date, waterPeriodMode);
     const matchProperty = waterFilterProperty === "all" || getWaterLocal(b) === waterFilterProperty;
     const matchYear = waterFilterYear === "all" || yyyy === waterFilterYear;
     const matchMonth = waterFilterMonth === "all" || mm === waterFilterMonth;
