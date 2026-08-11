@@ -360,7 +360,8 @@ export default function ConsumptionPage() {
     return [...filteredWaterBills].sort((a, b) => {
       let va: any, vb: any;
       switch (waterSortCol) {
-        case "reference_month": va = a.reference_month || ""; vb = b.reference_month || ""; break;
+        case "reference_month": va = (a.reference_month || "").split("/").reverse().join(""); vb = (b.reference_month || "").split("/").reverse().join(""); break;
+        case "due_date": va = a.due_date || ""; vb = b.due_date || ""; break;
         case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
         case "local": va = getWaterLocal(a); vb = getWaterLocal(b); break;
         case "consumption_m3": va = a.consumption_m3 || 0; vb = b.consumption_m3 || 0; break;
