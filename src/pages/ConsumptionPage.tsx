@@ -1322,7 +1322,7 @@ export default function ConsumptionPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("reference_month", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
-                        <span className="inline-flex items-center">Referência<SortIcon col="reference_month" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                        <span className="inline-flex items-center">Competência<SortIcon col="reference_month" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("account_number", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center">Matrícula<SortIcon col="account_number" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
