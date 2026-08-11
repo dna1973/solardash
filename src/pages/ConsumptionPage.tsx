@@ -551,14 +551,14 @@ export default function ConsumptionPage() {
     y += 1;
     doc.setDrawColor(160, 185, 210); doc.setFillColor(220, 238, 255);
     doc.rect(mx, y - 3, tableW, 7, "F"); doc.line(mx, y - 3, mx + tableW, y - 3); doc.line(mx, y + 4, mx + tableW, y + 4);
-    const totalLabelX2 = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
+    const totalLabelX2 = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx - 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX2, y + 0.5, { align: "right" });
     const waterTotalGross = filteredWaterBills.reduce((s, b) => s + (b.gross_value || 0), 0);
     const waterTotalDeductions = filteredWaterBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
     const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalGross), fmtMoney2(waterTotalDeductions), fmtMoney2(waterTotalValue)];
-    let ttx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
-    totalVals.forEach((val, i) => { const col = cols[i + 3]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
+    let ttx = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx;
+    totalVals.forEach((val, i) => { const col = cols[i + 5]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
 
     y += 10;
     const footerX = pageW - mx - 80;
