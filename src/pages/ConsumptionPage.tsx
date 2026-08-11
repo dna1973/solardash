@@ -1416,6 +1416,7 @@ export default function ConsumptionPage() {
                       <TableCell className="text-xs">Total</TableCell>
                       <TableCell></TableCell>
                       <TableCell className="text-xs text-muted-foreground">{sortedWaterBills.length} contas</TableCell>
+                      <TableCell></TableCell>
                       <TableCell className="text-right text-sm font-mono">
                         {sortedWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0).toLocaleString("pt-BR")}
                       </TableCell>
