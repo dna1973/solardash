@@ -1116,6 +1116,12 @@ export default function ConsumptionPage() {
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
                         <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={energySortCol} currentDir={energySortDir} /></span>
                       </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("reference_month", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Competência<SortIcon col="reference_month" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("due_date", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Vencimento<SortIcon col="due_date" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_kwh", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
                         <span className="inline-flex items-center justify-end">Consumo KW/H<SortIcon col="consumption_kwh" currentCol={energySortCol} currentDir={energySortDir} /></span>
                       </TableHead>
