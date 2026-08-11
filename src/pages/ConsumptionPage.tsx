@@ -100,6 +100,22 @@ export default function ConsumptionPage() {
   const [waterFilterYear, setWaterFilterYear] = useState(defaultYear);
   const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
 
+  // Period mode: competência (reference_month) or vencimento (due_date)
+  type PeriodMode = "competencia" | "vencimento";
+  const [billPeriodMode, setBillPeriodMode] = useState<PeriodMode>("competencia");
+  const [waterPeriodMode, setWaterPeriodMode] = useState<PeriodMode>("competencia");
+
+  const periodParts = (refMonth: string | null, dueDate: string | null, mode: PeriodMode) => {
+    if (mode === "vencimento") {
+      const [yyyy, mm] = (dueDate || "").split("-");
+      return { mm: mm || "", yyyy: yyyy || "" };
+    }
+    const [mm, yyyy] = (refMonth || "").split("/");
+    return { mm: mm || "", yyyy: yyyy || "" };
+  };
+
+  const fmtDate = (d: string | null) => (d ? d.split("-").reverse().join("/") : "—");
+
   // Sorting state
   type SortDir = "asc" | "desc" | null;
   const [energySortCol, setEnergySortCol] = useState<string | null>("local");
