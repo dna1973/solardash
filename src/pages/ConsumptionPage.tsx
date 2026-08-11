@@ -338,6 +338,8 @@ export default function ConsumptionPage() {
       let va: any, vb: any;
       switch (energySortCol) {
         case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
+        case "reference_month": va = (a.reference_month || "").split("/").reverse().join(""); vb = (b.reference_month || "").split("/").reverse().join(""); break;
+        case "due_date": va = a.due_date || ""; vb = b.due_date || ""; break;
         case "local": va = getLocal(a); vb = getLocal(b); break;
         case "consumption_kwh": va = a.consumption_kwh || 0; vb = b.consumption_kwh || 0; break;
         case "gross_value": va = (a.net_value || 0) + (a.deductions_value || 0); vb = (b.net_value || 0) + (b.deductions_value || 0); break;
