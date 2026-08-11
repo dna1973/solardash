@@ -1330,6 +1330,9 @@ export default function ConsumptionPage() {
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("due_date", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Vencimento<SortIcon col="due_date" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_m3", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center justify-end">Consumo (m³)<SortIcon col="consumption_m3" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
