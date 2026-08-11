@@ -794,7 +794,7 @@ export default function ConsumptionPage() {
       doc.text(footerText2, pageW / 2, pageH - 6, { align: "center" });
     }
 
-    doc.save("extrato-faturas.pdf");
+    doc.save(`extrato-faturas-energia-${periodFileSuffix(billPeriodMode, billFilterMonth, billFilterYear)}.pdf`);
     toast.success("PDF exportado!");
   };
 
