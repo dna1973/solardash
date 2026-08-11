@@ -100,6 +100,22 @@ export default function ConsumptionPage() {
   const [waterFilterYear, setWaterFilterYear] = useState(defaultYear);
   const [waterFilterMonth, setWaterFilterMonth] = useState(defaultMonth);
 
+  // Period mode: competência (reference_month) or vencimento (due_date)
+  type PeriodMode = "competencia" | "vencimento";
+  const [billPeriodMode, setBillPeriodMode] = useState<PeriodMode>("competencia");
+  const [waterPeriodMode, setWaterPeriodMode] = useState<PeriodMode>("competencia");
+
+  const periodParts = (refMonth: string | null, dueDate: string | null, mode: PeriodMode) => {
+    if (mode === "vencimento") {
+      const [yyyy, mm] = (dueDate || "").split("-");
+      return { mm: mm || "", yyyy: yyyy || "" };
+    }
+    const [mm, yyyy] = (refMonth || "").split("/");
+    return { mm: mm || "", yyyy: yyyy || "" };
+  };
+
+  const fmtDate = (d: string | null) => (d ? d.split("-").reverse().join("/") : "—");
+
   // Sorting state
   type SortDir = "asc" | "desc" | null;
   const [energySortCol, setEnergySortCol] = useState<string | null>("local");
@@ -290,12 +306,12 @@ export default function ConsumptionPage() {
 
   // Derive unique filters from bills
   const uniqueProperties = ([...new Set(bills.map((b) => getLocal(b)).filter(Boolean))] as string[]).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  const uniqueYears = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
-  const uniqueMonths = [...new Set(bills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
+  const uniqueYears = [...new Set(bills.map((b) => periodParts(b.reference_month, b.due_date, billPeriodMode).yyyy).filter(Boolean))].sort() as string[];
+  const uniqueMonths = [...new Set(bills.map((b) => periodParts(b.reference_month, b.due_date, billPeriodMode).mm).filter(Boolean))].sort() as string[];
   const monthNames: Record<string, string> = { "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril", "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto", "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro" };
 
   const filteredBills = bills.filter((b) => {
-    const [mm, yyyy] = (b.reference_month || "").split("/");
+    const { mm, yyyy } = periodParts(b.reference_month, b.due_date, billPeriodMode);
     const matchProperty = billFilterProperty === "all" || getLocal(b) === billFilterProperty;
     const matchYear = billFilterYear === "all" || yyyy === billFilterYear;
     const matchMonth = billFilterMonth === "all" || mm === billFilterMonth;
@@ -304,11 +320,11 @@ export default function ConsumptionPage() {
 
   // Water bill filters
   const uniqueWaterProperties = ([...new Set(waterBills.map((b) => getWaterLocal(b)).filter(Boolean))] as string[]).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  const uniqueWaterYears = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[1]).filter(Boolean))].sort() as string[];
-  const uniqueWaterMonths = [...new Set(waterBills.map((b) => b.reference_month?.split("/")?.[0]).filter(Boolean))].sort() as string[];
+  const uniqueWaterYears = [...new Set(waterBills.map((b) => periodParts(b.reference_month, b.due_date, waterPeriodMode).yyyy).filter(Boolean))].sort() as string[];
+  const uniqueWaterMonths = [...new Set(waterBills.map((b) => periodParts(b.reference_month, b.due_date, waterPeriodMode).mm).filter(Boolean))].sort() as string[];
 
   const filteredWaterBills = waterBills.filter((b) => {
-    const [mm, yyyy] = (b.reference_month || "").split("/");
+    const { mm, yyyy } = periodParts(b.reference_month, b.due_date, waterPeriodMode);
     const matchProperty = waterFilterProperty === "all" || getWaterLocal(b) === waterFilterProperty;
     const matchYear = waterFilterYear === "all" || yyyy === waterFilterYear;
     const matchMonth = waterFilterMonth === "all" || mm === waterFilterMonth;
@@ -322,6 +338,8 @@ export default function ConsumptionPage() {
       let va: any, vb: any;
       switch (energySortCol) {
         case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
+        case "reference_month": va = (a.reference_month || "").split("/").reverse().join(""); vb = (b.reference_month || "").split("/").reverse().join(""); break;
+        case "due_date": va = a.due_date || ""; vb = b.due_date || ""; break;
         case "local": va = getLocal(a); vb = getLocal(b); break;
         case "consumption_kwh": va = a.consumption_kwh || 0; vb = b.consumption_kwh || 0; break;
         case "gross_value": va = (a.net_value || 0) + (a.deductions_value || 0); vb = (b.net_value || 0) + (b.deductions_value || 0); break;
@@ -342,7 +360,8 @@ export default function ConsumptionPage() {
     return [...filteredWaterBills].sort((a, b) => {
       let va: any, vb: any;
       switch (waterSortCol) {
-        case "reference_month": va = a.reference_month || ""; vb = b.reference_month || ""; break;
+        case "reference_month": va = (a.reference_month || "").split("/").reverse().join(""); vb = (b.reference_month || "").split("/").reverse().join(""); break;
+        case "due_date": va = a.due_date || ""; vb = b.due_date || ""; break;
         case "account_number": va = a.account_number || ""; vb = b.account_number || ""; break;
         case "local": va = getWaterLocal(a); vb = getWaterLocal(b); break;
         case "consumption_m3": va = a.consumption_m3 || 0; vb = b.consumption_m3 || 0; break;
@@ -369,13 +388,25 @@ export default function ConsumptionPage() {
   const billsTotalNet = filteredBills.reduce((s, b) => s + ((b as any).net_value || 0), 0);
   const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
+  const periodCriteriaLabel = (mode: PeriodMode) => (mode === "vencimento" ? "Vencimento" : "Competência");
+  const periodValueLabel = (month: string, year: string) =>
+    [month !== "all" ? (monthNames[month] || month) : "", year !== "all" ? year : ""].filter(Boolean).join("/") || "Todos";
+  const periodFileSuffix = (mode: PeriodMode, month: string, year: string) =>
+    `${mode}-${month !== "all" ? month : "todos"}-${year !== "all" ? year : "todos"}`;
+
   const getBillsExportData = () =>
     [...filteredBills]
-      .sort((a, b) => getLocal(a).localeCompare(getLocal(b), "pt-BR"))
+      .sort((a, b) =>
+        billPeriodMode === "vencimento"
+          ? (a.due_date || "").localeCompare(b.due_date || "") || getLocal(a).localeCompare(getLocal(b), "pt-BR")
+          : getLocal(a).localeCompare(getLocal(b), "pt-BR")
+      )
       .map((b, i) => ({
         "Nº": i + 1,
         "Nº da Conta": b.account_number || "—",
         "Local": getLocal(b),
+        "Competência": b.reference_month || "—",
+        "Vencimento": fmtDate(b.due_date),
         "Consumo KW/H": b.consumption_kwh || 0,
         "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
         "Valor Iluminação Pública": b.lighting_cost || 0,
@@ -389,18 +420,24 @@ export default function ConsumptionPage() {
     const ws = XLSX.utils.json_to_sheet(data);
     autoFitColumns(ws, data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Contas");
-    XLSX.writeFile(wb, "contas-energia.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, `Contas por ${periodCriteriaLabel(billPeriodMode)}`);
+    XLSX.writeFile(wb, `contas-energia-${periodFileSuffix(billPeriodMode, billFilterMonth, billFilterYear)}.xlsx`);
     toast.success("Excel exportado!");
   };
 
-  const exportWaterExcel = () => {
-    const data = [...filteredWaterBills]
-      .sort((a, b) => getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR"))
+  const getWaterExportData = () =>
+    [...filteredWaterBills]
+      .sort((a, b) =>
+        waterPeriodMode === "vencimento"
+          ? (a.due_date || "").localeCompare(b.due_date || "") || getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR")
+          : getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR")
+      )
       .map((b, i) => ({
         "Nº": i + 1,
         "Matrícula": b.account_number || "—",
         "Local": getWaterLocal(b),
+        "Competência": b.reference_month || "—",
+        "Vencimento": fmtDate(b.due_date),
         "Consumo (m³)": b.consumption_m3 || 0,
         "Valor Água (R$)": b.water_value || 0,
         "Valor Esgoto (R$)": b.sewer_value || 0,
@@ -408,29 +445,20 @@ export default function ConsumptionPage() {
         "Dedução (R$)": b.deductions_value || 0,
         "Valor Líquido (R$)": b.total_value || 0,
       }));
+
+  const exportWaterExcel = () => {
+    const data = getWaterExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const ws = XLSX.utils.json_to_sheet(data);
     autoFitColumns(ws, data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Contas Água");
-    XLSX.writeFile(wb, "contas-agua.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, `Água por ${periodCriteriaLabel(waterPeriodMode)}`);
+    XLSX.writeFile(wb, `contas-agua-${periodFileSuffix(waterPeriodMode, waterFilterMonth, waterFilterYear)}.xlsx`);
     toast.success("Excel exportado!");
   };
 
   const exportWaterPDF = () => {
-    const data = [...filteredWaterBills]
-      .sort((a, b) => getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR"))
-      .map((b, i) => ({
-        "Nº": i + 1,
-        "Matrícula": b.account_number || "—",
-        "Local": getWaterLocal(b),
-        "Consumo (m³)": b.consumption_m3 || 0,
-        "Valor Água (R$)": b.water_value || 0,
-        "Valor Esgoto (R$)": b.sewer_value || 0,
-        "Valor Bruto (R$)": b.gross_value || 0,
-        "Dedução (R$)": b.deductions_value || 0,
-        "Valor Líquido (R$)": b.total_value || 0,
-      }));
+    const data = getWaterExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
 
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -451,9 +479,8 @@ export default function ConsumptionPage() {
     const fmtNum2 = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     const fmtMoney2 = (v: number) => `R$ ${fmtNum2(v)}`;
 
-    const wml = waterFilterMonth !== "all" ? (monthNames[waterFilterMonth] || waterFilterMonth) : "";
-    const wyl = waterFilterYear !== "all" ? waterFilterYear : "";
-    const refLabel = [wml, wyl].filter(Boolean).join("/") || "Todos";
+    const refLabel = periodValueLabel(waterFilterMonth, waterFilterYear);
+    const criteriaLabel = periodCriteriaLabel(waterPeriodMode);
     const propLabel = waterFilterProperty !== "all" ? waterFilterProperty : "Todos os imóveis";
 
     let y = 14; const headerH = 22;
@@ -461,22 +488,24 @@ export default function ConsumptionPage() {
     doc.setDrawColor(160, 200, 230); doc.rect(mx, y - 4, tableW, headerH, "S");
     const centerX = mx + tableW / 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(30, 30, 30);
-    doc.text("EXTRATO DE CONTAS DE ÁGUA", centerX, y + 1, { align: "center" });
+    doc.text(`EXTRATO DE CONTAS DE ÁGUA POR ${criteriaLabel.toUpperCase()}`, centerX, y + 1, { align: "center" });
     doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(60, 60, 60);
-    doc.text(`Mês de Referência: ${refLabel}`, centerX, y + 8, { align: "center" });
+    doc.text(`${criteriaLabel}: ${refLabel}`, centerX, y + 8, { align: "center" });
     doc.text(`Imóvel: ${propLabel}`, centerX, y + 14, { align: "center" });
 
     y += headerH + 4;
     const cols = [
       { header: "Nº", width: 10, align: "left" as const },
-      { header: "MATRÍCULA", width: 25, align: "left" as const },
-      { header: "LOCAL", width: 70, align: "left" as const },
-      { header: "CONSUMO\n(m³)", width: 25, align: "right" as const },
-      { header: "Valor\nÁgua", width: 28, align: "right" as const },
-      { header: "Valor\nEsgoto", width: 28, align: "right" as const },
-      { header: "Valor\nBruto", width: 28, align: "right" as const },
-      { header: "Dedução", width: 28, align: "right" as const },
-      { header: "Valor\nLíquido", width: 35, align: "right" as const },
+      { header: "MATRÍCULA", width: 22, align: "left" as const },
+      { header: "LOCAL", width: 58, align: "left" as const },
+      { header: "COMPE-\nTÊNCIA", width: 18, align: "left" as const },
+      { header: "VENCI-\nMENTO", width: 20, align: "left" as const },
+      { header: "CONSUMO\n(m³)", width: 22, align: "right" as const },
+      { header: "Valor\nÁgua", width: 24, align: "right" as const },
+      { header: "Valor\nEsgoto", width: 24, align: "right" as const },
+      { header: "Valor\nBruto", width: 24, align: "right" as const },
+      { header: "Dedução", width: 24, align: "right" as const },
+      { header: "Valor\nLíquido", width: 24, align: "right" as const },
     ];
     const usedW2 = cols.reduce((s, c) => s + c.width, 0);
     if (usedW2 < tableW) cols[cols.length - 1].width += tableW - usedW2;
@@ -522,14 +551,14 @@ export default function ConsumptionPage() {
     y += 1;
     doc.setDrawColor(160, 185, 210); doc.setFillColor(220, 238, 255);
     doc.rect(mx, y - 3, tableW, 7, "F"); doc.line(mx, y - 3, mx + tableW, y - 3); doc.line(mx, y + 4, mx + tableW, y + 4);
-    const totalLabelX2 = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
+    const totalLabelX2 = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx - 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX2, y + 0.5, { align: "right" });
     const waterTotalGross = filteredWaterBills.reduce((s, b) => s + (b.gross_value || 0), 0);
     const waterTotalDeductions = filteredWaterBills.reduce((s, b) => s + (b.deductions_value || 0), 0);
     const totalVals = [fmtNum2(waterTotalConsumption), fmtMoney2(waterTotalWater), fmtMoney2(waterTotalSewer), fmtMoney2(waterTotalGross), fmtMoney2(waterTotalDeductions), fmtMoney2(waterTotalValue)];
-    let ttx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
-    totalVals.forEach((val, i) => { const col = cols[i + 3]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
+    let ttx = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx;
+    totalVals.forEach((val, i) => { const col = cols[i + 5]; if (val) doc.text(val, ttx + col.width - 2, y + 0.5, { align: "right" }); ttx += col.width; });
 
     y += 10;
     const footerX = pageW - mx - 80;
@@ -555,7 +584,7 @@ export default function ConsumptionPage() {
       doc.text(footerText1, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
     }
 
-    doc.save("extrato-contas-agua.pdf");
+    doc.save(`extrato-contas-agua-${periodFileSuffix(waterPeriodMode, waterFilterMonth, waterFilterYear)}.pdf`);
     toast.success("PDF exportado!");
   };
 
@@ -589,9 +618,8 @@ export default function ConsumptionPage() {
     const fmtNum = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     const fmtMoney = (v: number) => `R$ ${fmtNum(v)}`;
 
-    const monthLabel = billFilterMonth !== "all" ? (monthNames[billFilterMonth] || billFilterMonth) : "";
-    const yearLabel = billFilterYear !== "all" ? billFilterYear : "";
-    const refLabel = [monthLabel, yearLabel].filter(Boolean).join("/") || "Todos";
+    const refLabel = periodValueLabel(billFilterMonth, billFilterYear);
+    const criteriaLabel = periodCriteriaLabel(billPeriodMode);
     const propLabel = billFilterProperty !== "all" ? billFilterProperty : "Todos os imóveis";
 
     let y = 14;
@@ -607,25 +635,27 @@ export default function ConsumptionPage() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(30, 30, 30);
-    doc.text("EXTRATO DE FATURAS DE ENERGIA", centerX, y + 1, { align: "center" });
+    doc.text(`EXTRATO DE FATURAS DE ENERGIA POR ${criteriaLabel.toUpperCase()}`, centerX, y + 1, { align: "center" });
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(60, 60, 60);
-    doc.text(`Mês de Referência: ${refLabel}`, centerX, y + 8, { align: "center" });
+    doc.text(`${criteriaLabel}: ${refLabel}`, centerX, y + 8, { align: "center" });
     doc.text(`Imóvel: ${propLabel}`, centerX, y + 14, { align: "center" });
 
     y += headerH + 4;
 
     const cols = [
-      { header: "Nº", width: 12, align: "left" as const },
-      { header: "Nº DA CONTA", width: 28, align: "left" as const },
-      { header: "LOCAL", width: 78, align: "left" as const },
-      { header: "CONSUMO\nKW/H", width: 28, align: "right" as const },
-      { header: "Valor\nBruto", width: 28, align: "right" as const },
-      { header: "Valor Ilum.\nPública", width: 28, align: "right" as const },
-      { header: "Valor\nDeduções", width: 28, align: "right" as const },
-      { header: "Valor\nLíquido", width: 28, align: "right" as const },
+      { header: "Nº", width: 10, align: "left" as const },
+      { header: "Nº DA CONTA", width: 26, align: "left" as const },
+      { header: "LOCAL", width: 62, align: "left" as const },
+      { header: "COMPE-\nTÊNCIA", width: 18, align: "left" as const },
+      { header: "VENCI-\nMENTO", width: 20, align: "left" as const },
+      { header: "CONSUMO\nKW/H", width: 26, align: "right" as const },
+      { header: "Valor\nBruto", width: 27, align: "right" as const },
+      { header: "Valor Ilum.\nPública", width: 27, align: "right" as const },
+      { header: "Valor\nDeduções", width: 27, align: "right" as const },
+      { header: "Valor\nLíquido", width: 27, align: "right" as const },
     ];
     const usedW = cols.reduce((s, c) => s + c.width, 0);
     if (usedW < tableW) cols[cols.length - 1].width += tableW - usedW;
@@ -714,7 +744,7 @@ export default function ConsumptionPage() {
     doc.line(mx, y - 3, mx + tableW, y - 3);
     doc.line(mx, y + 4, mx + tableW, y + 4);
 
-    const totalLabelX = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
+    const totalLabelX = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx - 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX, y + 0.5, { align: "right" });
@@ -726,9 +756,9 @@ export default function ConsumptionPage() {
       fmtMoney(billsTotalDeductions),
       fmtMoney(billsTotalNet),
     ];
-    let tx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
+    let tx = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx;
     totalValues.forEach((val, i) => {
-      const col = cols[i + 3];
+      const col = cols[i + 5];
       if (val) {
         doc.text(val, tx + col.width - 2, y + 0.5, { align: "right" });
       }
@@ -764,7 +794,7 @@ export default function ConsumptionPage() {
       doc.text(footerText2, pageW / 2, pageH - 6, { align: "center" });
     }
 
-    doc.save("extrato-faturas.pdf");
+    doc.save(`extrato-faturas-energia-${periodFileSuffix(billPeriodMode, billFilterMonth, billFilterYear)}.pdf`);
     toast.success("PDF exportado!");
   };
 
@@ -995,6 +1025,23 @@ export default function ConsumptionPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <Select
+              value={billPeriodMode}
+              onValueChange={(v) => {
+                const mode = v as PeriodMode;
+                setBillPeriodMode(mode);
+                setEnergySortCol(mode === "vencimento" ? "due_date" : "local");
+                setEnergySortDir("asc");
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="competencia">Por competência</SelectItem>
+                <SelectItem value="vencimento">Por vencimento</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={billFilterProperty} onValueChange={setBillFilterProperty}>
               <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder="Imóvel" />
@@ -1069,6 +1116,12 @@ export default function ConsumptionPage() {
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
                         <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={energySortCol} currentDir={energySortDir} /></span>
                       </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("reference_month", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Competência<SortIcon col="reference_month" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("due_date", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
+                        <span className="inline-flex items-center">Vencimento<SortIcon col="due_date" currentCol={energySortCol} currentDir={energySortDir} /></span>
+                      </TableHead>
                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_kwh", energySortCol, energySortDir, setEnergySortCol, setEnergySortDir)}>
                         <span className="inline-flex items-center justify-end">Consumo KW/H<SortIcon col="consumption_kwh" currentCol={energySortCol} currentDir={energySortDir} /></span>
                       </TableHead>
@@ -1100,6 +1153,8 @@ export default function ConsumptionPage() {
                             <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.address || ""}</p>
                           </div>
                         </TableCell>
+                        <TableCell className="text-xs font-mono">{bill.reference_month || "—"}</TableCell>
+                        <TableCell className="text-xs font-mono">{fmtDate(bill.due_date)}</TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.consumption_kwh || 0).toLocaleString("pt-BR")}
                         </TableCell>
@@ -1143,6 +1198,9 @@ export default function ConsumptionPage() {
                     <TableRow className="bg-muted/50 font-semibold border-t-2">
                       <TableCell className="text-xs">Total</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{sortedEnergyBills.length} contas</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+
                       <TableCell className="text-right text-sm font-mono">
                         {sortedEnergyBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0).toLocaleString("pt-BR")}
                       </TableCell>
@@ -1178,6 +1236,23 @@ export default function ConsumptionPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <Select
+              value={waterPeriodMode}
+              onValueChange={(v) => {
+                const mode = v as PeriodMode;
+                setWaterPeriodMode(mode);
+                setWaterSortCol(mode === "vencimento" ? "due_date" : "local");
+                setWaterSortDir("asc");
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="competencia">Por competência</SelectItem>
+                <SelectItem value="vencimento">Por vencimento</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={waterFilterProperty} onValueChange={setWaterFilterProperty}>
               <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder="Imóvel" />
@@ -1247,13 +1322,16 @@ export default function ConsumptionPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("reference_month", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
-                        <span className="inline-flex items-center">Referência<SortIcon col="reference_month" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                        <span className="inline-flex items-center">Competência<SortIcon col="reference_month" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("account_number", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center">Matrícula<SortIcon col="account_number" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
                       <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("local", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center">Local<SortIcon col="local" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
+                      </TableHead>
+                      <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("due_date", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
+                        <span className="inline-flex items-center">Vencimento<SortIcon col="due_date" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
                       </TableHead>
                       <TableHead className="text-right cursor-pointer select-none" onClick={() => toggleSort("consumption_m3", waterSortCol, waterSortDir, setWaterSortCol, setWaterSortDir)}>
                         <span className="inline-flex items-center justify-end">Consumo (m³)<SortIcon col="consumption_m3" currentCol={waterSortCol} currentDir={waterSortDir} /></span>
@@ -1290,6 +1368,7 @@ export default function ConsumptionPage() {
                             <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.address || ""}</p>
                           </div>
                         </TableCell>
+                        <TableCell className="text-xs font-mono">{fmtDate(bill.due_date)}</TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.consumption_m3 || 0).toLocaleString("pt-BR")}
                         </TableCell>
@@ -1337,6 +1416,7 @@ export default function ConsumptionPage() {
                       <TableCell className="text-xs">Total</TableCell>
                       <TableCell></TableCell>
                       <TableCell className="text-xs text-muted-foreground">{sortedWaterBills.length} contas</TableCell>
+                      <TableCell></TableCell>
                       <TableCell className="text-right text-sm font-mono">
                         {sortedWaterBills.reduce((s, b) => s + (b.consumption_m3 || 0), 0).toLocaleString("pt-BR")}
                       </TableCell>
