@@ -388,13 +388,25 @@ export default function ConsumptionPage() {
   const billsTotalNet = filteredBills.reduce((s, b) => s + ((b as any).net_value || 0), 0);
   const billsTotalGross = billsTotalNet + billsTotalDeductions;
 
+  const periodCriteriaLabel = (mode: PeriodMode) => (mode === "vencimento" ? "Vencimento" : "Competência");
+  const periodValueLabel = (month: string, year: string) =>
+    [month !== "all" ? (monthNames[month] || month) : "", year !== "all" ? year : ""].filter(Boolean).join("/") || "Todos";
+  const periodFileSuffix = (mode: PeriodMode, month: string, year: string) =>
+    `${mode}-${month !== "all" ? month : "todos"}-${year !== "all" ? year : "todos"}`;
+
   const getBillsExportData = () =>
     [...filteredBills]
-      .sort((a, b) => getLocal(a).localeCompare(getLocal(b), "pt-BR"))
+      .sort((a, b) =>
+        billPeriodMode === "vencimento"
+          ? (a.due_date || "").localeCompare(b.due_date || "") || getLocal(a).localeCompare(getLocal(b), "pt-BR")
+          : getLocal(a).localeCompare(getLocal(b), "pt-BR")
+      )
       .map((b, i) => ({
         "Nº": i + 1,
         "Nº da Conta": b.account_number || "—",
         "Local": getLocal(b),
+        "Competência": b.reference_month || "—",
+        "Vencimento": fmtDate(b.due_date),
         "Consumo KW/H": b.consumption_kwh || 0,
         "Valor Bruto": (b.net_value || 0) + (b.deductions_value || 0),
         "Valor Iluminação Pública": b.lighting_cost || 0,
@@ -408,18 +420,24 @@ export default function ConsumptionPage() {
     const ws = XLSX.utils.json_to_sheet(data);
     autoFitColumns(ws, data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Contas");
-    XLSX.writeFile(wb, "contas-energia.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, `Contas por ${periodCriteriaLabel(billPeriodMode)}`);
+    XLSX.writeFile(wb, `contas-energia-${periodFileSuffix(billPeriodMode, billFilterMonth, billFilterYear)}.xlsx`);
     toast.success("Excel exportado!");
   };
 
-  const exportWaterExcel = () => {
-    const data = [...filteredWaterBills]
-      .sort((a, b) => getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR"))
+  const getWaterExportData = () =>
+    [...filteredWaterBills]
+      .sort((a, b) =>
+        waterPeriodMode === "vencimento"
+          ? (a.due_date || "").localeCompare(b.due_date || "") || getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR")
+          : getWaterLocal(a).localeCompare(getWaterLocal(b), "pt-BR")
+      )
       .map((b, i) => ({
         "Nº": i + 1,
         "Matrícula": b.account_number || "—",
         "Local": getWaterLocal(b),
+        "Competência": b.reference_month || "—",
+        "Vencimento": fmtDate(b.due_date),
         "Consumo (m³)": b.consumption_m3 || 0,
         "Valor Água (R$)": b.water_value || 0,
         "Valor Esgoto (R$)": b.sewer_value || 0,
@@ -427,12 +445,15 @@ export default function ConsumptionPage() {
         "Dedução (R$)": b.deductions_value || 0,
         "Valor Líquido (R$)": b.total_value || 0,
       }));
+
+  const exportWaterExcel = () => {
+    const data = getWaterExportData();
     if (data.length === 0) { toast.error("Nenhuma conta para exportar"); return; }
     const ws = XLSX.utils.json_to_sheet(data);
     autoFitColumns(ws, data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Contas Água");
-    XLSX.writeFile(wb, "contas-agua.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, `Água por ${periodCriteriaLabel(waterPeriodMode)}`);
+    XLSX.writeFile(wb, `contas-agua-${periodFileSuffix(waterPeriodMode, waterFilterMonth, waterFilterYear)}.xlsx`);
     toast.success("Excel exportado!");
   };
 
