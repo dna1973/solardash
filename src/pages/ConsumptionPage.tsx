@@ -1198,6 +1198,9 @@ export default function ConsumptionPage() {
                     <TableRow className="bg-muted/50 font-semibold border-t-2">
                       <TableCell className="text-xs">Total</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{sortedEnergyBills.length} contas</TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+
                       <TableCell className="text-right text-sm font-mono">
                         {sortedEnergyBills.reduce((s, b) => s + (b.consumption_kwh || 0), 0).toLocaleString("pt-BR")}
                       </TableCell>
