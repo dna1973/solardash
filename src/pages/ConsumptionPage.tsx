@@ -744,7 +744,7 @@ export default function ConsumptionPage() {
     doc.line(mx, y - 3, mx + tableW, y - 3);
     doc.line(mx, y + 4, mx + tableW, y + 4);
 
-    const totalLabelX = cols.slice(0, 2).reduce((s, c) => s + c.width, 0) + mx + cols[2].width - 2;
+    const totalLabelX = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx - 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.text("TOTAL:", totalLabelX, y + 0.5, { align: "right" });
@@ -756,9 +756,9 @@ export default function ConsumptionPage() {
       fmtMoney(billsTotalDeductions),
       fmtMoney(billsTotalNet),
     ];
-    let tx = cols.slice(0, 3).reduce((s, c) => s + c.width, 0) + mx;
+    let tx = cols.slice(0, 5).reduce((s, c) => s + c.width, 0) + mx;
     totalValues.forEach((val, i) => {
-      const col = cols[i + 3];
+      const col = cols[i + 5];
       if (val) {
         doc.text(val, tx + col.width - 2, y + 0.5, { align: "right" });
       }
