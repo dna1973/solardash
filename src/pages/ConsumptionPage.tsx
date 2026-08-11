@@ -618,9 +618,8 @@ export default function ConsumptionPage() {
     const fmtNum = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     const fmtMoney = (v: number) => `R$ ${fmtNum(v)}`;
 
-    const monthLabel = billFilterMonth !== "all" ? (monthNames[billFilterMonth] || billFilterMonth) : "";
-    const yearLabel = billFilterYear !== "all" ? billFilterYear : "";
-    const refLabel = [monthLabel, yearLabel].filter(Boolean).join("/") || "Todos";
+    const refLabel = periodValueLabel(billFilterMonth, billFilterYear);
+    const criteriaLabel = periodCriteriaLabel(billPeriodMode);
     const propLabel = billFilterProperty !== "all" ? billFilterProperty : "Todos os imóveis";
 
     let y = 14;
@@ -636,25 +635,27 @@ export default function ConsumptionPage() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(30, 30, 30);
-    doc.text("EXTRATO DE FATURAS DE ENERGIA", centerX, y + 1, { align: "center" });
+    doc.text(`EXTRATO DE FATURAS DE ENERGIA POR ${criteriaLabel.toUpperCase()}`, centerX, y + 1, { align: "center" });
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(60, 60, 60);
-    doc.text(`Mês de Referência: ${refLabel}`, centerX, y + 8, { align: "center" });
+    doc.text(`${criteriaLabel}: ${refLabel}`, centerX, y + 8, { align: "center" });
     doc.text(`Imóvel: ${propLabel}`, centerX, y + 14, { align: "center" });
 
     y += headerH + 4;
 
     const cols = [
-      { header: "Nº", width: 12, align: "left" as const },
-      { header: "Nº DA CONTA", width: 28, align: "left" as const },
-      { header: "LOCAL", width: 78, align: "left" as const },
-      { header: "CONSUMO\nKW/H", width: 28, align: "right" as const },
-      { header: "Valor\nBruto", width: 28, align: "right" as const },
-      { header: "Valor Ilum.\nPública", width: 28, align: "right" as const },
-      { header: "Valor\nDeduções", width: 28, align: "right" as const },
-      { header: "Valor\nLíquido", width: 28, align: "right" as const },
+      { header: "Nº", width: 10, align: "left" as const },
+      { header: "Nº DA CONTA", width: 26, align: "left" as const },
+      { header: "LOCAL", width: 62, align: "left" as const },
+      { header: "COMPE-\nTÊNCIA", width: 18, align: "left" as const },
+      { header: "VENCI-\nMENTO", width: 20, align: "left" as const },
+      { header: "CONSUMO\nKW/H", width: 26, align: "right" as const },
+      { header: "Valor\nBruto", width: 27, align: "right" as const },
+      { header: "Valor Ilum.\nPública", width: 27, align: "right" as const },
+      { header: "Valor\nDeduções", width: 27, align: "right" as const },
+      { header: "Valor\nLíquido", width: 27, align: "right" as const },
     ];
     const usedW = cols.reduce((s, c) => s + c.width, 0);
     if (usedW < tableW) cols[cols.length - 1].width += tableW - usedW;
