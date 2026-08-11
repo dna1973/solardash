@@ -584,7 +584,7 @@ export default function ConsumptionPage() {
       doc.text(footerText1, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 6, { align: "center" });
     }
 
-    doc.save("extrato-contas-agua.pdf");
+    doc.save(`extrato-contas-agua-${periodFileSuffix(waterPeriodMode, waterFilterMonth, waterFilterYear)}.pdf`);
     toast.success("PDF exportado!");
   };
 
