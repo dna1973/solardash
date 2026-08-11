@@ -1025,6 +1025,23 @@ export default function ConsumptionPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <Select
+              value={billPeriodMode}
+              onValueChange={(v) => {
+                const mode = v as PeriodMode;
+                setBillPeriodMode(mode);
+                setEnergySortCol(mode === "vencimento" ? "due_date" : "local");
+                setEnergySortDir("asc");
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="competencia">Por competência</SelectItem>
+                <SelectItem value="vencimento">Por vencimento</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={billFilterProperty} onValueChange={setBillFilterProperty}>
               <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder="Imóvel" />
