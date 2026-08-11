@@ -479,9 +479,8 @@ export default function ConsumptionPage() {
     const fmtNum2 = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     const fmtMoney2 = (v: number) => `R$ ${fmtNum2(v)}`;
 
-    const wml = waterFilterMonth !== "all" ? (monthNames[waterFilterMonth] || waterFilterMonth) : "";
-    const wyl = waterFilterYear !== "all" ? waterFilterYear : "";
-    const refLabel = [wml, wyl].filter(Boolean).join("/") || "Todos";
+    const refLabel = periodValueLabel(waterFilterMonth, waterFilterYear);
+    const criteriaLabel = periodCriteriaLabel(waterPeriodMode);
     const propLabel = waterFilterProperty !== "all" ? waterFilterProperty : "Todos os imóveis";
 
     let y = 14; const headerH = 22;
@@ -489,22 +488,24 @@ export default function ConsumptionPage() {
     doc.setDrawColor(160, 200, 230); doc.rect(mx, y - 4, tableW, headerH, "S");
     const centerX = mx + tableW / 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(30, 30, 30);
-    doc.text("EXTRATO DE CONTAS DE ÁGUA", centerX, y + 1, { align: "center" });
+    doc.text(`EXTRATO DE CONTAS DE ÁGUA POR ${criteriaLabel.toUpperCase()}`, centerX, y + 1, { align: "center" });
     doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(60, 60, 60);
-    doc.text(`Mês de Referência: ${refLabel}`, centerX, y + 8, { align: "center" });
+    doc.text(`${criteriaLabel}: ${refLabel}`, centerX, y + 8, { align: "center" });
     doc.text(`Imóvel: ${propLabel}`, centerX, y + 14, { align: "center" });
 
     y += headerH + 4;
     const cols = [
       { header: "Nº", width: 10, align: "left" as const },
-      { header: "MATRÍCULA", width: 25, align: "left" as const },
-      { header: "LOCAL", width: 70, align: "left" as const },
-      { header: "CONSUMO\n(m³)", width: 25, align: "right" as const },
-      { header: "Valor\nÁgua", width: 28, align: "right" as const },
-      { header: "Valor\nEsgoto", width: 28, align: "right" as const },
-      { header: "Valor\nBruto", width: 28, align: "right" as const },
-      { header: "Dedução", width: 28, align: "right" as const },
-      { header: "Valor\nLíquido", width: 35, align: "right" as const },
+      { header: "MATRÍCULA", width: 22, align: "left" as const },
+      { header: "LOCAL", width: 58, align: "left" as const },
+      { header: "COMPE-\nTÊNCIA", width: 18, align: "left" as const },
+      { header: "VENCI-\nMENTO", width: 20, align: "left" as const },
+      { header: "CONSUMO\n(m³)", width: 22, align: "right" as const },
+      { header: "Valor\nÁgua", width: 24, align: "right" as const },
+      { header: "Valor\nEsgoto", width: 24, align: "right" as const },
+      { header: "Valor\nBruto", width: 24, align: "right" as const },
+      { header: "Dedução", width: 24, align: "right" as const },
+      { header: "Valor\nLíquido", width: 24, align: "right" as const },
     ];
     const usedW2 = cols.reduce((s, c) => s + c.width, 0);
     if (usedW2 < tableW) cols[cols.length - 1].width += tableW - usedW2;
