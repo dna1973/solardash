@@ -1368,6 +1368,7 @@ export default function ConsumptionPage() {
                             <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{bill.address || ""}</p>
                           </div>
                         </TableCell>
+                        <TableCell className="text-xs font-mono">{fmtDate(bill.due_date)}</TableCell>
                         <TableCell className="text-right text-sm font-mono">
                           {(bill.consumption_m3 || 0).toLocaleString("pt-BR")}
                         </TableCell>
