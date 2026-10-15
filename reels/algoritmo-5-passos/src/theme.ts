@@ -3,17 +3,6 @@ import {staticFile} from 'remotion';
 import type {ChipColor} from './scenes';
 
 export const FPS = 30;
-export const WIDTH = 1080;
-export const HEIGHT = 1920;
-
-// área segura do reels: nada importante nos 250 px do topo nem nos 420 px de baixo
-export const SAFE_TOP = 250;
-export const SAFE_BOTTOM = 420;
-export const SIDE = 80;
-// faixa reservada para a legenda karaokê, logo acima da margem de baixo
-export const CAPTION_HEIGHT = 170;
-export const CONTENT_BOTTOM = HEIGHT - SAFE_BOTTOM - CAPTION_HEIGHT;
-
 // PRF Design System v1.0 (github.com/daniel-nunes-avila/prf-design-system, tokens.css)
 // fundo em Azul PRF, Amarelo PRF só como destaque, texto branco.
 export const colors = {

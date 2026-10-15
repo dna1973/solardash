@@ -2,6 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Html5Audio, interpolate, Sequence, staticFile, useVideoConfig} from 'remotion';
 import type {SceneId} from './scenes';
 import {SceneContext, type SceneSlot, type Timings} from './timing';
+import {FormatContext, REELS, YOUTUBE} from './format';
 import {Background} from './components/Scene';
 import {Captions} from './components/Captions';
 import {Gancho} from './scenes/Gancho';
@@ -27,11 +28,13 @@ export type VideoProps = {
   timings: Timings | null;
   hasNarration: boolean;
   hasMusic: boolean;
+  format: 'reels' | 'youtube';
 };
 
-export const Video: React.FC<VideoProps> = ({layout, timings, hasNarration, hasMusic}) => {
+export const Video: React.FC<VideoProps> = ({layout, timings, hasNarration, hasMusic, format}) => {
   const {durationInFrames, fps} = useVideoConfig();
   return (
+    <FormatContext.Provider value={format === 'youtube' ? YOUTUBE : REELS}>
     <AbsoluteFill>
       <Background />
       {layout.map((slot) => {
@@ -54,5 +57,6 @@ export const Video: React.FC<VideoProps> = ({layout, timings, hasNarration, hasM
         />
       ) : null}
     </AbsoluteFill>
+    </FormatContext.Provider>
   );
 };

@@ -8,6 +8,8 @@
     "align": "python3 scripts/align.py",
     "render": "remotion render Algoritmo5Passos out/algoritmo-5-passos.mp4 --codec=h264 --crf=18",
     "capa": "remotion still Capa out/capa.png --frame=70",
+    "render:youtube": "remotion render Algoritmo5PassosYoutube out/algoritmo-5-passos-youtube.mp4 --codec=h264 --crf=18",
+    "capa:youtube": "remotion still CapaYoutube out/capa-youtube.png --frame=70",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

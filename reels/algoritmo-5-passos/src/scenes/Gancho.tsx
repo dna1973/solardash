@@ -5,12 +5,14 @@ import {useCues} from '../timing';
 import {ease, fade, pop, slideIn} from '../anim';
 import {colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
+import {useFormat} from '../format';
 
 const scene = getScene('gancho');
 
 export const Gancho: React.FC = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const {horizontal: h} = useFormat();
   const [l1, l2] = useCues([scene.cues.line1, scene.cues.line2]);
   const impact = pop(frame, l2, fps, 12);
   const bar = ease(frame, l2 + 6, fps, 10);
@@ -24,7 +26,7 @@ export const Gancho: React.FC = () => {
           style={{
             fontFamily: titleFont,
             fontWeight: 800,
-            fontSize: 108,
+            fontSize: h ? 112 : 108,
             lineHeight: 1.02,
             color: colors.text,
             ...slideIn(frame, l1, fps, 'up', 50),
@@ -37,7 +39,7 @@ export const Gancho: React.FC = () => {
             marginTop: 34,
             fontFamily: titleFont,
             fontWeight: 800,
-            fontSize: 132,
+            fontSize: h ? 168 : 132,
             lineHeight: 1.04,
             color: colors.yellow,
             opacity: fade(frame, l2, 4),

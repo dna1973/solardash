@@ -1,17 +1,16 @@
 import React, {useMemo} from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import type {Word} from '../timing';
-import {colors, CAPTION_HEIGHT, CONTENT_BOTTOM, SIDE, titleFont} from '../theme';
+import {colors, titleFont} from '../theme';
+import {useFormat} from '../format';
 
-const MAX_WORDS = 4;
-const MAX_CHARS = 24;
 const GAP_BREAK = 0.45;
 const HOLD = 0.4;
 
 type Group = {words: Word[]; start: number; end: number};
 
 // agrupa palavras em blocos curtos: quebra em pontuação, pausa ou tamanho
-const groupWords = (words: Word[]): Group[] => {
+const groupWords = (words: Word[], MAX_WORDS: number, MAX_CHARS: number): Group[] => {
   const groups: Group[] = [];
   let cur: Word[] = [];
   const flush = () => {
@@ -35,7 +34,9 @@ const clean = (t: string) => t.toLowerCase().replace(/[.,:;!]+$/g, '');
 export const Captions: React.FC<{words: Word[]}> = ({words}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const groups = useMemo(() => groupWords(words), [words]);
+  const f = useFormat();
+  // blocos mais longos na tela larga
+  const groups = useMemo(() => (f.horizontal ? groupWords(words, 7, 42) : groupWords(words, 4, 24)), [words, f.horizontal]);
   const t = frame / fps;
   const g = groups.find((x) => t >= x.start && t < x.end);
   if (!g) return null;
@@ -47,10 +48,10 @@ export const Captions: React.FC<{words: Word[]}> = ({words}) => {
     <div
       style={{
         position: 'absolute',
-        left: SIDE,
-        right: SIDE,
-        top: CONTENT_BOTTOM,
-        height: CAPTION_HEIGHT,
+        left: f.side,
+        right: f.side,
+        top: f.contentBottom,
+        height: f.captionHeight,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -63,7 +64,7 @@ export const Captions: React.FC<{words: Word[]}> = ({words}) => {
           backgroundColor: 'rgba(0,9,53,0.88)',
           fontFamily: titleFont,
           fontWeight: 800,
-          fontSize: 76,
+          fontSize: f.captionFont,
           lineHeight: 1,
           textAlign: 'center',
           opacity: appear,

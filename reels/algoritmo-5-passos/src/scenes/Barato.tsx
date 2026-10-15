@@ -5,6 +5,7 @@ import {useCues, useSlot} from '../timing';
 import {ease, slideIn} from '../anim';
 import {bodyFont, colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
+import {useFormat} from '../format';
 
 const scene = getScene('barato');
 
@@ -14,9 +15,8 @@ const toMinutes = (hhmm: string) => {
 };
 const fmt = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(Math.floor(min % 60)).padStart(2, '0')}`;
 
-const SIZE = 300;
 
-const Clock: React.FC<{start: number}> = ({start}) => {
+const Clock: React.FC<{start: number; size: number}> = ({start, size}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {durationInFrames} = useSlot();
@@ -33,7 +33,7 @@ const Clock: React.FC<{start: number}> = ({start}) => {
 
   return (
     <div style={{display: 'flex', alignItems: 'center', gap: 46, opacity: appear, transform: `translateY(${(1 - appear) * 40}px)`}}>
-      <svg width={SIZE} height={SIZE} viewBox="-150 -150 300 300">
+      <svg width={size} height={size} viewBox="-150 -150 300 300">
         <circle r={138} fill={colors.surface} stroke={colors.text} strokeWidth={10} />
         {Array.from({length: 12}).map((_, i) => (
           <rect
@@ -87,13 +87,18 @@ export const Barato: React.FC = () => {
     scene.cues.clock,
     scene.cues.highlight,
   ]);
+  const {horizontal: h} = useFormat();
 
   return (
     <SceneFrame>
-      <Clock start={clock} />
+      <div style={{display: 'flex', flexDirection: h ? 'row' : 'column', alignItems: h ? 'center' : 'stretch', gap: h ? 90 : 0}}>
+      <div style={{flexShrink: 0}}>
+        <Clock start={clock} size={300} />
+      </div>
+      <div>
       <div
         style={{
-          marginTop: 70,
+          marginTop: h ? 0 : 70,
           fontFamily: titleFont,
           fontWeight: 800,
           fontSize: 100,
@@ -109,6 +114,8 @@ export const Barato: React.FC = () => {
         <span style={{fontWeight: 600, color: colors.yellow, display: 'block', marginTop: 6, ...slideIn(frame, highlight, fps, 'up', 30)}}>
           {scene.screen.highlight}
         </span>
+      </div>
+      </div>
       </div>
     </SceneFrame>
   );

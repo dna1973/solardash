@@ -10,7 +10,8 @@ visual no PRF Design System v1.0 (github.com/daniel-nunes-avila/prf-design-syste
 - `src/timings.json`: opcional, gerado por `scripts/align.py`. quando existe, as cenas seguem a fala e aparecem as legendas karaokê
 - `public/narracao.mp3`: opcional, narração
 - `public/musica.mp3`: opcional, trilha a 12% de volume
-- `src/scenes/*.tsx`: um componente por cena
+- `src/scenes/*.tsx`: um componente por cena, com layout vertical (reels) e horizontal (youtube)
+- `src/format.ts`: tamanho do quadro, margens e faixa de legenda de cada formato
 
 ## comandos
 
@@ -19,6 +20,8 @@ npm install
 npm run dev        # remotion studio para preview
 npm run render     # out/algoritmo-5-passos.mp4 (h264, crf 18)
 npm run capa       # out/capa.png a partir da cena 1
+npm run render:youtube   # out/algoritmo-5-passos-youtube.mp4 (1920x1080)
+npm run capa:youtube     # out/capa-youtube.png (thumbnail 1920x1080)
 ```
 
 ## depois de gravar a narração
@@ -30,6 +33,8 @@ pip install -r scripts/requirements.txt
 python scripts/align.py                         # gera src/timings.json
 npm run render
 npm run capa
+npm run render:youtube
+npm run capa:youtube
 ```
 
 para voltar às durações padrão, apague `src/timings.json`.

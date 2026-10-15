@@ -5,6 +5,7 @@ import {useCues} from '../timing';
 import {ease, slideIn} from '../anim';
 import {bodyFont, chipColors, chipText, colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
+import {useFormat} from '../format';
 import {Chip} from '../components/Chip';
 
 const scene = getScene('decisao');
@@ -25,6 +26,7 @@ export const Decisao: React.FC = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const rows = scene.screen.rows;
+  const {horizontal: h} = useFormat();
   const cues = rows.flatMap((r) => [r.cue, ...r.chips.map((c) => c.cue)]);
   const resolved = useCues(cues);
   let k = 0;
@@ -36,7 +38,7 @@ export const Decisao: React.FC = () => {
 
   return (
     <SceneFrame>
-      <div style={{display: 'flex', flexDirection: 'column', gap: 34}}>
+      <div style={{display: 'flex', flexDirection: 'column', gap: h ? 24 : 34}}>
         {rows.map((r, i) => {
           const s = starts[i];
           return (
@@ -49,23 +51,25 @@ export const Decisao: React.FC = () => {
                 ...slideIn(frame, s.row, fps, 'up', 50),
               }}
             >
-              <div style={{display: 'flex', alignItems: 'baseline', gap: 22, flexWrap: 'wrap'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: h ? 60 : 0, flexDirection: h ? 'row' : 'column', justifyContent: 'space-between'}}>
+              <div style={{display: 'flex', alignItems: 'baseline', gap: 22, flexWrap: h ? 'nowrap' : 'wrap', whiteSpace: h ? 'nowrap' : undefined, flexShrink: 0, alignSelf: h ? 'center' : 'flex-start'}}>
                 <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 36, color: colors.gray}}>se</span>
                 {r.condition.map((c, j) => (
                   <React.Fragment key={c}>
-                    {j > 0 ? <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: 58, color: colors.yellow}}>+</span> : null}
-                    <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: 58, lineHeight: 1, color: colors.text}}>{c}</span>
+                    {j > 0 ? <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: h ? 62 : 58, color: colors.yellow}}>+</span> : null}
+                    <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: h ? 62 : 58, lineHeight: 1, color: colors.text}}>{c}</span>
                   </React.Fragment>
                 ))}
               </div>
-              <div style={{display: 'flex', alignItems: 'center', gap: 16, marginTop: 22}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: 16, marginTop: h ? 0 : 22, alignSelf: h ? 'center' : 'flex-start'}}>
                 <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 36, color: colors.gray, marginRight: 4}}>então</span>
                 {r.chips.map((c, j) => (
                   <React.Fragment key={c.text}>
                     <Arrow start={s.chips[j] - 4} />
-                    <Chip text={c.text} start={s.chips[j]} bg={chipColors[c.color]} fg={chipText[c.color]} size={44} />
+                    <Chip text={c.text} start={s.chips[j]} bg={chipColors[c.color]} fg={chipText[c.color]} size={h ? 48 : 44} />
                   </React.Fragment>
                 ))}
+              </div>
               </div>
             </div>
           );

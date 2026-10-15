@@ -5,6 +5,7 @@ import {useCues} from '../timing';
 import {ease, fade, pop, slideIn} from '../anim';
 import {bodyFont, colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
+import {useFormat} from '../format';
 
 const scene = getScene('passos');
 
@@ -100,14 +101,18 @@ export const Passos: React.FC = () => {
   const plateStarts = frames.slice(1, 1 + plates.length);
   const stamp = frames[frames.length - 1];
   const underline = ease(frame, title + 6, fps, 12);
+  const {horizontal: h} = useFormat();
 
   return (
     <SceneFrame>
-      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 80, lineHeight: 1, color: colors.text, ...slideIn(frame, title, fps, 'up', 40)}}>
+      <div style={{display: 'flex', flexDirection: h ? 'row' : 'column', alignItems: h ? 'center' : 'stretch', gap: h ? 80 : 0}}>
+      <div style={h ? {width: 560, flexShrink: 0} : undefined}>
+      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: h ? 96 : 80, lineHeight: 1, color: colors.text, ...slideIn(frame, title, fps, 'up', 40)}}>
         {scene.screen.title}
       </div>
-      <div style={{height: 10, width: 260 * underline, backgroundColor: colors.yellow, marginTop: 18, marginBottom: 52}} />
-      <div style={{display: 'flex', flexDirection: 'column', gap: 26}}>
+      <div style={{height: 10, width: 260 * underline, backgroundColor: colors.yellow, marginTop: 18, marginBottom: h ? 0 : 52}} />
+      </div>
+      <div style={{display: 'flex', flexDirection: 'column', gap: h ? 20 : 26, flex: 1}}>
         {plates.map((p, i) => (
           <Plate
             key={p.n}
@@ -117,6 +122,7 @@ export const Passos: React.FC = () => {
             stamp={i === plates.length - 1 ? {text: scene.screen.stamp, start: Math.max(stamp, plateStarts[i] + 8)} : undefined}
           />
         ))}
+      </div>
       </div>
     </SceneFrame>
   );

@@ -6,6 +6,7 @@ import {ease, fade, slideIn} from '../anim';
 import {Img, staticFile} from 'remotion';
 import {bodyFont, chipColors, chipText, colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
+import {useFormat} from '../format';
 
 const scene = getScene('planilha');
 
@@ -49,12 +50,16 @@ export const Planilha: React.FC = () => {
   const [sheet, rowsStart, cta] = useCues([scene.cues.sheet, scene.cues.rowsStart, scene.cues.cta]);
   const dim = interpolate(frame, [cta, cta + 10], [1, 0.45], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const ctaP = ease(frame, cta, fps, 12);
+  const {horizontal: h} = useFormat();
 
   return (
-    <SceneFrame exit={false} justify="flex-start">
+    <SceneFrame exit={false} justify={h ? 'center' : 'flex-start'}>
+      <div style={{display: 'flex', flexDirection: h ? 'row' : 'column', alignItems: h ? 'center' : 'stretch', gap: h ? 48 : 0}}>
       <div
         style={{
-          marginTop: 10,
+          marginTop: h ? 0 : 10,
+          // planilha maior na tela larga
+          zoom: h ? 1.2 : 1,
           flexShrink: 0,
           borderRadius: 18,
           overflow: 'hidden',
@@ -121,7 +126,8 @@ export const Planilha: React.FC = () => {
 
       <div
         style={{
-          marginTop: 28,
+          marginTop: h ? 0 : 28,
+          flex: h ? 1 : undefined,
           flexShrink: 0,
           alignSelf: 'center',
           width: '100%',
@@ -134,13 +140,14 @@ export const Planilha: React.FC = () => {
           transform: `translateY(${(1 - ctaP) * 80}px)`,
         }}
       >
-        <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 84, lineHeight: 1.04, color: colors.text}}>
+        <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: h ? 68 : 84, lineHeight: 1.04, color: colors.text}}>
           <Cta text={scene.screen.cta} />
         </div>
         {scene.screen.logo ? (
           // logotipo amarelo sobre azul (variação institucional do miv)
           <Img src={staticFile('marca/logotipo-amarelo.png')} style={{display: 'block', marginTop: 34, height: 48, width: 'auto'}} />
         ) : null}
+      </div>
       </div>
     </SceneFrame>
   );

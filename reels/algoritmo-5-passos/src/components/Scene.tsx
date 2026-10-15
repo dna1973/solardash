@@ -1,11 +1,12 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {useSlot} from '../timing';
-import {colors, SAFE_TOP, SIDE, CONTENT_BOTTOM, HEIGHT} from '../theme';
+import {useFormat} from '../format';
+import {colors} from '../theme';
 
 const EXIT = 8;
 
-// moldura de cada cena: área segura + saída curta (fade e leve subida)
+// moldura de cada cena: área útil do formato + saída curta (fade e leve subida)
 export const SceneFrame: React.FC<{children: React.ReactNode; exit?: boolean; justify?: 'center' | 'flex-start'}> = ({
   children,
   exit = true,
@@ -13,6 +14,7 @@ export const SceneFrame: React.FC<{children: React.ReactNode; exit?: boolean; ju
 }) => {
   const frame = useCurrentFrame();
   const {durationInFrames} = useSlot();
+  const f = useFormat();
   const out = exit
     ? interpolate(frame, [durationInFrames - EXIT, durationInFrames], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
     : 0;
@@ -21,10 +23,10 @@ export const SceneFrame: React.FC<{children: React.ReactNode; exit?: boolean; ju
       <div
         style={{
           position: 'absolute',
-          top: SAFE_TOP,
-          left: SIDE,
-          right: SIDE,
-          height: CONTENT_BOTTOM - SAFE_TOP,
+          top: f.top,
+          left: f.side,
+          right: f.side,
+          height: f.contentBottom - f.top,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: justify,
@@ -38,9 +40,10 @@ export const SceneFrame: React.FC<{children: React.ReactNode; exit?: boolean; ju
   );
 };
 
-// fundo comum: grafite com uma faixa tracejada discreta, tipo pista
+// fundo comum: azul prf com uma faixa tracejada discreta, tipo pista
 export const Background: React.FC = () => {
   const frame = useCurrentFrame();
+  const {height} = useFormat();
   const offset = (frame * 2) % 120;
   return (
     <AbsoluteFill style={{backgroundColor: colors.bg}}>
@@ -50,7 +53,7 @@ export const Background: React.FC = () => {
           left: 28,
           top: -120 + offset,
           width: 6,
-          height: HEIGHT + 240,
+          height: height + 240,
           backgroundImage: `repeating-linear-gradient(to bottom, ${colors.surface2} 0 60px, transparent 60px 120px)`,
         }}
       />
