@@ -1,0 +1,25 @@
+{
+  "name": "reels-algoritmo-5-passos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "reels 1080x1920 em remotion: o algoritmo de 5 passos adaptado ao serviço público",
+  "scripts": {
+    "dev": "remotion studio",
+    "align": "python3 scripts/align.py",
+    "render": "remotion render Algoritmo5Passos out/algoritmo-5-passos.mp4 --codec=h264 --crf=18",
+    "capa": "remotion still Capa out/capa.png --frame=70",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.535",
+    "@remotion/google-fonts": "4.0.535",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.535"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "@types/webpack-env": "1.18.8",
+    "typescript": "5.8.3"
+  }
+}
