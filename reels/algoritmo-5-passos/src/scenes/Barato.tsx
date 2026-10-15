@@ -96,15 +96,15 @@ export const Barato: React.FC = () => {
           marginTop: 70,
           fontFamily: titleFont,
           fontWeight: 800,
-          fontSize: 112,
-          lineHeight: 0.98,
+          fontSize: 100,
+          lineHeight: 1.02,
           color: colors.text,
           ...slideIn(frame, title, fps, 'up', 50),
         }}
       >
         {scene.screen.title}
       </div>
-      <div style={{marginTop: 44, fontFamily: bodyFont, fontSize: 50, lineHeight: 1.25, color: colors.text}}>
+      <div style={{marginTop: 44, fontFamily: bodyFont, fontSize: 46, lineHeight: 1.3, color: colors.text}}>
         <span style={{fontWeight: 400, display: 'block', ...slideIn(frame, support, fps, 'up', 30)}}>{scene.screen.support}</span>
         <span style={{fontWeight: 600, color: colors.yellow, display: 'block', marginTop: 6, ...slideIn(frame, highlight, fps, 'up', 30)}}>
           {scene.screen.highlight}

@@ -14,7 +14,7 @@ type Props = {
 };
 
 // chip arredondado que entra com um spring curto
-export const Chip: React.FC<Props> = ({text, start, bg = colors.yellow, fg = colors.bg, outline = false, size = 52, style}) => {
+export const Chip: React.FC<Props> = ({text, start, bg = colors.yellow, fg = colors.ink, outline = false, size = 52, style}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const p = pop(frame, start, fps, 12);

@@ -1,5 +1,5 @@
-import {loadFont as loadCondensed} from '@remotion/google-fonts/BarlowCondensed';
-import {loadFont as loadBarlow} from '@remotion/google-fonts/Barlow';
+import {loadFont} from '@remotion/fonts';
+import {staticFile} from 'remotion';
 import type {ChipColor} from './scenes';
 
 export const FPS = 30;
@@ -14,17 +14,23 @@ export const SIDE = 80;
 export const CAPTION_HEIGHT = 170;
 export const CONTENT_BOTTOM = HEIGHT - SAFE_BOTTOM - CAPTION_HEIGHT;
 
+// PRF Design System v1.0 (github.com/daniel-nunes-avila/prf-design-system, tokens.css)
+// fundo em Azul PRF, Amarelo PRF só como destaque, texto branco.
 export const colors = {
-  bg: '#14171C',
-  surface: '#1D2128',
-  surface2: '#252A32',
-  text: '#F2F0EA',
-  yellow: '#FFC72C',
-  green: '#3BB273',
-  red: '#E5484D',
-  amber: '#F59E0B',
-  gray: '#8A94A3',
-  black: '#0B0C0E',
+  bg: '#000D4B', //       --prf-azul
+  surface: '#0A1656', //  --azul-20
+  surface2: '#19245F', // --azul-30
+  deep: '#000935', //     --azul-10
+  text: '#FFFFFF', //     --prf-branco
+  yellow: '#FFC900', //   --prf-amarelo
+  green: '#1F7A3A', //    --status-success
+  red: '#B32020', //      --status-danger
+  amber: '#B26B00', //    --status-warning
+  gray: '#B5BBD3', //     --azul-80 (texto de apoio sobre azul)
+  ink: '#000D4B', //      texto e borda sobre amarelo ou branco
+  sheet: '#FFFFFF',
+  sheetAlt: '#F1F2F8', // --azul-95
+  sheetLine: '#DCDFEC', // --azul-90
 };
 
 export const chipColors: Record<ChipColor, string> = {
@@ -34,12 +40,24 @@ export const chipColors: Record<ChipColor, string> = {
   green: colors.green,
 };
 
-export const {fontFamily: titleFont} = loadCondensed('normal', {
-  weights: ['800'],
-  subsets: ['latin'],
-});
+// contraste wcag: azul sobre amarelo, branco sobre as cores de status
+export const chipText: Record<ChipColor, string> = {
+  red: colors.text,
+  amber: colors.text,
+  yellow: colors.ink,
+  green: colors.text,
+};
 
-export const {fontFamily: bodyFont} = loadBarlow('normal', {
-  weights: ['400', '600'],
-  subsets: ['latin'],
-});
+// fira sans, família oficial do miv (arquivos locais em public/fonts, licença ofl)
+export const titleFont = 'Fira Sans';
+export const bodyFont = 'Fira Sans';
+
+const weights = [
+  ['400', 'FiraSans-Regular.ttf'],
+  ['600', 'FiraSans-SemiBold.ttf'],
+  ['800', 'FiraSans-ExtraBold.ttf'],
+] as const;
+
+for (const [weight, file] of weights) {
+  loadFont({family: 'Fira Sans', url: staticFile(`fonts/${file}`), weight, format: 'truetype'});
+}

@@ -16,7 +16,7 @@ export const Teste: React.FC = () => {
 
   return (
     <SceneFrame>
-      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 112, lineHeight: 1, color: colors.text, ...slideIn(frame, title, fps, 'up', 40)}}>
+      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 100, lineHeight: 1.02, color: colors.text, ...slideIn(frame, title, fps, 'up', 40)}}>
         {scene.screen.title}
       </div>
       <div style={{marginTop: 64, display: 'flex', flexDirection: 'column', gap: 36}}>
@@ -32,7 +32,7 @@ export const Teste: React.FC = () => {
             }}
           >
             <div style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 34, color: colors.gray, marginBottom: 14}}>{c.label}</div>
-            <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 86, lineHeight: 1, color: colors.text}}>{c.text}</div>
+            <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 72, lineHeight: 1.06, color: colors.text}}>{c.text}</div>
           </div>
         ))}
       </div>

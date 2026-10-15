@@ -2,6 +2,8 @@
 
 vídeo vertical 1080x1920, 30 fps, ~50 s, feito em remotion só com tipografia e formas.
 
+visual no PRF Design System v1.0 (github.com/daniel-nunes-avila/prf-design-system): Azul PRF #000D4B de fundo, Amarelo PRF #FFC900 como destaque, Fira Sans (arquivos locais em `public/fonts`, licença OFL) e cores de status do `tokens.css`. o logotipo amarelo fica em `public/marca` e aparece no cta (`logo: false` em `scenes.ts` para tirar).
+
 ## estrutura
 
 - `src/scenes.ts`: roteiro (id, narração, textos de tela, duração padrão e cues de cada elemento)

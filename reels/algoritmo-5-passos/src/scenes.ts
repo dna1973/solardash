@@ -138,7 +138,8 @@ export const scenes = [
       ],
       // o texto entre {chaves} fica em amarelo
       cta: "comenta {PLANILHA} que eu te mando o modelo",
-      handle: "@epertiosaas",
+      // logotipo prf (amarelo sobre azul) embaixo do cta; false para tirar
+      logo: true,
     },
     cues: {
       sheet: {at: 0},

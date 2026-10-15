@@ -60,7 +60,7 @@ export const Captions: React.FC<{words: Word[]}> = ({words}) => {
         style={{
           padding: '14px 30px 18px',
           borderRadius: 18,
-          backgroundColor: 'rgba(11,12,14,0.82)',
+          backgroundColor: 'rgba(0,9,53,0.88)',
           fontFamily: titleFont,
           fontWeight: 800,
           fontSize: 76,
@@ -76,7 +76,7 @@ export const Captions: React.FC<{words: Word[]}> = ({words}) => {
           const active = t >= w.start && (next ? t < next.start : t < g.end);
           const spoken = t >= w.start;
           return (
-            <span key={i} style={{color: active ? colors.yellow : spoken ? colors.text : 'rgba(242,240,234,0.55)'}}>
+            <span key={i} style={{color: active ? colors.yellow : spoken ? colors.text : 'rgba(255,255,255,0.55)'}}>
               {i > 0 ? ' ' : ''}
               {clean(w.text)}
             </span>

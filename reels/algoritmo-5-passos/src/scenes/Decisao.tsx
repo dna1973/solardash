@@ -3,7 +3,7 @@ import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {getScene} from '../scenes';
 import {useCues} from '../timing';
 import {ease, slideIn} from '../anim';
-import {bodyFont, chipColors, colors, titleFont} from '../theme';
+import {bodyFont, chipColors, chipText, colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
 import {Chip} from '../components/Chip';
 
@@ -53,8 +53,8 @@ export const Decisao: React.FC = () => {
                 <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 36, color: colors.gray}}>se</span>
                 {r.condition.map((c, j) => (
                   <React.Fragment key={c}>
-                    {j > 0 ? <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: 70, color: colors.yellow}}>+</span> : null}
-                    <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: 70, lineHeight: 1, color: colors.text}}>{c}</span>
+                    {j > 0 ? <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: 58, color: colors.yellow}}>+</span> : null}
+                    <span style={{fontFamily: titleFont, fontWeight: 800, fontSize: 58, lineHeight: 1, color: colors.text}}>{c}</span>
                   </React.Fragment>
                 ))}
               </div>
@@ -63,7 +63,7 @@ export const Decisao: React.FC = () => {
                 {r.chips.map((c, j) => (
                   <React.Fragment key={c.text}>
                     <Arrow start={s.chips[j] - 4} />
-                    <Chip text={c.text} start={s.chips[j]} bg={chipColors[c.color]} size={50} />
+                    <Chip text={c.text} start={s.chips[j]} bg={chipColors[c.color]} fg={chipText[c.color]} size={44} />
                   </React.Fragment>
                 ))}
               </div>

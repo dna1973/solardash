@@ -29,7 +29,7 @@ const Plate: React.FC<{n: string; text: string; start: number; stamp?: {text: st
         backgroundColor: colors.yellow,
         borderRadius: 22,
         padding: 9,
-        boxShadow: `0 0 0 4px ${colors.black}`,
+        boxShadow: `0 0 0 4px ${colors.ink}`,
         opacity: fade(frame, start, 6),
         transform: `translateX(${(1 - p) * 140}px) scale(${pulse})`,
       }}
@@ -37,7 +37,7 @@ const Plate: React.FC<{n: string; text: string; start: number; stamp?: {text: st
       <div
         style={{
           height: '100%',
-          border: `7px solid ${colors.black}`,
+          border: `7px solid ${colors.ink}`,
           borderRadius: 14,
           display: 'flex',
           alignItems: 'center',
@@ -50,7 +50,7 @@ const Plate: React.FC<{n: string; text: string; start: number; stamp?: {text: st
             width: 92,
             height: 92,
             borderRadius: 10,
-            backgroundColor: colors.black,
+            backgroundColor: colors.ink,
             color: colors.yellow,
             fontFamily: titleFont,
             fontWeight: 800,
@@ -63,7 +63,7 @@ const Plate: React.FC<{n: string; text: string; start: number; stamp?: {text: st
         >
           {n}
         </div>
-        <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 74, color: colors.black, lineHeight: 1}}>{text}</div>
+        <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 64, color: colors.ink, lineHeight: 1}}>{text}</div>
       </div>
       {stamp ? (
         <div
@@ -103,7 +103,7 @@ export const Passos: React.FC = () => {
 
   return (
     <SceneFrame>
-      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 104, lineHeight: 1, color: colors.text, ...slideIn(frame, title, fps, 'up', 40)}}>
+      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 80, lineHeight: 1, color: colors.text, ...slideIn(frame, title, fps, 'up', 40)}}>
         {scene.screen.title}
       </div>
       <div style={{height: 10, width: 260 * underline, backgroundColor: colors.yellow, marginTop: 18, marginBottom: 52}} />

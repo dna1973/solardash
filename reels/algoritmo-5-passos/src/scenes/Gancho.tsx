@@ -24,8 +24,8 @@ export const Gancho: React.FC = () => {
           style={{
             fontFamily: titleFont,
             fontWeight: 800,
-            fontSize: 118,
-            lineHeight: 0.98,
+            fontSize: 108,
+            lineHeight: 1.02,
             color: colors.text,
             ...slideIn(frame, l1, fps, 'up', 50),
           }}
@@ -37,8 +37,8 @@ export const Gancho: React.FC = () => {
             marginTop: 34,
             fontFamily: titleFont,
             fontWeight: 800,
-            fontSize: 150,
-            lineHeight: 0.95,
+            fontSize: 132,
+            lineHeight: 1.04,
             color: colors.yellow,
             opacity: fade(frame, l2, 4),
             transform: `scale(${1.35 - 0.35 * impact})`,

@@ -8,7 +8,7 @@ import {SceneFrame} from '../components/Scene';
 import {Chip} from '../components/Chip';
 
 const scene = getScene('governo');
-const chipTints = [colors.yellow, colors.amber, colors.green];
+const chipTints = [colors.yellow, colors.text, colors.gray];
 
 export const Governo: React.FC = () => {
   const frame = useCurrentFrame();
@@ -18,7 +18,7 @@ export const Governo: React.FC = () => {
 
   return (
     <SceneFrame>
-      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 124, lineHeight: 0.98, color: colors.text, ...slideIn(frame, l1, fps, 'up', 50)}}>
+      <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 104, lineHeight: 1.02, color: colors.text, ...slideIn(frame, l1, fps, 'up', 50)}}>
         {scene.screen.line1}
       </div>
       <div
@@ -28,8 +28,8 @@ export const Governo: React.FC = () => {
           borderLeft: `10px solid ${colors.red}`,
           fontFamily: titleFont,
           fontWeight: 800,
-          fontSize: 80,
-          lineHeight: 1.02,
+          fontSize: 66,
+          lineHeight: 1.1,
           color: colors.gray,
           ...slideIn(frame, l2, fps, 'left', 50),
         }}

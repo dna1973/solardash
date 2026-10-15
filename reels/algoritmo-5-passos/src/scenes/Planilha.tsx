@@ -3,7 +3,8 @@ import {interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {getScene} from '../scenes';
 import {useCues} from '../timing';
 import {ease, fade, slideIn} from '../anim';
-import {bodyFont, chipColors, colors, titleFont} from '../theme';
+import {Img, staticFile} from 'remotion';
+import {bodyFont, chipColors, chipText, colors, titleFont} from '../theme';
 import {SceneFrame} from '../components/Scene';
 
 const scene = getScene('planilha');
@@ -19,7 +20,7 @@ const Cell: React.FC<{w: number; children: React.ReactNode; first?: boolean}> = 
       padding: '0 16px',
       display: 'flex',
       alignItems: 'center',
-      borderLeft: first ? 'none' : `2px solid #D9D5CB`,
+      borderLeft: first ? 'none' : `2px solid ${colors.sheetLine}`,
     }}
   >
     {children}
@@ -58,15 +59,16 @@ export const Planilha: React.FC = () => {
           borderRadius: 18,
           overflow: 'hidden',
           backgroundColor: colors.text,
+          border: `2px solid ${colors.surface2}`,
           boxShadow: '0 30px 60px rgba(0,0,0,0.45)',
           opacity: dim,
           ...slideIn(frame, sheet, fps, 'up', 60),
         }}
       >
-        <div style={{display: 'flex', height: 84, backgroundColor: colors.black}}>
+        <div style={{display: 'flex', height: 84, backgroundColor: colors.bg}}>
           {columns.map((c, i) => (
             <Cell key={c} w={COLS[i]} first={i === 0}>
-              <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 30, lineHeight: 1.1, color: i === 3 ? colors.yellow : colors.text}}>{c}</span>
+              <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 25, lineHeight: 1.1, color: i === 3 ? colors.yellow : colors.text}}>{c}</span>
             </Cell>
           ))}
         </div>
@@ -80,20 +82,20 @@ export const Planilha: React.FC = () => {
                 display: 'flex',
                 flexShrink: 0,
                 height: 140,
-                backgroundColor: i % 2 === 0 ? colors.text : '#E7E3D8',
-                borderTop: '2px solid #D9D5CB',
+                backgroundColor: i % 2 === 0 ? colors.sheet : colors.sheetAlt,
+                borderTop: `2px solid ${colors.sheetLine}`,
                 opacity: fade(frame, start, 8),
                 transform: `translateY(${(1 - p) * -40}px)`,
               }}
             >
               <Cell w={COLS[0]} first>
-                <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 34, lineHeight: 1.12, color: colors.bg}}>{r.activity}</span>
+                <span style={{fontFamily: bodyFont, fontWeight: 600, fontSize: 29, lineHeight: 1.12, color: colors.ink}}>{r.activity}</span>
               </Cell>
               <Cell w={COLS[1]}>
-                <span style={{fontFamily: bodyFont, fontWeight: 400, fontSize: 31, lineHeight: 1.12, color: colors.bg}}>{r.breaks}</span>
+                <span style={{fontFamily: bodyFont, fontWeight: 400, fontSize: 27, lineHeight: 1.12, color: colors.ink}}>{r.breaks}</span>
               </Cell>
               <Cell w={COLS[2]}>
-                <span style={{fontFamily: bodyFont, fontWeight: 400, fontSize: 31, color: colors.bg}}>{r.basis}</span>
+                <span style={{fontFamily: bodyFont, fontWeight: 400, fontSize: 27, color: colors.ink}}>{r.basis}</span>
               </Cell>
               <Cell w={COLS[3]}>
                 <span
@@ -104,9 +106,9 @@ export const Planilha: React.FC = () => {
                     backgroundColor: chipColors[r.color],
                     fontFamily: titleFont,
                     fontWeight: 800,
-                    fontSize: 33,
+                    fontSize: 27,
                     lineHeight: 1.05,
-                    color: colors.bg,
+                    color: chipText[r.color],
                   }}
                 >
                   {r.decision}
@@ -119,11 +121,11 @@ export const Planilha: React.FC = () => {
 
       <div
         style={{
-          marginTop: -20,
+          marginTop: 28,
           flexShrink: 0,
           alignSelf: 'center',
           width: '100%',
-          backgroundColor: colors.bg,
+          backgroundColor: colors.deep,
           border: `4px solid ${colors.yellow}`,
           borderRadius: 28,
           padding: '44px 48px 40px',
@@ -132,10 +134,13 @@ export const Planilha: React.FC = () => {
           transform: `translateY(${(1 - ctaP) * 80}px)`,
         }}
       >
-        <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 104, lineHeight: 0.98, color: colors.text}}>
+        <div style={{fontFamily: titleFont, fontWeight: 800, fontSize: 84, lineHeight: 1.04, color: colors.text}}>
           <Cta text={scene.screen.cta} />
         </div>
-        <div style={{marginTop: 26, fontFamily: bodyFont, fontWeight: 600, fontSize: 36, color: colors.gray}}>{scene.screen.handle}</div>
+        {scene.screen.logo ? (
+          // logotipo amarelo sobre azul (variação institucional do miv)
+          <Img src={staticFile('marca/logotipo-amarelo.png')} style={{display: 'block', marginTop: 34, height: 48, width: 'auto'}} />
+        ) : null}
       </div>
     </SceneFrame>
   );
